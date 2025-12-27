@@ -1,6 +1,5 @@
 """Tests for the application factory."""
 
-import os
 from pathlib import Path
 
 import pytest

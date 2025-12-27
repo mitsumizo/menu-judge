@@ -15,10 +15,12 @@ def index() -> Response:
     Returns:
         JSON response with application status and message.
     """
-    return jsonify({
-        "status": "ok",
-        "message": "Menu Judge API is running",
-    })
+    return jsonify(
+        {
+            "status": "ok",
+            "message": "Menu Judge API is running",
+        }
+    )
 
 
 @main_bp.route("/health")
@@ -28,6 +30,8 @@ def health() -> Response:
     Returns:
         JSON response indicating the application is healthy.
     """
-    return jsonify({
-        "status": "healthy",
-    })
+    return jsonify(
+        {
+            "status": "healthy",
+        }
+    )

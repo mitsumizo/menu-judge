@@ -12,10 +12,12 @@ def app():
     Yields:
         Flask application configured for testing.
     """
-    app = create_app({
-        "TESTING": True,
-        "SECRET_KEY": "test-secret-key",
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SECRET_KEY": "test-secret-key",
+        }
+    )
     yield app
 
 
