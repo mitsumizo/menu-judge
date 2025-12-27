@@ -15,6 +15,7 @@ from app.services.ai.base import (
     APIKeyMissingError,
 )
 from app.services.ai.claude_provider import ClaudeProvider
+from app.services.ai.factory import AIProviderFactory, UnknownProviderError
 
 
 class TestAnalysisResult:
@@ -455,3 +456,106 @@ class TestClaudeProvider:
 
             with pytest.raises(APICallError, match="Claude API call failed"):
                 provider.analyze_menu(b"fake image data", "image/jpeg")
+
+
+class TestAIProviderFactory:
+    """Test cases for AIProviderFactory."""
+
+    def test_create_with_default_provider(self):
+        """Test creating provider with default (claude)."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
+            provider = AIProviderFactory.create()
+            assert isinstance(provider, ClaudeProvider)
+            assert provider.name == "claude"
+
+    def test_create_with_env_variable(self):
+        """Test creating provider from AI_PROVIDER environment variable."""
+        with patch.dict(
+            os.environ, {"AI_PROVIDER": "claude", "ANTHROPIC_API_KEY": "test-api-key"}
+        ):
+            provider = AIProviderFactory.create()
+            assert isinstance(provider, ClaudeProvider)
+            assert provider.name == "claude"
+
+    def test_create_with_explicit_provider_name(self):
+        """Test creating provider with explicit provider_name argument."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
+            provider = AIProviderFactory.create(provider_name="claude")
+            assert isinstance(provider, ClaudeProvider)
+            assert provider.name == "claude"
+
+    def test_create_with_unknown_provider_raises_error(self):
+        """Test that unknown provider raises UnknownProviderError."""
+        with pytest.raises(UnknownProviderError, match="Unknown provider: unknown"):
+            AIProviderFactory.create(provider_name="unknown")
+
+    def test_create_with_unknown_provider_from_env_raises_error(self):
+        """Test that unknown provider from env raises UnknownProviderError."""
+        with patch.dict(os.environ, {"AI_PROVIDER": "nonexistent"}):
+            with pytest.raises(UnknownProviderError, match="Unknown provider: nonexistent"):
+                AIProviderFactory.create()
+
+    def test_create_without_api_key_raises_error(self):
+        """Test that missing API key raises APIKeyMissingError."""
+        with patch.dict(os.environ, {}, clear=True):
+            with pytest.raises(APIKeyMissingError, match="API key not configured for claude"):
+                AIProviderFactory.create()
+
+    def test_register_new_provider(self):
+        """Test registering a new provider."""
+
+        class CustomProvider(AIProvider):
+            @property
+            def name(self) -> str:
+                return "custom"
+
+            def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
+                dish = Dish(
+                    original_name="Custom Dish",
+                    japanese_name="カスタム料理",
+                    description="カスタムプロバイダーのテスト",
+                    spiciness=3,
+                    sweetness=3,
+                )
+                return AnalysisResult(
+                    dishes=[dish],
+                    raw_response="custom response",
+                    provider=self.name,
+                    processing_time=1.0,
+                )
+
+            def is_available(self) -> bool:
+                return True
+
+        # Register new provider
+        AIProviderFactory.register("custom", CustomProvider)
+
+        # Verify it can be created
+        provider = AIProviderFactory.create(provider_name="custom")
+        assert isinstance(provider, CustomProvider)
+        assert provider.name == "custom"
+
+        # Clean up
+        del AIProviderFactory._providers["custom"]
+
+    def test_available_providers_returns_list(self):
+        """Test that available_providers returns list of available providers."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
+            providers = AIProviderFactory.available_providers()
+            assert isinstance(providers, list)
+            assert "claude" in providers
+
+    def test_available_providers_excludes_unavailable(self):
+        """Test that available_providers excludes providers without API keys."""
+        with patch.dict(os.environ, {}, clear=True):
+            providers = AIProviderFactory.available_providers()
+            assert isinstance(providers, list)
+            # claude should not be in the list without API key
+            assert "claude" not in providers
+
+    def test_unknown_provider_error_is_ai_provider_error(self):
+        """Test that UnknownProviderError is a subclass of AIProviderError."""
+        assert issubclass(UnknownProviderError, AIProviderError)
+
+        with pytest.raises(AIProviderError):
+            raise UnknownProviderError("Unknown provider")
