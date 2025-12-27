@@ -25,12 +25,18 @@
 git clone https://github.com/mitsumizo/menu-judge.git
 cd menu-judge
 
-# 仮想環境作成
+# Python仮想環境作成
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 依存関係インストール
+# Python依存関係インストール
 pip install -r requirements.txt
+
+# フロントエンド依存関係インストール
+npm install
+
+# フロントエンドアセットをビルド
+npm run build
 
 # 環境変数設定
 cp .env.example .env
@@ -38,6 +44,24 @@ cp .env.example .env
 
 # 開発サーバー起動
 python run.py
+```
+
+### 開発時のビルド
+
+フロントエンドのコードを変更した場合：
+
+```bash
+# CSSの再ビルド（Tailwind）
+npm run build:css
+
+# JSライブラリの再コピー
+npm run build:js
+
+# 全てをビルド
+npm run build
+
+# CSSの変更を監視（自動再ビルド）
+npm run watch:css
 ```
 
 ## 使い方
