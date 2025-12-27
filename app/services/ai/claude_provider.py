@@ -44,14 +44,15 @@ class ClaudeProvider(AIProvider):
         """
         return "claude"
 
-    def is_available(self) -> bool:
+    @classmethod
+    def is_available(cls) -> bool:
         """
         Check if provider is available.
 
         Returns:
             True if provider is available, False otherwise
         """
-        return self.api_key is not None
+        return os.getenv("ANTHROPIC_API_KEY") is not None
 
     def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
         """
