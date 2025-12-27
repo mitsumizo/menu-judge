@@ -14,7 +14,7 @@
 
 ## 技術スタック
 
-- **Backend**: Python 3.11+, Flask
+- **Backend**: Python 3.13+, Flask
 - **AI**: Claude API (Vision)
 - **Frontend**: HTML/CSS/JavaScript
 
