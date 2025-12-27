@@ -24,7 +24,6 @@ dist/
 build/
 .next/
 out/
-app/static/css/app.css
 
 # Environment files
 .env
