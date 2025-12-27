@@ -15,7 +15,7 @@
 
 ## 技術スタック
 
-- **Backend**: Python 3.11+, Flask
+- **Backend**: Python 3.13+, Flask
 - **AI**: マルチプロバイダー対応（環境変数で切り替え）
   - Claude API (Anthropic)
   - OpenAI GPT-4V
@@ -198,7 +198,8 @@ OPENAI_API_KEY=your_api_key_here      # OpenAI用
 GOOGLE_API_KEY=your_api_key_here      # Gemini用
 
 # Flask設定
-FLASK_ENV=development
+# Note: FLASK_ENV is deprecated in Flask 2.3.0+
+ENV=development
 FLASK_DEBUG=1
 SECRET_KEY=your_secret_key
 
