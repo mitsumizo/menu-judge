@@ -4,7 +4,15 @@
   "scripts": {
     "build:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/app.css",
     "watch:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/app.css --watch",
-    "build": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/app.css --minify"
+    "build:js": "npm run copy:htmx && npm run copy:alpine",
+    "copy:htmx": "cp node_modules/htmx.org/dist/htmx.min.js app/static/js/vendor/",
+    "copy:alpine": "cp node_modules/alpinejs/dist/cdn.min.js app/static/js/vendor/alpinejs.min.js",
+    "build": "npm run build:css && npm run build:js",
+    "prebuild": "mkdir -p app/static/js/vendor"
+  },
+  "dependencies": {
+    "alpinejs": "^3.14.1",
+    "htmx.org": "^1.9.10"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.0",
