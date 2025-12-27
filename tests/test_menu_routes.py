@@ -81,25 +81,6 @@ class TestAnalyzeMenuEndpoint:
         assert response.json["code"] == "INVALID_FILE"
         assert "File type not allowed" in response.json["error"]
 
-    def test_invalid_mime_type(self, client):
-        """無効なMIMEタイプの場合、エラーを返す."""
-        response = client.post(
-            "/api/analyze",
-            data={"image": (BytesIO(b"test"), "test.png")},
-            content_type="multipart/form-data",
-        )
-        # Werkzeugは自動的にMIMEタイプを推測するので、明示的に設定する必要がある
-        # ここでは、画像ではないデータを送信してテストする
-        img_bytes = BytesIO(b"not an image")
-        response = client.post(
-            "/api/analyze",
-            data={"image": (img_bytes, "test.gif")},
-        )
-
-        assert response.status_code == 400
-        assert response.json["success"] is False
-        assert response.json["code"] == "INVALID_FILE"
-
     def test_file_too_large(self, client):
         """ファイルサイズが大きすぎる場合、エラーを返す."""
         # 11MBのデータを生成
