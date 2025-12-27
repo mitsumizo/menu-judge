@@ -36,6 +36,7 @@ build/
 out/
 *.egg-info/
 .eggs/
+app/static/css/app.css
 
 # Environment files
 .env
