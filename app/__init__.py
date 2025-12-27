@@ -22,9 +22,14 @@ def create_app(config: Optional[dict] = None) -> Flask:
     """
     app = Flask(__name__)
 
+    # Validate SECRET_KEY for production environment
+    secret_key = os.environ.get("SECRET_KEY")
+    if not secret_key and os.environ.get("FLASK_ENV") == "production":
+        raise ValueError("SECRET_KEY must be set in production environment")
+
     # Default configuration
     app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-secret-key"),
+        SECRET_KEY=secret_key or "dev-secret-key-change-in-production",
         MAX_CONTENT_LENGTH=int(
             os.environ.get("MAX_UPLOAD_SIZE", 10 * 1024 * 1024)
         ),  # 10MB default
