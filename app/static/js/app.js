@@ -27,6 +27,10 @@ function showToast(message, type = 'info', duration = 3000) {
     toast.className += ` ${typeStyles[type] || typeStyles.info}`;
     toast.textContent = message;
 
+    // ARIA属性でアクセシビリティ向上
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+
     // 初期状態（非表示）
     toast.style.opacity = '0';
     toast.style.transform = 'translateX(100%)';
