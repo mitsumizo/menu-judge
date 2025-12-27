@@ -23,8 +23,9 @@ def create_app(config: Optional[dict] = None) -> Flask:
     app = Flask(__name__)
 
     # Validate production environment settings
+    # Note: Using ENV instead of FLASK_ENV (deprecated in Flask 2.3.0+)
     secret_key = os.environ.get("SECRET_KEY")
-    if os.environ.get("FLASK_ENV") == "production":
+    if os.environ.get("ENV") == "production":
         if not secret_key:
             raise ValueError("SECRET_KEY must be set in production environment")
         if os.environ.get("FLASK_DEBUG") == "1":
