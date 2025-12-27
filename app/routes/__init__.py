@@ -3,13 +3,13 @@
 This module defines and exports the main Blueprint for the application.
 """
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, Response, jsonify
 
 main_bp = Blueprint("main", __name__)
 
 
 @main_bp.route("/")
-def index() -> dict:
+def index() -> Response:
     """Root endpoint returning application status.
 
     Returns:
@@ -22,7 +22,7 @@ def index() -> dict:
 
 
 @main_bp.route("/health")
-def health() -> dict:
+def health() -> Response:
     """Health check endpoint.
 
     Returns:
