@@ -1,0 +1,36 @@
+<div id="error-message"
+     role="alert"
+     aria-live="assertive"
+     class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 animate-shake">
+    <div class="flex items-start gap-3">
+        <!-- エラーアイコン -->
+        <div class="text-red-500 text-xl">⚠️</div>
+
+        <div class="flex-1">
+            <!-- エラータイトル -->
+            <h3 class="font-bold text-red-400">
+                {{ title | default('エラーが発生しました') }}
+            </h3>
+
+            <!-- エラーメッセージ -->
+            <p class="text-sm text-slate-300 mt-1">
+                {{ message }}
+            </p>
+
+            <!-- エラーコード -->
+            {% if code %}
+            <p class="text-xs text-slate-500 mt-2">
+                エラーコード: {{ code }}
+            </p>
+            {% endif %}
+
+            <!-- リトライボタン -->
+            <button class="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30
+                           text-red-400 rounded transition-colors"
+                    aria-label="エラーメッセージを閉じる"
+                    onclick="document.getElementById('error-message').remove()">
+                閉じる
+            </button>
+        </div>
+    </div>
+</div>
