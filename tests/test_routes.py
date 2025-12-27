@@ -16,3 +16,10 @@ def test_health_endpoint_returns_healthy(client):
 
     assert response.status_code == 200
     assert response.json == {"status": "healthy"}
+
+
+def test_unknown_endpoint_returns_404(client):
+    """Test that unknown endpoints return 404."""
+    response = client.get("/unknown-endpoint")
+
+    assert response.status_code == 404

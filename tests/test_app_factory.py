@@ -44,3 +44,36 @@ def test_create_app_uses_secret_key_from_env(monkeypatch):
     app = create_app()
 
     assert app.config["SECRET_KEY"] == "env-secret-key"
+
+
+def test_create_app_works_in_production_with_secret_key(monkeypatch):
+    """Test that app starts in production when SECRET_KEY is set."""
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "production-secret-key")
+
+    app = create_app()
+
+    assert app.config["SECRET_KEY"] == "production-secret-key"
+
+
+def test_max_upload_size_from_env(monkeypatch):
+    """Test that MAX_UPLOAD_SIZE is loaded from environment variable."""
+    monkeypatch.setenv("MAX_UPLOAD_SIZE", "5242880")
+    app = create_app()
+
+    assert app.config["MAX_CONTENT_LENGTH"] == 5242880
+
+
+def test_max_upload_size_default(monkeypatch):
+    """Test that MAX_UPLOAD_SIZE defaults to 10MB."""
+    monkeypatch.delenv("MAX_UPLOAD_SIZE", raising=False)
+    app = create_app()
+
+    assert app.config["MAX_CONTENT_LENGTH"] == 10 * 1024 * 1024
+
+
+def test_blueprint_is_registered():
+    """Test that main blueprint is registered."""
+    app = create_app()
+
+    assert "main" in app.blueprints
