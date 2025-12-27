@@ -99,8 +99,23 @@ function uploadZone() {
          */
         handleDrop(event) {
             this.isDragging = false;
-            const file = event.dataTransfer.files[0];
-            if (file) {
+            const files = event.dataTransfer.files;
+
+            // 複数ファイルのドロップをチェック
+            if (files.length > 1) {
+                showToast('一度に処理できる画像は1枚です', 'warning');
+                return;
+            }
+
+            if (files.length === 1) {
+                const file = files[0];
+
+                // 早期にファイルサイズをチェック（パフォーマンス向上）
+                if (file.size > MAX_FILE_SIZE) {
+                    showToast('ファイルサイズが大きすぎます。10MB以下の画像を選択してください。', 'error');
+                    return;
+                }
+
                 this.processFile(file);
             }
         },
