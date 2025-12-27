@@ -28,4 +28,6 @@ def health() -> Response:
     Returns:
         JSON response indicating the application is healthy.
     """
-    return jsonify({"status": "healthy"})
+    return jsonify({
+        "status": "healthy",
+    })
