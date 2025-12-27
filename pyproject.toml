@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "menu-judge"
 version = "0.1.0"
@@ -5,6 +9,11 @@ description = "Web application for analyzing restaurant menu images"
 readme = "README.md"
 requires-python = ">=3.13"
 license = {text = "MIT"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+exclude = ["tests*", "instance*"]
 
 [project.optional-dependencies]
 dev = [
@@ -45,3 +54,10 @@ ignore = [
 # フォーマット設定
 quote-style = "double"
 indent-style = "space"
+
+[tool.bandit]
+# セキュリティチェック設定
+exclude_dirs = ["tests", "venv", ".venv"]
+skips = [
+    "B101",  # assert_used（テストでは使用するため）
+]

@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     # WARNING: 0.0.0.0 exposes the server to your local network
     # For production, use a proper WSGI server (Gunicorn, uWSGI)
-    default_host = "0.0.0.0" if debug else "127.0.0.1"
+    default_host = "0.0.0.0" if debug else "127.0.0.1"  # nosec B104
     host = os.environ.get("FLASK_HOST", default_host)
     port = int(os.environ.get("FLASK_PORT", 5000))
 
