@@ -3,13 +3,18 @@
  * Alpine.jsと連携してインタラクティブな機能を提供
  */
 
+// Toast通知の定数
+const TOAST_ANIMATION_DELAY = 10;  // アニメーション開始までの遅延（ミリ秒）
+const TOAST_FADE_DURATION = 300;   // フェードアウトのアニメーション時間（ミリ秒）
+const TOAST_DEFAULT_DURATION = 3000; // デフォルトの表示時間（ミリ秒）
+
 /**
  * Toast通知を表示する
  * @param {string} message - 表示するメッセージ
  * @param {string} type - メッセージタイプ (success, error, info, warning)
  * @param {number} duration - 表示時間（ミリ秒）
  */
-function showToast(message, type = 'info', duration = 3000) {
+function showToast(message, type = 'info', duration = TOAST_DEFAULT_DURATION) {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
@@ -41,7 +46,7 @@ function showToast(message, type = 'info', duration = 3000) {
     setTimeout(() => {
         toast.style.opacity = '1';
         toast.style.transform = 'translateX(0)';
-    }, 10);
+    }, TOAST_ANIMATION_DELAY);
 
     // 指定時間後に非表示にして削除
     setTimeout(() => {
@@ -50,7 +55,7 @@ function showToast(message, type = 'info', duration = 3000) {
 
         setTimeout(() => {
             container.removeChild(toast);
-        }, 300);
+        }, TOAST_FADE_DURATION);
     }, duration);
 }
 
