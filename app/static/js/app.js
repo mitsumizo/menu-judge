@@ -160,6 +160,10 @@ function uploadZone() {
          * ファイルをクリアする
          */
         clearFile() {
+            // ファイル入力をリセット（同じファイルを再選択できるようにする）
+            const fileInputs = this.$el.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => input.value = '');
+
             this.file = null;
             this.preview = null;
             this.isUploading = false;
