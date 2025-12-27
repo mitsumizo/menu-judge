@@ -15,7 +15,7 @@
 
 ## 技術スタック
 
-- **Backend**: Python 3.11+, Flask
+- **Backend**: Python 3.13+, Flask
 - **AI**: マルチプロバイダー対応（環境変数で切り替え）
   - Claude API (Anthropic)
   - OpenAI GPT-4V
