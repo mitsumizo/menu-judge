@@ -128,7 +128,8 @@ def analyze_menu() -> Response:
 
     try:
         # バリデーション済みの画像データを使用
-        mime_type = file.content_type or "image/jpeg"
+        # バリデーションで content_type が ALLOWED_MIME_TYPES に含まれることを確認済み
+        mime_type = file.content_type
 
         logger.info(f"Processing image: {file.filename}, size: {len(image_data)} bytes, MIME: {mime_type}")
 
