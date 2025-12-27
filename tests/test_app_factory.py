@@ -50,10 +50,23 @@ def test_create_app_works_in_production_with_secret_key(monkeypatch):
     """Test that app starts in production when SECRET_KEY is set."""
     monkeypatch.setenv("FLASK_ENV", "production")
     monkeypatch.setenv("SECRET_KEY", "production-secret-key")
+    monkeypatch.delenv("FLASK_DEBUG", raising=False)
 
     app = create_app()
 
     assert app.config["SECRET_KEY"] == "production-secret-key"
+
+
+def test_create_app_rejects_debug_mode_in_production(monkeypatch):
+    """Test that DEBUG mode is rejected in production environment."""
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "production-secret-key")
+    monkeypatch.setenv("FLASK_DEBUG", "1")
+
+    with pytest.raises(ValueError) as exc_info:
+        create_app()
+
+    assert "DEBUG mode must be disabled in production" in str(exc_info.value)
 
 
 def test_max_upload_size_from_env(monkeypatch):

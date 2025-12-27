@@ -22,10 +22,13 @@ def create_app(config: Optional[dict] = None) -> Flask:
     """
     app = Flask(__name__)
 
-    # Validate SECRET_KEY for production environment
+    # Validate production environment settings
     secret_key = os.environ.get("SECRET_KEY")
-    if not secret_key and os.environ.get("FLASK_ENV") == "production":
-        raise ValueError("SECRET_KEY must be set in production environment")
+    if os.environ.get("FLASK_ENV") == "production":
+        if not secret_key:
+            raise ValueError("SECRET_KEY must be set in production environment")
+        if os.environ.get("FLASK_DEBUG") == "1":
+            raise ValueError("DEBUG mode must be disabled in production environment")
 
     # Default configuration
     app.config.update(
