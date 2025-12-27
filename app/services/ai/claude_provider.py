@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import os
 import time
 
@@ -16,6 +17,8 @@ from app.services.ai.base import (
     APICallError,
     APIKeyMissingError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ClaudeProvider(AIProvider):
@@ -200,7 +203,7 @@ class ClaudeProvider(AIProvider):
                     dishes.append(dish)
                 except Exception as e:
                     # Log error but continue with other dishes
-                    print(f"Warning: Failed to parse dish: {e}")
+                    logger.warning("Failed to parse dish: %s", e, exc_info=True)
                     continue
 
             if not dishes:
