@@ -131,3 +131,58 @@ def test_base_template_blocks_are_extendable(app):
         assert '<meta name="custom" content="test">' in rendered
         assert '<div id="test-content">Test</div>' in rendered
         assert "console.log('test')" in rendered
+
+
+def test_loading_component_renders(app):
+    """Test that loading component renders correctly."""
+    with app.test_request_context():
+        from flask import render_template
+
+        rendered = render_template("components/loading.html")
+
+        # Check for spinner container
+        assert 'loading-container' in rendered
+        assert 'animate-pulse' in rendered
+
+        # Check for spinner SVG
+        assert 'animate-spin' in rendered
+        assert '<svg' in rendered
+        assert '<circle' in rendered
+        assert '<path' in rendered
+
+        # Check for loading messages
+        assert 'メニューを解析中...' in rendered
+        assert '少々お待ちください' in rendered
+
+        # Check for progress bar
+        assert 'animate-progress' in rendered
+
+        # Check for skeleton UI
+        assert 'skeleton-container' in rendered
+        assert 'skeleton-card' in rendered
+
+
+def test_loading_component_has_required_animations(app):
+    """Test that loading component has all required animations."""
+    with app.test_request_context():
+        from flask import render_template
+
+        rendered = render_template("components/loading.html")
+
+        # Check for Tailwind animations
+        assert 'animate-pulse' in rendered
+        assert 'animate-spin' in rendered
+
+        # Check for custom animation
+        assert 'animate-progress' in rendered
+
+
+def test_loading_component_has_accessibility(app):
+    """Test that loading component has proper text for screen readers."""
+    with app.test_request_context():
+        from flask import render_template
+
+        rendered = render_template("components/loading.html")
+
+        # Check for user-friendly messages
+        assert 'メニューを解析中' in rendered or 'Loading' in rendered
