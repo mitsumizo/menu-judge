@@ -70,7 +70,6 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 // 許可される画像形式
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
 
 /**
  * 画像アップロードゾーンのAlpine.jsコンポーネント
