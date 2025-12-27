@@ -1,0 +1,32 @@
+<!-- スピナー版ローディング -->
+<div class="loading-container animate-pulse">
+    <!-- スピナー -->
+    <div class="flex justify-center mb-4">
+        <svg class="animate-spin h-12 w-12 text-primary" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10"
+                    stroke="currentColor" stroke-width="4" fill="none"/>
+            <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+    </div>
+
+    <!-- メッセージ -->
+    <p class="text-center text-lg">メニューを解析中...</p>
+    <p class="text-center text-sm text-slate-400">
+        少々お待ちください
+    </p>
+
+    <!-- プログレスバー（オプション） -->
+    <div class="mt-4 w-64 mx-auto">
+        <div class="h-2 bg-surface rounded-full overflow-hidden">
+            <div class="h-full bg-primary animate-progress"></div>
+        </div>
+    </div>
+</div>
+
+<!-- スケルトンUI版 -->
+<div class="skeleton-container space-y-4 hidden">
+    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
+    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
+    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
+</div>
