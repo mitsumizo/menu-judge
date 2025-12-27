@@ -143,17 +143,13 @@ function uploadZone() {
          * @param {File} file - プレビューを生成するファイル
          */
         generatePreview(file) {
-            const reader = new FileReader();
+            // 以前のプレビューURLを解放（メモリリーク防止）
+            if (this.preview) {
+                URL.revokeObjectURL(this.preview);
+            }
 
-            reader.onload = (e) => {
-                this.preview = e.target.result;
-            };
-
-            reader.onerror = () => {
-                showToast('画像の読み込みに失敗しました', 'error');
-            };
-
-            reader.readAsDataURL(file);
+            // URL.createObjectURLを使用（大きな画像でもメモリ効率が良い）
+            this.preview = URL.createObjectURL(file);
         },
 
         /**
@@ -163,6 +159,11 @@ function uploadZone() {
             // ファイル入力をリセット（同じファイルを再選択できるようにする）
             const fileInputs = this.$el.querySelectorAll('input[type="file"]');
             fileInputs.forEach(input => input.value = '');
+
+            // プレビューURLを解放（メモリリーク防止）
+            if (this.preview) {
+                URL.revokeObjectURL(this.preview);
+            }
 
             this.file = null;
             this.preview = null;
