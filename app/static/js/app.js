@@ -190,7 +190,7 @@ function uploadZone() {
             // または、Fetch APIを使用してアップロード
             fetch('/api/analyze', {
                 method: 'POST',
-                headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
+                headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
                 body: formData
             })
             .then(async response => {
