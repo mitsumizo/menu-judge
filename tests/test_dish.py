@@ -182,6 +182,36 @@ class TestDish:
         assert dish.price_range is None
         assert dish.image_url is None
 
+    def test_from_dict_with_invalid_category(self) -> None:
+        """無効なカテゴリの場合、Category.OTHERにフォールバック"""
+        data = {
+            "original_name": "Test Dish",
+            "japanese_name": "テスト料理",
+            "description": "無効なカテゴリのテスト",
+            "spiciness": 3,
+            "sweetness": 3,
+            "category": "invalid_category",  # 無効な値
+        }
+
+        dish = Dish.from_dict(data)
+
+        assert dish.category == Category.OTHER
+
+    def test_from_dict_with_invalid_price_range(self) -> None:
+        """無効な価格帯の場合、Noneにフォールバック"""
+        data = {
+            "original_name": "Test Dish",
+            "japanese_name": "テスト料理",
+            "description": "無効な価格帯のテスト",
+            "spiciness": 3,
+            "sweetness": 3,
+            "price_range": "$$$$$",  # 無効な値
+        }
+
+        dish = Dish.from_dict(data)
+
+        assert dish.price_range is None
+
     def test_roundtrip_to_dict_from_dict(self) -> None:
         """to_dictとfrom_dictのラウンドトリップテスト"""
         original_dish = Dish(
