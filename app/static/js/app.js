@@ -189,9 +189,10 @@ function uploadZone() {
                 headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
                 body: formData
             })
-            .then(response => {
+            .then(async response => {
                 if (!response.ok) {
-                    throw new Error('アップロードに失敗しました');
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `サーバーエラー: ${response.status}`);
                 }
                 return response.json();
             })
