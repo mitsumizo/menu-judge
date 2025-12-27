@@ -127,7 +127,8 @@ def test_max_upload_size_invalid_value_raises_error(monkeypatch):
     with pytest.raises(ValueError) as exc_info:
         create_app()
 
-    assert "Invalid MAX_UPLOAD_SIZE" in str(exc_info.value)
+    assert "MAX_UPLOAD_SIZE must be a valid integer" in str(exc_info.value)
+    assert "'invalid'" in str(exc_info.value)
 
 
 def test_max_upload_size_negative_value_raises_error(monkeypatch):
@@ -137,7 +138,8 @@ def test_max_upload_size_negative_value_raises_error(monkeypatch):
     with pytest.raises(ValueError) as exc_info:
         create_app()
 
-    assert "MAX_UPLOAD_SIZE must be positive" in str(exc_info.value)
+    assert "MAX_UPLOAD_SIZE must be a positive integer" in str(exc_info.value)
+    assert "-1" in str(exc_info.value)
 
 
 def test_upload_folder_outside_instance_raises_error():

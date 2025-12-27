@@ -32,12 +32,20 @@ def create_app(config: Optional[dict] = None) -> Flask:
             raise ValueError("DEBUG mode must be disabled in production environment")
 
     # Parse and validate MAX_UPLOAD_SIZE
-    try:
-        max_upload_size = int(os.environ.get("MAX_UPLOAD_SIZE", 10 * 1024 * 1024))
+    max_upload_size_raw = os.environ.get("MAX_UPLOAD_SIZE")
+    if max_upload_size_raw is None:
+        max_upload_size = 10 * 1024 * 1024  # Default: 10MB
+    else:
+        try:
+            max_upload_size = int(max_upload_size_raw)
+        except ValueError:
+            raise ValueError(
+                f"MAX_UPLOAD_SIZE must be a valid integer, got: '{max_upload_size_raw}'"
+            ) from None
         if max_upload_size <= 0:
-            raise ValueError("MAX_UPLOAD_SIZE must be positive")
-    except ValueError as e:
-        raise ValueError(f"Invalid MAX_UPLOAD_SIZE: {e}") from e
+            raise ValueError(
+                f"MAX_UPLOAD_SIZE must be a positive integer, got: {max_upload_size}"
+            )
 
     # Default configuration
     app.config.update(
