@@ -74,8 +74,10 @@ def create_app(config: dict | None = None) -> Flask:
 
     # Register blueprints
     from app.routes import main_bp
+    from app.routes.menu import menu_bp
 
     app.register_blueprint(main_bp)
+    app.register_blueprint(menu_bp)
 
     # Register context processor for template global functions
     @app.context_processor
