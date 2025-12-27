@@ -97,7 +97,7 @@
             <!-- プレビュー画像とローディングオーバーレイ -->
             <div class="relative" :class="isUploading ? 'opacity-75' : ''">
                 <img :src="preview"
-                     alt="アップロード画像のプレビュー"
+                     :alt="'プレビュー: ' + (file?.name || 'アップロード画像')"
                      class="max-h-64 w-auto mx-auto rounded-lg shadow-md">
 
                 <!-- アップロード中のオーバーレイ -->
