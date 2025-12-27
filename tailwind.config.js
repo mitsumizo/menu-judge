@@ -13,7 +13,9 @@ module.exports = {
         accent: '#F59E0B',
         background: '#0F172A',
         surface: '#1E293B',
-        'text-primary': '#F8FAFC',
+        text: {
+          primary: '#F8FAFC',
+        },
       },
     },
   },
