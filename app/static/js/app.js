@@ -54,7 +54,10 @@ function showToast(message, type = 'info', duration = TOAST_DEFAULT_DURATION) {
         toast.style.transform = 'translateX(100%)';
 
         setTimeout(() => {
-            container.removeChild(toast);
+            // 親要素が存在する場合のみ削除（メモリリーク防止）
+            if (toast.parentElement) {
+                container.removeChild(toast);
+            }
         }, TOAST_FADE_DURATION);
     }, duration);
 }
