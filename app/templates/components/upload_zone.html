@@ -37,6 +37,7 @@
     <div class="drop-zone border-2 border-dashed rounded-xl p-8 text-center
                 transition-all duration-300"
          :class="isDragging ? 'border-primary bg-primary/10' : 'border-slate-600 bg-surface'"
+         @dragenter.prevent="isDragging = true"
          @dragover.prevent="isDragging = true"
          @dragleave.prevent="isDragging = false"
          @drop.prevent="handleDrop($event)">
