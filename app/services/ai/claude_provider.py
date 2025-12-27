@@ -25,6 +25,7 @@ class ClaudeProvider(AIProvider):
     """Claude APIを使用した画像解析プロバイダー"""
 
     MODEL = "claude-3-5-sonnet-20241022"
+    MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB (matches CLAUDE.md spec)
 
     def __init__(self) -> None:
         """Initialize Claude provider."""
@@ -65,10 +66,17 @@ class ClaudeProvider(AIProvider):
 
         Raises:
             APIKeyMissingError: API key is not configured
-            APICallError: API call failed
+            APICallError: API call failed or image size exceeds limit
         """
         if not self.is_available():
             raise APIKeyMissingError("ANTHROPIC_API_KEY is not configured")
+
+        # Validate image size
+        if len(image_data) > self.MAX_IMAGE_SIZE:
+            raise APICallError(
+                f"Image size {len(image_data)} bytes exceeds maximum "
+                f"{self.MAX_IMAGE_SIZE} bytes"
+            )
 
         start_time = time.time()
 

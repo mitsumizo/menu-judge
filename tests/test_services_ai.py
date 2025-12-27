@@ -378,6 +378,19 @@ class TestClaudeProvider:
             with pytest.raises(APIKeyMissingError, match="ANTHROPIC_API_KEY is not configured"):
                 provider.analyze_menu(b"fake image data", "image/jpeg")
 
+    def test_analyze_menu_image_size_exceeds_limit(self):
+        """Test that analyze_menu raises APICallError when image size exceeds limit."""
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
+            provider = ClaudeProvider()
+
+            # Create image data larger than MAX_IMAGE_SIZE (10MB)
+            large_image_data = b"x" * (provider.MAX_IMAGE_SIZE + 1)
+
+            with pytest.raises(
+                APICallError, match="Image size .* bytes exceeds maximum .* bytes"
+            ):
+                provider.analyze_menu(large_image_data, "image/jpeg")
+
     @patch("anthropic.Anthropic")
     def test_analyze_menu_success(self, mock_anthropic_class):
         """Test successful menu analysis."""
