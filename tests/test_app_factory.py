@@ -8,16 +8,22 @@ import pytest
 from app import create_app
 
 
-def test_create_app_returns_flask_instance():
+def test_create_app_returns_flask_instance(monkeypatch):
     """Test that create_app returns a Flask application instance."""
+    monkeypatch.delenv("ENV", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+
     app = create_app()
 
     assert app is not None
     assert app.name == "app"
 
 
-def test_create_app_with_custom_config():
+def test_create_app_with_custom_config(monkeypatch):
     """Test that create_app accepts custom configuration."""
+    monkeypatch.delenv("ENV", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+
     custom_config = {
         "TESTING": True,
         "SECRET_KEY": "custom-test-key",
@@ -86,15 +92,21 @@ def test_max_upload_size_default(monkeypatch):
     assert app.config["MAX_CONTENT_LENGTH"] == 10 * 1024 * 1024
 
 
-def test_blueprint_is_registered():
+def test_blueprint_is_registered(monkeypatch):
     """Test that main blueprint is registered."""
+    monkeypatch.delenv("ENV", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+
     app = create_app()
 
     assert "main" in app.blueprints
 
 
-def test_upload_folder_is_created():
+def test_upload_folder_is_created(monkeypatch):
     """Test that UPLOAD_FOLDER directory is created."""
+    monkeypatch.delenv("ENV", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+
     app = create_app()
 
     upload_folder = Path(app.config["UPLOAD_FOLDER"])
@@ -142,8 +154,11 @@ def test_max_upload_size_negative_value_raises_error(monkeypatch):
     assert "-1" in str(exc_info.value)
 
 
-def test_upload_folder_outside_instance_raises_error():
+def test_upload_folder_outside_instance_raises_error(monkeypatch):
     """Test that UPLOAD_FOLDER outside instance directory is rejected."""
+    monkeypatch.delenv("ENV", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+
     with pytest.raises(ValueError) as exc_info:
         create_app({"UPLOAD_FOLDER": "/tmp/uploads"})
 
