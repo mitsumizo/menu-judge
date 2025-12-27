@@ -1,0 +1,84 @@
+{#
+料理カードコンポーネント
+
+使用方法:
+    {% from 'components/dish_card.html' import dish_card %}
+    {{ dish_card(dish) }}
+
+引数:
+    dish: Dishモデルのインスタンス
+#}
+
+{% macro dish_card(dish) %}
+<div class="dish-card bg-surface rounded-xl p-4 shadow-lg
+            hover:shadow-xl transition-all duration-300
+            border border-slate-700 hover:border-primary">
+
+    <!-- ヘッダー -->
+    <div class="flex justify-between items-start mb-3">
+        <div>
+            <h3 class="text-lg font-bold text-slate-50">
+                {{ dish.japanese_name }}
+            </h3>
+            <p class="text-sm text-slate-400">
+                {{ dish.original_name }}
+            </p>
+        </div>
+        {% if dish.price_range %}
+        <span class="px-2 py-1 bg-accent/20 text-accent rounded text-sm">
+            {{ dish.price_range.value }}
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- 説明 -->
+    <p class="text-slate-300 text-sm mb-3">
+        {{ dish.description }}
+    </p>
+
+    <!-- 辛さ・甘さインジケーター -->
+    <div class="flex gap-4 mb-3">
+        <div class="flex items-center gap-1">
+            <span class="text-sm">🌶️</span>
+            {% for i in range(5) %}
+                <span class="w-2 h-2 rounded-full
+                    {% if i < dish.spiciness %}bg-red-500{% else %}bg-slate-600{% endif %}">
+                </span>
+            {% endfor %}
+        </div>
+        <div class="flex items-center gap-1">
+            <span class="text-sm">🍯</span>
+            {% for i in range(5) %}
+                <span class="w-2 h-2 rounded-full
+                    {% if i < dish.sweetness %}bg-amber-500{% else %}bg-slate-600{% endif %}">
+                </span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 材料タグ -->
+    <div class="flex flex-wrap gap-1 mb-3">
+        {% for ingredient in dish.ingredients %}
+        <span class="px-2 py-0.5 bg-slate-700 rounded-full text-xs text-slate-300">
+            {{ ingredient }}
+        </span>
+        {% endfor %}
+    </div>
+
+    <!-- アレルギー警告 -->
+    {% if dish.allergens %}
+    <div class="mt-2 p-2 bg-red-500/10 border border-red-500/30 rounded">
+        <p class="text-xs text-red-400">
+            ⚠️ アレルギー: {{ dish.allergens | join(', ') }}
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- カテゴリバッジ -->
+    <div class="mt-3">
+        <span class="px-2 py-1 bg-primary/20 text-primary rounded text-xs">
+            {{ dish.category.value }}
+        </span>
+    </div>
+</div>
+{% endmacro %}
