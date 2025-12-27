@@ -243,3 +243,16 @@ class TestAnalyzeMenuEndpoint:
         assert response.json["success"] is False
         assert response.json["code"] == "INTERNAL_ERROR"
         assert "Internal server error" in response.json["error"]
+
+    def test_invalid_mime_type_with_valid_extension(self, client):
+        """有効な拡張子でも無効なMIMEタイプの場合、エラーを返す."""
+        img_bytes = create_test_image(format="PNG")
+        response = client.post(
+            "/api/analyze",
+            data={"image": (img_bytes, "test.png", "text/plain")},
+        )
+
+        assert response.status_code == 400
+        assert response.json["success"] is False
+        assert response.json["code"] == "INVALID_FILE"
+        assert "Invalid MIME type" in response.json["error"]
