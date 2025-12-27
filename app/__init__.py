@@ -55,7 +55,10 @@ def create_app(config: Optional[dict] = None) -> Flask:
         Path(app.instance_path).mkdir(parents=True, exist_ok=True)
         Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
     except OSError as e:
-        raise RuntimeError(f"Failed to create required directories: {e}") from e
+        raise RuntimeError(
+            f"Failed to create required directories at {app.instance_path} "
+            f"or {app.config['UPLOAD_FOLDER']}: {e}"
+        ) from e
 
     # Register blueprints
     from app.routes import main_bp
