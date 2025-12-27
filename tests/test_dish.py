@@ -53,7 +53,7 @@ class TestDish:
     @pytest.mark.parametrize("spiciness", [0, -1, 6, 10])
     def test_spiciness_validation_fails(self, spiciness: int) -> None:
         """spiciness が範囲外の場合にエラーが発生"""
-        with pytest.raises(ValueError, match="spiciness must be between 1 and 5"):
+        with pytest.raises(ValueError, match=f"spiciness must be 1-5, got {spiciness}"):
             Dish(
                 original_name="Test",
                 japanese_name="テスト",
@@ -65,7 +65,7 @@ class TestDish:
     @pytest.mark.parametrize("sweetness", [0, -1, 6, 10])
     def test_sweetness_validation_fails(self, sweetness: int) -> None:
         """sweetness が範囲外の場合にエラーが発生"""
-        with pytest.raises(ValueError, match="sweetness must be between 1 and 5"):
+        with pytest.raises(ValueError, match=f"sweetness must be 1-5, got {sweetness}"):
             Dish(
                 original_name="Test",
                 japanese_name="テスト",

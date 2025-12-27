@@ -5,6 +5,7 @@ and configuring the Flask application.
 """
 
 import os
+from datetime import datetime
 from pathlib import Path
 
 from flask import Flask
@@ -75,5 +76,11 @@ def create_app(config: dict | None = None) -> Flask:
     from app.routes import main_bp
 
     app.register_blueprint(main_bp)
+
+    # Register context processor for template global functions
+    @app.context_processor
+    def inject_now():
+        """Inject now function into Jinja2 templates."""
+        return {"now": datetime.now}
 
     return app

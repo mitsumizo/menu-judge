@@ -54,10 +54,17 @@ class Dish:
 
     def __post_init__(self) -> None:
         """バリデーション処理"""
+        # 型チェック
+        if not isinstance(self.spiciness, int):
+            raise ValueError(f"spiciness must be an integer, got {type(self.spiciness).__name__}")
+        if not isinstance(self.sweetness, int):
+            raise ValueError(f"sweetness must be an integer, got {type(self.sweetness).__name__}")
+
+        # 範囲チェック
         if not 1 <= self.spiciness <= 5:
-            raise ValueError(f"spiciness must be between 1 and 5, got {self.spiciness}")
+            raise ValueError(f"spiciness must be 1-5, got {self.spiciness}")
         if not 1 <= self.sweetness <= 5:
-            raise ValueError(f"sweetness must be between 1 and 5, got {self.sweetness}")
+            raise ValueError(f"sweetness must be 1-5, got {self.sweetness}")
 
     def to_dict(self) -> dict[str, Any]:
         """辞書に変換
@@ -87,7 +94,16 @@ class Dish:
 
         Returns:
             Dishインスタンス
+
+        Raises:
+            ValueError: 必須フィールドが欠けている場合
         """
+        # 必須フィールドのチェック
+        required_fields = ["original_name", "japanese_name", "description", "spiciness", "sweetness"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+
         # Enumの変換（無効な値はデフォルトにフォールバック）
         try:
             category = (
