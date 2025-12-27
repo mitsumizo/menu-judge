@@ -57,8 +57,9 @@ class AIProvider(ABC):
         """
         pass
 
+    @classmethod
     @abstractmethod
-    def is_available(self) -> bool:
+    def is_available(cls) -> bool:
         """
         Check if provider is available.
 
