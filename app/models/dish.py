@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class Category(Enum):
@@ -58,7 +59,7 @@ class Dish:
         if not 1 <= self.sweetness <= 5:
             raise ValueError(f"sweetness must be between 1 and 5, got {self.sweetness}")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """辞書に変換
 
         Returns:
@@ -87,13 +88,20 @@ class Dish:
         Returns:
             Dishインスタンス
         """
-        # Enumの変換
-        category = (
-            Category(data["category"])
-            if isinstance(data.get("category"), str)
-            else data.get("category", Category.OTHER)
-        )
-        price_range = PriceRange(data["price_range"]) if data.get("price_range") else None
+        # Enumの変換（無効な値はデフォルトにフォールバック）
+        try:
+            category = (
+                Category(data["category"])
+                if isinstance(data.get("category"), str)
+                else data.get("category", Category.OTHER)
+            )
+        except (ValueError, KeyError):
+            category = Category.OTHER
+
+        try:
+            price_range = PriceRange(data["price_range"]) if data.get("price_range") else None
+        except (ValueError, KeyError):
+            price_range = None
 
         return cls(
             original_name=data["original_name"],
