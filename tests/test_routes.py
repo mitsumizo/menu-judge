@@ -23,3 +23,17 @@ def test_unknown_endpoint_returns_404(client):
     response = client.get("/unknown-endpoint")
 
     assert response.status_code == 404
+
+
+def test_index_rejects_post_method(client):
+    """Test that POST method is not allowed on root endpoint."""
+    response = client.post("/")
+
+    assert response.status_code == 405
+
+
+def test_health_rejects_post_method(client):
+    """Test that POST method is not allowed on health endpoint."""
+    response = client.post("/health")
+
+    assert response.status_code == 405

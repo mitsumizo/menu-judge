@@ -118,3 +118,11 @@ def test_custom_config_overrides_max_content_length(monkeypatch):
     app = create_app({"MAX_CONTENT_LENGTH": 1024})
 
     assert app.config["MAX_CONTENT_LENGTH"] == 1024
+
+
+def test_max_upload_size_invalid_value_raises_error(monkeypatch):
+    """Test that invalid MAX_UPLOAD_SIZE raises ValueError."""
+    monkeypatch.setenv("MAX_UPLOAD_SIZE", "invalid")
+
+    with pytest.raises(ValueError):
+        create_app()
