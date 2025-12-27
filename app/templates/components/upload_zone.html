@@ -26,6 +26,7 @@
             <input type="file"
                    accept="image/*"
                    capture="environment"
+                   aria-label="カメラでメニューを撮影"
                    @change="handleFileSelect($event)"
                    class="hidden">
             <span class="text-xl">📷</span>
@@ -63,6 +64,7 @@
                           transition-all duration-200">
                 <input type="file"
                        accept=".jpg,.jpeg,.png,.webp"
+                       aria-label="メニュー画像を選択"
                        @change="handleFileSelect($event)"
                        class="hidden">
                 ファイルを選択
