@@ -35,7 +35,7 @@ def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def validate_image_file(file: FileStorage) -> tuple[bool, str | None]:
+def validate_image_file(file: FileStorage) -> tuple[bool, str | None, bytes | None]:
     """
     画像ファイルをバリデーション.
 
@@ -43,41 +43,40 @@ def validate_image_file(file: FileStorage) -> tuple[bool, str | None]:
         file: アップロードされたファイル
 
     Returns:
-        (バリデーション結果, エラーメッセージ)
+        (バリデーション結果, エラーメッセージ, 画像データ)
     """
     # ファイル名チェック
     if not file.filename:
-        return False, "No filename provided"
+        return False, "No filename provided", None
 
     # 拡張子チェック
     if not allowed_file(file.filename):
-        return False, f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+        return False, f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}", None
 
     # MIMEタイプチェック
     if file.content_type not in ALLOWED_MIME_TYPES:
-        return False, f"Invalid MIME type: {file.content_type}"
+        return False, f"Invalid MIME type: {file.content_type}", None
+
+    # ファイルを一度だけ読み込む
+    file.seek(0)
+    image_data = file.read()
+    file_size = len(image_data)
 
     # ファイルサイズチェック
-    file.seek(0, 2)  # ファイルの末尾に移動
-    file_size = file.tell()
-    file.seek(0)  # ファイルの先頭に戻す
-
     if file_size > MAX_FILE_SIZE:
-        return False, f"File size exceeds limit ({MAX_FILE_SIZE / (1024 * 1024):.0f}MB)"
+        return False, f"File size exceeds limit ({MAX_FILE_SIZE / (1024 * 1024):.0f}MB)", None
 
     if file_size == 0:
-        return False, "File is empty"
+        return False, "File is empty", None
 
     # 画像として読み込めるか検証
     try:
-        image_data = file.read()
-        file.seek(0)  # ファイルの先頭に戻す
         Image.open(BytesIO(image_data))
-    except Exception as e:
+    except (OSError, Image.UnidentifiedImageError) as e:
         logger.error(f"Failed to open image: {e}")
-        return False, "Invalid image file"
+        return False, "Invalid image file", None
 
-    return True, None
+    return True, None, image_data
 
 
 @menu_bp.route("/analyze", methods=["POST"])
@@ -115,14 +114,13 @@ def analyze_menu() -> Response:
         return jsonify({"success": False, "error": "No file selected", "code": "NO_FILE"}), 400
 
     # バリデーション
-    is_valid, error_message = validate_image_file(file)
+    is_valid, error_message, image_data = validate_image_file(file)
     if not is_valid:
         logger.warning(f"Validation failed: {error_message}")
         return jsonify({"success": False, "error": error_message, "code": "INVALID_FILE"}), 400
 
     try:
-        # 画像データを読み込む
-        image_data = file.read()
+        # バリデーション済みの画像データを使用
         mime_type = file.content_type or "image/jpeg"
 
         logger.info(f"Processing image: {file.filename}, size: {len(image_data)} bytes, MIME: {mime_type}")
