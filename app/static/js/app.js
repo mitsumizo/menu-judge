@@ -64,3 +64,150 @@ function showToast(message, type = 'info', duration = TOAST_DEFAULT_DURATION) {
 
 // グローバルに公開
 window.showToast = showToast;
+
+// ファイルサイズの定数（10MB）
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+// 許可される画像形式
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+
+/**
+ * 画像アップロードゾーンのAlpine.jsコンポーネント
+ * @returns {Object} Alpine.jsコンポーネントオブジェクト
+ */
+function uploadZone() {
+    return {
+        isDragging: false,
+        file: null,
+        preview: null,
+        isUploading: false,
+
+        /**
+         * ファイル選択イベントハンドラ
+         * @param {Event} event - ファイル選択イベント
+         */
+        handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.processFile(file);
+            }
+        },
+
+        /**
+         * ドロップイベントハンドラ
+         * @param {DragEvent} event - ドロップイベント
+         */
+        handleDrop(event) {
+            this.isDragging = false;
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                this.processFile(file);
+            }
+        },
+
+        /**
+         * ファイルを処理する（バリデーション・プレビュー生成）
+         * @param {File} file - 処理するファイル
+         */
+        processFile(file) {
+            // ファイルタイプのバリデーション
+            if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+                showToast(
+                    '対応していない画像形式です。JPEG、PNG、WebPのいずれかを選択してください。',
+                    'error'
+                );
+                return;
+            }
+
+            // ファイルサイズのバリデーション
+            if (file.size > MAX_FILE_SIZE) {
+                showToast(
+                    'ファイルサイズが大きすぎます。10MB以下の画像を選択してください。',
+                    'error'
+                );
+                return;
+            }
+
+            // ファイルを保存
+            this.file = file;
+
+            // プレビュー生成
+            this.generatePreview(file);
+
+            showToast('画像を読み込みました', 'success');
+        },
+
+        /**
+         * プレビュー画像を生成する
+         * @param {File} file - プレビューを生成するファイル
+         */
+        generatePreview(file) {
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                this.preview = e.target.result;
+            };
+
+            reader.onerror = () => {
+                showToast('画像の読み込みに失敗しました', 'error');
+            };
+
+            reader.readAsDataURL(file);
+        },
+
+        /**
+         * ファイルをクリアする
+         */
+        clearFile() {
+            this.file = null;
+            this.preview = null;
+            this.isUploading = false;
+        },
+
+        /**
+         * ファイルをアップロードして解析を開始する
+         */
+        uploadFile() {
+            if (!this.file) {
+                showToast('ファイルが選択されていません', 'error');
+                return;
+            }
+
+            this.isUploading = true;
+
+            const formData = new FormData();
+            formData.append('image', this.file);
+
+            // HTMX経由でアップロード（hx-post属性を使用する場合）
+            // または、Fetch APIを使用してアップロード
+            fetch('/api/analyze', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('アップロードに失敗しました');
+                }
+                return response.json();
+            })
+            .then(data => {
+                this.isUploading = false;
+                if (data.success) {
+                    showToast('解析が完了しました', 'success');
+                    // 結果を表示（HTMXまたはAlpine.jsで処理）
+                    // この部分は後で実装
+                } else {
+                    showToast(data.error || '解析に失敗しました', 'error');
+                }
+            })
+            .catch(error => {
+                this.isUploading = false;
+                showToast(error.message || 'エラーが発生しました', 'error');
+            });
+        }
+    };
+}
+
+// グローバルに公開
+window.uploadZone = uploadZone;
