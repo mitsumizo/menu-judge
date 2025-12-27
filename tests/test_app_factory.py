@@ -1,6 +1,7 @@
 """Tests for the application factory."""
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -90,3 +91,30 @@ def test_blueprint_is_registered():
     app = create_app()
 
     assert "main" in app.blueprints
+
+
+def test_upload_folder_is_created():
+    """Test that UPLOAD_FOLDER directory is created."""
+    app = create_app()
+
+    upload_folder = Path(app.config["UPLOAD_FOLDER"])
+    assert upload_folder.exists()
+    assert upload_folder.is_dir()
+
+
+def test_custom_config_overrides_env_vars(monkeypatch):
+    """Test that custom config takes precedence over environment variables."""
+    monkeypatch.setenv("SECRET_KEY", "env-secret-key")
+
+    app = create_app({"SECRET_KEY": "custom-secret-key"})
+
+    assert app.config["SECRET_KEY"] == "custom-secret-key"
+
+
+def test_custom_config_overrides_max_content_length(monkeypatch):
+    """Test that custom config overrides MAX_CONTENT_LENGTH from env."""
+    monkeypatch.setenv("MAX_UPLOAD_SIZE", "5242880")
+
+    app = create_app({"MAX_CONTENT_LENGTH": 1024})
+
+    assert app.config["MAX_CONTENT_LENGTH"] == 1024
