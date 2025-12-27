@@ -70,5 +70,5 @@ class AIProviderFactory:
         return [
             name
             for name, prov_cls in cls._providers.items()
-            if prov_cls().is_available()
+            if prov_cls.is_available()
         ]
