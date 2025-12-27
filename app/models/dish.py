@@ -1,6 +1,4 @@
-"""Dish data model for menu analysis results."""
-
-from __future__ import annotations
+"""料理データモデル"""
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -8,7 +6,7 @@ from typing import Any
 
 
 class Category(Enum):
-    """Dish category."""
+    """料理のカテゴリ"""
 
     APPETIZER = "appetizer"
     MAIN = "main"
@@ -18,7 +16,7 @@ class Category(Enum):
 
 
 class PriceRange(Enum):
-    """Price range indicator."""
+    """価格帯"""
 
     BUDGET = "$"
     MODERATE = "$$"
@@ -28,20 +26,19 @@ class PriceRange(Enum):
 
 @dataclass
 class Dish:
-    """
-    Dish data model representing a menu item.
+    """料理データモデル
 
     Attributes:
-        original_name: Original name of the dish
-        japanese_name: Japanese translation of the dish name
-        description: Description of the dish
-        spiciness: Spiciness level (1-5)
-        sweetness: Sweetness level (1-5)
-        ingredients: List of ingredients
-        allergens: List of allergens
-        category: Dish category
-        price_range: Price range indicator
-        image_url: Optional image URL
+        original_name: 料理の原語名
+        japanese_name: 料理の日本語名
+        description: 料理の説明
+        spiciness: 辛さレベル（1-5）
+        sweetness: 甘さレベル（1-5）
+        ingredients: 材料のリスト
+        allergens: アレルゲンのリスト
+        category: 料理のカテゴリ
+        price_range: 価格帯
+        image_url: 画像URL
     """
 
     original_name: str
@@ -56,25 +53,17 @@ class Dish:
     image_url: str | None = None
 
     def __post_init__(self) -> None:
-        """Validate spiciness and sweetness values."""
-        # Type validation
-        if not isinstance(self.spiciness, int):
-            raise ValueError(f"spiciness must be an integer, got {type(self.spiciness).__name__}")
-        if not isinstance(self.sweetness, int):
-            raise ValueError(f"sweetness must be an integer, got {type(self.sweetness).__name__}")
-
-        # Range validation
+        """バリデーション処理"""
         if not 1 <= self.spiciness <= 5:
-            raise ValueError(f"spiciness must be 1-5, got {self.spiciness}")
+            raise ValueError(f"spiciness must be between 1 and 5, got {self.spiciness}")
         if not 1 <= self.sweetness <= 5:
-            raise ValueError(f"sweetness must be 1-5, got {self.sweetness}")
+            raise ValueError(f"sweetness must be between 1 and 5, got {self.sweetness}")
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Convert Dish to dictionary.
+        """辞書に変換
 
         Returns:
-            Dictionary representation of the Dish
+            料理データの辞書表現
         """
         return {
             "original_name": self.original_name,
@@ -90,38 +79,29 @@ class Dish:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Dish:
-        """
-        Create Dish from dictionary.
+    def from_dict(cls, data: dict) -> "Dish":
+        """辞書から生成
 
         Args:
-            data: Dictionary containing dish data
+            data: 料理データの辞書
 
         Returns:
-            Dish instance
-
-        Raises:
-            ValueError: If required fields are missing or invalid
+            Dishインスタンス
         """
-        # Validate required fields
-        required_fields = [
-            "original_name",
-            "japanese_name",
-            "description",
-            "spiciness",
-            "sweetness",
-        ]
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+        # Enumの変換（無効な値はデフォルトにフォールバック）
+        try:
+            category = (
+                Category(data["category"])
+                if isinstance(data.get("category"), str)
+                else data.get("category", Category.OTHER)
+            )
+        except (ValueError, KeyError):
+            category = Category.OTHER
 
-        category = data.get("category", "other")
-        if isinstance(category, str):
-            category = Category(category)
-
-        price_range = data.get("price_range")
-        if isinstance(price_range, str):
-            price_range = PriceRange(price_range)
+        try:
+            price_range = PriceRange(data["price_range"]) if data.get("price_range") else None
+        except (ValueError, KeyError):
+            price_range = None
 
         return cls(
             original_name=data["original_name"],

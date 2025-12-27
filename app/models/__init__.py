@@ -1,4 +1,4 @@
-"""Data models for the application."""
+"""データモデル"""
 
 from app.models.dish import Category, Dish, PriceRange
 
