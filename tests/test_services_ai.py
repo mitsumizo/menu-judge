@@ -424,14 +424,21 @@ class TestClaudeProvider:
     @patch("anthropic.Anthropic")
     def test_analyze_menu_api_error(self, mock_anthropic_class):
         """Test that API errors are properly handled."""
+        import anthropic
+
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
             mock_client = MagicMock()
             mock_anthropic_class.return_value = mock_client
 
-            # Simulate API error (use generic Exception to avoid anthropic.APIError initialization issues)
-            mock_client.messages.create.side_effect = Exception("API Error")
+            # Simulate API error with properly mocked anthropic.APIError
+            api_error = anthropic.APIError(
+                message="API Error",
+                request=MagicMock(),
+                body=None,
+            )
+            mock_client.messages.create.side_effect = api_error
 
             provider = ClaudeProvider()
 
-            with pytest.raises(APICallError, match="Unexpected error during analysis"):
+            with pytest.raises(APICallError, match="Claude API call failed"):
                 provider.analyze_menu(b"fake image data", "image/jpeg")
