@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-from app import create_app
+from app import create_app  # noqa: E402 (must load .env first)
 
 app = create_app()
 

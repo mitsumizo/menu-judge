@@ -6,12 +6,11 @@ and configuring the Flask application.
 
 import os
 from pathlib import Path
-from typing import Optional
 
 from flask import Flask
 
 
-def create_app(config: Optional[dict] = None) -> Flask:
+def create_app(config: dict | None = None) -> Flask:
     """Create and configure the Flask application.
 
     Args:
@@ -43,9 +42,7 @@ def create_app(config: Optional[dict] = None) -> Flask:
                 f"MAX_UPLOAD_SIZE must be a valid integer, got: '{max_upload_size_raw}'"
             ) from None
         if max_upload_size <= 0:
-            raise ValueError(
-                f"MAX_UPLOAD_SIZE must be a positive integer, got: {max_upload_size}"
-            )
+            raise ValueError(f"MAX_UPLOAD_SIZE must be a positive integer, got: {max_upload_size}")
 
     # Default configuration
     app.config.update(
@@ -62,9 +59,7 @@ def create_app(config: Optional[dict] = None) -> Flask:
     upload_folder = Path(app.config["UPLOAD_FOLDER"]).resolve()
     instance_path = Path(app.instance_path).resolve()
     if not upload_folder.is_relative_to(instance_path):
-        raise ValueError(
-            f"UPLOAD_FOLDER must be within instance directory: {instance_path}"
-        )
+        raise ValueError(f"UPLOAD_FOLDER must be within instance directory: {instance_path}")
 
     # Ensure instance and upload folders exist
     try:
