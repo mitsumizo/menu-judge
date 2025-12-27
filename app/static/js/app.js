@@ -179,10 +179,14 @@ function uploadZone() {
             const formData = new FormData();
             formData.append('image', this.file);
 
+            // CSRFトークンを取得
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
             // HTMX経由でアップロード（hx-post属性を使用する場合）
             // または、Fetch APIを使用してアップロード
             fetch('/api/analyze', {
                 method: 'POST',
+                headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
                 body: formData
             })
             .then(response => {
