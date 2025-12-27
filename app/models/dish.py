@@ -57,6 +57,13 @@ class Dish:
 
     def __post_init__(self) -> None:
         """Validate spiciness and sweetness values."""
+        # Type validation
+        if not isinstance(self.spiciness, int):
+            raise ValueError(f"spiciness must be an integer, got {type(self.spiciness).__name__}")
+        if not isinstance(self.sweetness, int):
+            raise ValueError(f"sweetness must be an integer, got {type(self.sweetness).__name__}")
+
+        # Range validation
         if not 1 <= self.spiciness <= 5:
             raise ValueError(f"spiciness must be 1-5, got {self.spiciness}")
         if not 1 <= self.sweetness <= 5:
@@ -96,6 +103,18 @@ class Dish:
         Raises:
             ValueError: If required fields are missing or invalid
         """
+        # Validate required fields
+        required_fields = [
+            "original_name",
+            "japanese_name",
+            "description",
+            "spiciness",
+            "sweetness",
+        ]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+
         category = data.get("category", "other")
         if isinstance(category, str):
             category = Category(category)

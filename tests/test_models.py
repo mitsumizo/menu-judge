@@ -134,6 +134,28 @@ class TestDish:
         )
         assert dish_max.sweetness == 5
 
+    def test_spiciness_type_validation(self):
+        """Test that spiciness must be an integer."""
+        with pytest.raises(ValueError, match="spiciness must be an integer"):
+            Dish(
+                original_name="Invalid Type",
+                japanese_name="無効な型",
+                description="辛さが文字列",
+                spiciness=3.5,  # type: ignore
+                sweetness=3,
+            )
+
+    def test_sweetness_type_validation(self):
+        """Test that sweetness must be an integer."""
+        with pytest.raises(ValueError, match="sweetness must be an integer"):
+            Dish(
+                original_name="Invalid Type",
+                japanese_name="無効な型",
+                description="甘さが文字列",
+                spiciness=3,
+                sweetness="3",  # type: ignore
+            )
+
     def test_to_dict(self):
         """Test converting Dish to dictionary."""
         dish = Dish(
@@ -272,6 +294,30 @@ class TestDish:
 
         assert dish.category == Category.APPETIZER
         assert dish.price_range == PriceRange.BUDGET
+
+    def test_from_dict_missing_required_fields(self):
+        """Test from_dict raises ValueError when required fields are missing."""
+        # Missing original_name
+        data = {
+            "japanese_name": "テスト",
+            "description": "説明",
+            "spiciness": 1,
+            "sweetness": 1,
+        }
+        with pytest.raises(ValueError, match="Missing required fields: original_name"):
+            Dish.from_dict(data)
+
+    def test_from_dict_missing_multiple_required_fields(self):
+        """Test from_dict raises ValueError with all missing fields listed."""
+        # Missing multiple fields
+        data = {
+            "original_name": "Test",
+        }
+        with pytest.raises(
+            ValueError,
+            match="Missing required fields: japanese_name, description, spiciness, sweetness",
+        ):
+            Dish.from_dict(data)
 
 
 class TestCategory:
