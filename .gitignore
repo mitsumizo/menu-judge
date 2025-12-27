@@ -6,6 +6,7 @@ __pycache__/
 .Python
 venv/
 env/
+ENV/
 .venv/
 *.egg-info/
 .eggs/
@@ -18,24 +19,11 @@ instance/
 # Dependencies
 node_modules/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-ENV/
-.venv
-
 # Build outputs
 dist/
 build/
 .next/
 out/
-*.egg-info/
-.eggs/
 app/static/css/app.css
 
 # Environment files
@@ -63,7 +51,6 @@ yarn-error.log*
 coverage/
 .coverage
 htmlcov/
-.pytest_cache/
 
 # Cache
 .cache/
