@@ -1,4 +1,11 @@
-"""Menu analysis route handlers."""
+"""Menu analysis route handlers.
+
+API Error Codes:
+- NO_FILE: No image file provided or empty filename
+- INVALID_FILE: File validation failed (extension, MIME type, size, or format)
+- AI_ERROR: AI provider analysis failed
+- INTERNAL_ERROR: Unexpected server error
+"""
 
 import logging
 import time
