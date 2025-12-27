@@ -138,3 +138,11 @@ def test_max_upload_size_negative_value_raises_error(monkeypatch):
         create_app()
 
     assert "MAX_UPLOAD_SIZE must be positive" in str(exc_info.value)
+
+
+def test_upload_folder_outside_instance_raises_error():
+    """Test that UPLOAD_FOLDER outside instance directory is rejected."""
+    with pytest.raises(ValueError) as exc_info:
+        create_app({"UPLOAD_FOLDER": "/tmp/uploads"})
+
+    assert "must be within instance directory" in str(exc_info.value)

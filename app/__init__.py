@@ -50,6 +50,14 @@ def create_app(config: Optional[dict] = None) -> Flask:
     if config:
         app.config.update(config)
 
+    # Validate UPLOAD_FOLDER path to prevent directory traversal
+    upload_folder = Path(app.config["UPLOAD_FOLDER"]).resolve()
+    instance_path = Path(app.instance_path).resolve()
+    if not upload_folder.is_relative_to(instance_path):
+        raise ValueError(
+            f"UPLOAD_FOLDER must be within instance directory: {instance_path}"
+        )
+
     # Ensure instance and upload folders exist
     try:
         Path(app.instance_path).mkdir(parents=True, exist_ok=True)
