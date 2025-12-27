@@ -1,4 +1,6 @@
 <div id="error-message"
+     role="alert"
+     aria-live="assertive"
      class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 animate-shake">
     <div class="flex items-start gap-3">
         <!-- エラーアイコン -->
@@ -25,6 +27,7 @@
             <!-- リトライボタン -->
             <button class="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30
                            text-red-400 rounded transition-colors"
+                    aria-label="エラーメッセージを閉じる"
                     onclick="document.getElementById('error-message').remove()">
                 閉じる
             </button>
