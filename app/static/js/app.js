@@ -212,7 +212,12 @@ function uploadZone() {
             })
             .catch(error => {
                 this.isUploading = false;
-                showToast(error.message || 'エラーが発生しました', 'error');
+                // ネットワークエラー（オフライン、タイムアウト、CORS等）とAPIエラーを区別
+                if (error instanceof TypeError) {
+                    showToast('ネットワークエラー: 接続を確認してください', 'error');
+                } else {
+                    showToast(error.message || 'エラーが発生しました', 'error');
+                }
             });
         }
     };
