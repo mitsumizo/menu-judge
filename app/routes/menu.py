@@ -41,6 +41,46 @@ def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def _create_error_response(
+    error_message: str, error_code: str, status_code: int, title: str = "エラー"
+) -> Response | tuple[Response, int]:
+    """
+    エラーレスポンスを作成（リクエストタイプに応じてJSONまたはHTML）.
+
+    Args:
+        error_message: エラーメッセージ
+        error_code: エラーコード
+        status_code: HTTPステータスコード
+        title: HTMLレスポンスのタイトル
+
+    Returns:
+        FlaskのResponseまたは(Response, status_code)のタプル
+    """
+    # HTMXリクエストの場合はHTMLパーシャルを返す
+    if request.headers.get("HX-Request") == "true":
+        return (
+            render_template(
+                "partials/error.html",
+                title=title,
+                message=error_message,
+                code=error_code,
+            ),
+            status_code,
+        )
+
+    # 通常のリクエストの場合はJSONを返す
+    return (
+        jsonify(
+            {
+                "success": False,
+                "error": error_message,
+                "code": error_code,
+            }
+        ),
+        status_code,
+    )
+
+
 def validate_image_file(file: FileStorage) -> tuple[bool, str | None, bytes | None]:
     """
     画像ファイルをバリデーション.
@@ -159,55 +199,17 @@ def analyze_menu() -> Response:
 
     except AIProviderError as e:
         logger.error(f"AI provider error: {e}")
-        error_message = f"AI analysis failed: {str(e)}"
-        error_code = "AI_ERROR"
-
-        # HTMXリクエストの場合はHTMLパーシャルを返す
-        if request.headers.get("HX-Request") == "true":
-            return (
-                render_template(
-                    "partials/error.html",
-                    title="AI解析エラー",
-                    message=error_message,
-                    code=error_code,
-                ),
-                500,
-            )
-
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": error_message,
-                    "code": error_code,
-                }
-            ),
-            500,
+        return _create_error_response(
+            error_message=f"AI analysis failed: {str(e)}",
+            error_code="AI_ERROR",
+            status_code=500,
+            title="AI解析エラー",
         )
     except Exception as e:
         logger.error(f"Unexpected error: {e}", exc_info=True)
-        error_message = "Internal server error"
-        error_code = "INTERNAL_ERROR"
-
-        # HTMXリクエストの場合はHTMLパーシャルを返す
-        if request.headers.get("HX-Request") == "true":
-            return (
-                render_template(
-                    "partials/error.html",
-                    title="予期しないエラー",
-                    message=error_message,
-                    code=error_code,
-                ),
-                500,
-            )
-
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": error_message,
-                    "code": error_code,
-                }
-            ),
-            500,
+        return _create_error_response(
+            error_message="Internal server error",
+            error_code="INTERNAL_ERROR",
+            status_code=500,
+            title="予期しないエラー",
         )
