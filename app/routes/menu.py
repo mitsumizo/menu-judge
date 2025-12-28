@@ -159,24 +159,54 @@ def analyze_menu() -> Response:
 
     except AIProviderError as e:
         logger.error(f"AI provider error: {e}")
+        error_message = f"AI analysis failed: {str(e)}"
+        error_code = "AI_ERROR"
+
+        # HTMXリクエストの場合はHTMLパーシャルを返す
+        if request.headers.get("HX-Request") == "true":
+            return (
+                render_template(
+                    "partials/error.html",
+                    title="AI解析エラー",
+                    message=error_message,
+                    code=error_code,
+                ),
+                500,
+            )
+
         return (
             jsonify(
                 {
                     "success": False,
-                    "error": f"AI analysis failed: {str(e)}",
-                    "code": "AI_ERROR",
+                    "error": error_message,
+                    "code": error_code,
                 }
             ),
             500,
         )
     except Exception as e:
         logger.error(f"Unexpected error: {e}", exc_info=True)
+        error_message = "Internal server error"
+        error_code = "INTERNAL_ERROR"
+
+        # HTMXリクエストの場合はHTMLパーシャルを返す
+        if request.headers.get("HX-Request") == "true":
+            return (
+                render_template(
+                    "partials/error.html",
+                    title="予期しないエラー",
+                    message=error_message,
+                    code=error_code,
+                ),
+                500,
+            )
+
         return (
             jsonify(
                 {
                     "success": False,
-                    "error": "Internal server error",
-                    "code": "INTERNAL_ERROR",
+                    "error": error_message,
+                    "code": error_code,
                 }
             ),
             500,

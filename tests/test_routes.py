@@ -170,6 +170,30 @@ class TestAnalyzeRoute:
         assert response.status_code == 500
         assert response.get_json()["code"] == "AI_ERROR"
 
+    @patch("app.routes.menu.AIProviderFactory.create")
+    def test_api_error_handling_htmx(self, mock_factory, client, sample_image):
+        """APIエラーハンドリングテスト（HTMX）."""
+        mock_factory.return_value.analyze_menu.side_effect = AIProviderError("API Error")
+
+        data = {"image": (BytesIO(sample_image), "menu.jpg")}
+        response = client.post("/api/analyze", data=data, headers={"HX-Request": "true"})
+
+        assert response.status_code == 500
+        assert b"error-message" in response.data  # エラーパーシャルが返される
+        assert b"AI_ERROR" in response.data  # エラーコードが含まれる
+
+    @patch("app.routes.menu.AIProviderFactory.create")
+    def test_unexpected_error_htmx(self, mock_factory, client, sample_image):
+        """予期しないエラーハンドリングテスト（HTMX）."""
+        mock_factory.return_value.analyze_menu.side_effect = Exception("Unexpected error")
+
+        data = {"image": (BytesIO(sample_image), "menu.jpg")}
+        response = client.post("/api/analyze", data=data, headers={"HX-Request": "true"})
+
+        assert response.status_code == 500
+        assert b"error-message" in response.data  # エラーパーシャルが返される
+        assert b"INTERNAL_ERROR" in response.data  # エラーコードが含まれる
+
 
 def test_unknown_endpoint_returns_404(client):
     """Test that unknown endpoints return 404."""
