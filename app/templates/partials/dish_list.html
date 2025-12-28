@@ -1,0 +1,35 @@
+{#
+料理リストパーシャル - HTMX用
+
+このテンプレートは/api/analyzeエンドポイントからHTMXリクエスト時に返される
+料理リストを表示する部分的HTMLです。
+
+引数:
+    dishes: Dishモデルのインスタンスのリスト
+    provider: 使用したAIプロバイダー名
+    processing_time: 処理時間（秒）
+#}
+{% from 'components/dish_card.html' import dish_card %}
+
+<div id="dish-list" class="space-y-4">
+    {% if dishes %}
+        <!-- メタ情報 -->
+        <div class="mb-4 p-3 bg-slate-800 rounded-lg">
+            <p class="text-sm text-slate-400">
+                {{ dishes|length }}件の料理を{{ provider }}で解析しました
+                （{{ "%.2f"|format(processing_time) }}秒）
+            </p>
+        </div>
+
+        <!-- 料理カードリスト -->
+        <div class="grid gap-4 md:grid-cols-2">
+            {% for dish in dishes %}
+                {{ dish_card(dish) }}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="p-4 bg-slate-800 rounded-lg text-center">
+            <p class="text-slate-400">料理が見つかりませんでした</p>
+        </div>
+    {% endif %}
+</div>
