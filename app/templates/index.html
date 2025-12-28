@@ -26,7 +26,8 @@
               @htmx:before-request="analyzing = true"
               @htmx:after-request="analyzing = false">
 
-            {% include 'components/upload_zone.html' %}
+            {% from 'components/upload_zone.html' import upload_zone %}
+            {{ upload_zone() }}
 
             <!-- 解析ボタン -->
             <div class="mt-4 text-center">
