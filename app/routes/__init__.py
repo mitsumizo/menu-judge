@@ -3,24 +3,19 @@
 This module defines and exports the main Blueprint for the application.
 """
 
-from flask import Blueprint, Response, jsonify
+from flask import Blueprint, Response, jsonify, render_template
 
 main_bp = Blueprint("main", __name__)
 
 
 @main_bp.route("/")
-def index() -> Response:
-    """Root endpoint returning application status.
+def index() -> str:
+    """Root endpoint showing the main menu analysis page.
 
     Returns:
-        JSON response with application status and message.
+        Rendered HTML template for the main page.
     """
-    return jsonify(
-        {
-            "status": "ok",
-            "message": "Menu Judge API is running",
-        }
-    )
+    return render_template("index.html")
 
 
 @main_bp.route("/health")
