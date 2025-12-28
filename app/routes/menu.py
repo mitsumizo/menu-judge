@@ -12,7 +12,7 @@ import time
 from io import BytesIO
 from typing import Any
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response, jsonify, render_template, request
 from PIL import Image
 from werkzeug.datastructures import FileStorage
 
@@ -139,15 +139,26 @@ def analyze_menu() -> Response:
         # メニュー解析
         result = provider.analyze_menu(image_data, mime_type)
 
-        # レスポンス作成
+        processing_time = time.time() - start_time
+
+        logger.info(f"Analysis complete: {len(result.dishes)} dishes found in {processing_time:.2f}s")
+
+        # HTMXリクエストの場合はパーシャルを返す
+        if request.headers.get("HX-Request"):
+            return render_template(
+                "partials/dish_list.html",
+                dishes=result.dishes,
+                provider=result.provider,
+                processing_time=processing_time,
+            )
+
+        # 通常リクエストの場合はJSONを返す
         response_data: dict[str, Any] = {
             "success": True,
             "dishes": [dish.to_dict() for dish in result.dishes],
             "provider": result.provider,
-            "processing_time": time.time() - start_time,
+            "processing_time": processing_time,
         }
-
-        logger.info(f"Analysis complete: {len(result.dishes)} dishes found in {response_data['processing_time']:.2f}s")
 
         return jsonify(response_data), 200
 
