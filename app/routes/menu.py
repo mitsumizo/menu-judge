@@ -8,7 +8,6 @@ API Error Codes:
 """
 
 import logging
-import time
 from io import BytesIO
 from typing import Any
 
@@ -106,8 +105,6 @@ def analyze_menu() -> Response:
     Returns:
         JSON形式の解析結果
     """
-    start_time = time.time()
-
     # ファイル存在チェック
     if "image" not in request.files:
         logger.warning("No image file in request")
@@ -144,10 +141,10 @@ def analyze_menu() -> Response:
             "success": True,
             "dishes": [dish.to_dict() for dish in result.dishes],
             "provider": result.provider,
-            "processing_time": time.time() - start_time,
+            "processing_time": result.processing_time,
         }
 
-        logger.info(f"Analysis complete: {len(result.dishes)} dishes found in {response_data['processing_time']:.2f}s")
+        logger.info(f"Analysis complete: {len(result.dishes)} dishes found in {result.processing_time:.2f}s")
 
         # HTMXリクエストの場合はHTMLパーシャルを返す
         if request.headers.get("HX-Request") == "true":
