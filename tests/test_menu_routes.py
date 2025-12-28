@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 from PIL import Image
 
 from app.models.dish import Category, Dish, PriceRange
-from app.services.ai.base import AIProviderError, AnalysisResult
+from app.services.ai.base import AIProviderError, AnalysisResult, InvalidMenuImageError
 
 
 def create_test_image(format="PNG", size=(100, 100), color="red"):
@@ -292,11 +292,12 @@ class TestAnalyzeMenuEndpoint:
 
     @patch("app.routes.menu.AIProviderFactory.create")
     def test_htmx_request_with_empty_dishes(self, mock_factory, client):
-        """HTMXリクエストで料理が検出されない場合、空結果のHTMLを返す."""
-        # モックの設定（空の結果）
+        """HTMXリクエストで料理が検出されない場合、エラーHTMLを返す."""
+        # モックの設定（InvalidMenuImageErrorを発生させる）
         mock_provider = Mock()
-        empty_result = AnalysisResult(dishes=[], raw_response="mock response", provider="mock", processing_time=0.5)
-        mock_provider.analyze_menu.return_value = empty_result
+        mock_provider.analyze_menu.side_effect = InvalidMenuImageError(
+            "画像からメニューを検出できませんでした。メニュー表の写真であることを確認してください。"
+        )
         mock_factory.return_value = mock_provider
 
         # テスト画像を生成
@@ -307,10 +308,10 @@ class TestAnalyzeMenuEndpoint:
             "/api/analyze",
             data={"image": (img_bytes, "test.png")},
             content_type="multipart/form-data",
-            headers={"HX-Request": "true"},
+            headers={"HX-Request": "true", "X-API-Key": "test-key"},
         )
 
-        assert response.status_code == 200
-        assert response.content_type == "text/html; charset=utf-8"
-        assert b"dish-list" in response.data
-        assert b"\xe6\x96\x99\xe7\x90\x86\xe3\x81\x8c\xe6\xa4\x9c\xe5\x87\xba" in response.data  # 料理が検出されませんでした
+        assert response.status_code == 400
+        assert response.content_type.startswith("text/html")
+        assert b"INVALID_MENU_IMAGE" in response.headers.get("X-Error-Code", "").encode()
+        assert "画像からメニューを検出できませんでした".encode() in response.data

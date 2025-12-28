@@ -13,6 +13,7 @@ from app.services.ai.base import (
     AnalysisResult,
     APICallError,
     APIKeyMissingError,
+    InvalidMenuImageError,
 )
 from app.services.ai.claude_provider import ClaudeProvider
 from app.services.ai.factory import AIProviderFactory, UnknownProviderError
@@ -330,14 +331,13 @@ class TestClaudeProvider:
                 provider._parse_response(json.dumps(response_json))
 
     def test_parse_response_empty_dishes(self):
-        """Test that empty dishes list raises APICallError."""
-        with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+        """Test that empty dishes list raises InvalidMenuImageError."""
+        provider = ClaudeProvider(api_key="test-api-key")
 
-            response_json = {"dishes": []}
+        response_json = {"dishes": []}
 
-            with pytest.raises(APICallError, match="No valid dishes found in response"):
-                provider._parse_response(json.dumps(response_json))
+        with pytest.raises(InvalidMenuImageError, match="画像からメニューを検出できませんでした"):
+            provider._parse_response(json.dumps(response_json))
 
     def test_parse_response_skips_invalid_dishes(self):
         """Test that invalid dishes are skipped but valid ones are kept."""

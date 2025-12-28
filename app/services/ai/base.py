@@ -83,3 +83,9 @@ class APICallError(AIProviderError):
     """API call failed."""
 
     pass
+
+
+class InvalidMenuImageError(AIProviderError):
+    """Image does not appear to be a menu."""
+
+    pass

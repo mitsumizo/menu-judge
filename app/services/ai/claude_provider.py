@@ -15,6 +15,7 @@ from app.services.ai.base import (
     AnalysisResult,
     APICallError,
     APIKeyMissingError,
+    InvalidMenuImageError,
 )
 
 logger = logging.getLogger(__name__)
@@ -207,10 +208,16 @@ class ClaudeProvider(AIProvider):
                     continue
 
             if not dishes:
-                raise ValueError("No valid dishes found in response")
+                raise InvalidMenuImageError(
+                    "画像からメニューを検出できませんでした。"
+                    "メニュー表の写真であることを確認してください。"
+                )
 
             return dishes
 
+        except InvalidMenuImageError:
+            # Re-raise InvalidMenuImageError as-is
+            raise
         except json.JSONDecodeError as e:
             raise APICallError(f"Failed to parse JSON response: {e}") from e
         except Exception as e:

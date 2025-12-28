@@ -1,8 +1,10 @@
 """Menu analysis route handlers.
 
 API Error Codes:
+- NO_API_KEY: API key not provided
 - NO_FILE: No image file provided or empty filename
 - INVALID_FILE: File validation failed (extension, MIME type, size, or format)
+- INVALID_MENU_IMAGE: Image does not appear to be a menu
 - AI_ERROR: AI provider analysis failed
 - INTERNAL_ERROR: Unexpected server error
 """
@@ -15,7 +17,7 @@ from flask import Blueprint, Response, jsonify, render_template, request
 from PIL import Image
 from werkzeug.datastructures import FileStorage
 
-from app.services.ai.base import AIProviderError
+from app.services.ai.base import AIProviderError, InvalidMenuImageError
 from app.services.ai.factory import AIProviderFactory
 
 # ロガーの設定
@@ -211,10 +213,18 @@ def analyze_menu() -> Response:
 
         return jsonify(response_data), 200
 
+    except InvalidMenuImageError as e:
+        logger.warning(f"Invalid menu image: {e}")
+        return _create_error_response(
+            error_message=str(e),
+            error_code="INVALID_MENU_IMAGE",
+            status_code=400,
+            title="メニュー画像ではありません",
+        )
     except AIProviderError as e:
         logger.error(f"AI provider error: {e}")
         return _create_error_response(
-            error_message=f"AI analysis failed: {str(e)}",
+            error_message=f"AI解析に失敗しました: {str(e)}",
             error_code="AI_ERROR",
             status_code=500,
             title="AI解析エラー",
@@ -222,7 +232,7 @@ def analyze_menu() -> Response:
     except Exception as e:
         logger.error(f"Unexpected error: {e}", exc_info=True)
         return _create_error_response(
-            error_message="Internal server error",
+            error_message="予期しないエラーが発生しました。しばらく時間をおいて再度お試しください。",
             error_code="INTERNAL_ERROR",
             status_code=500,
             title="予期しないエラー",
