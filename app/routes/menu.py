@@ -8,7 +8,6 @@ API Error Codes:
 """
 
 import logging
-import time
 from io import BytesIO
 from typing import Any
 
@@ -40,6 +39,46 @@ def allowed_file(filename: str) -> bool:
         許可されている場合True
     """
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def _create_error_response(
+    error_message: str, error_code: str, status_code: int, title: str = "エラー"
+) -> tuple[Response, int]:
+    """
+    エラーレスポンスを作成（リクエストタイプに応じてJSONまたはHTML）.
+
+    Args:
+        error_message: エラーメッセージ
+        error_code: エラーコード
+        status_code: HTTPステータスコード
+        title: HTMLレスポンスのタイトル
+
+    Returns:
+        (Response, status_code)のタプル
+    """
+    # HTMXリクエストの場合はHTMLパーシャルを返す
+    if request.headers.get("HX-Request") == "true":
+        return (
+            render_template(
+                "partials/error.html",
+                title=title,
+                message=error_message,
+                code=error_code,
+            ),
+            status_code,
+        )
+
+    # 通常のリクエストの場合はJSONを返す
+    return (
+        jsonify(
+            {
+                "success": False,
+                "error": error_message,
+                "code": error_code,
+            }
+        ),
+        status_code,
+    )
 
 
 def validate_image_file(file: FileStorage) -> tuple[bool, str | None, bytes | None]:
@@ -106,8 +145,6 @@ def analyze_menu() -> Response:
     Returns:
         JSON形式の解析結果
     """
-    start_time = time.time()
-
     # ファイル存在チェック
     if "image" not in request.files:
         logger.warning("No image file in request")
@@ -139,50 +176,40 @@ def analyze_menu() -> Response:
         # メニュー解析
         result = provider.analyze_menu(image_data, mime_type)
 
-        processing_time = time.time() - start_time
-
-        logger.info(f"Analysis complete: {len(result.dishes)} dishes found in {processing_time:.2f}s")
-
-        # HTMXリクエストの場合はパーシャルを返す
-        if request.headers.get("HX-Request"):
-            return render_template(
-                "partials/dish_list.html",
-                dishes=result.dishes,
-                provider=result.provider,
-                processing_time=processing_time,
-            )
-
-        # 通常リクエストの場合はJSONを返す
+        # レスポンス作成
         response_data: dict[str, Any] = {
             "success": True,
             "dishes": [dish.to_dict() for dish in result.dishes],
             "provider": result.provider,
-            "processing_time": processing_time,
+            "processing_time": result.processing_time,
         }
+
+        logger.info(f"Analysis complete: {len(result.dishes)} dishes found in {result.processing_time:.2f}s")
+
+        # HTMXリクエストの場合はHTMLパーシャルを返す
+        if request.headers.get("HX-Request") == "true":
+            return render_template(
+                "partials/dish_list.html",
+                dishes=result.dishes,
+                provider=result.provider,
+                processing_time=response_data["processing_time"],
+            )
 
         return jsonify(response_data), 200
 
     except AIProviderError as e:
         logger.error(f"AI provider error: {e}")
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": f"AI analysis failed: {str(e)}",
-                    "code": "AI_ERROR",
-                }
-            ),
-            500,
+        return _create_error_response(
+            error_message=f"AI analysis failed: {str(e)}",
+            error_code="AI_ERROR",
+            status_code=500,
+            title="AI解析エラー",
         )
     except Exception as e:
         logger.error(f"Unexpected error: {e}", exc_info=True)
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": "Internal server error",
-                    "code": "INTERNAL_ERROR",
-                }
-            ),
-            500,
+        return _create_error_response(
+            error_message="Internal server error",
+            error_code="INTERNAL_ERROR",
+            status_code=500,
+            title="予期しないエラー",
         )
