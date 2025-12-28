@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Menu Judge - メニューを解析{% endblock %}
+
+{% block content %}
+<div x-data="{ analyzing: false }" class="max-w-4xl mx-auto">
+
+    <!-- ヒーローセクション -->
+    <section class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4">
+            海外メニューを
+            <span class="text-primary">瞬時に解析</span>
+        </h1>
+        <p class="text-slate-400">
+            メニュー表の写真を撮るだけで、料理の詳細がわかります
+        </p>
+    </section>
+
+    <!-- アップロードセクション -->
+    <section class="mb-8">
+        <form hx-post="{{ url_for('menu.analyze_menu') }}"
+              hx-target="#result-area"
+              hx-swap="innerHTML"
+              hx-indicator="#loading"
+              hx-encoding="multipart/form-data"
+              @htmx:before-request="analyzing = true"
+              @htmx:after-request="analyzing = false">
+
+            {% include 'components/upload_zone.html' %}
+
+            <!-- 解析ボタン -->
+            <div class="mt-4 text-center">
+                <button type="submit"
+                        :disabled="analyzing"
+                        class="px-8 py-3 bg-primary hover:bg-primary/80
+                               disabled:bg-slate-600 disabled:cursor-not-allowed
+                               text-white font-bold rounded-lg
+                               transition-all duration-300 transform hover:scale-105">
+                    <span x-show="!analyzing">メニューを解析</span>
+                    <span x-show="analyzing">解析中...</span>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- ローディング表示 -->
+    <div id="loading" class="htmx-indicator">
+        {% include 'components/loading.html' %}
+    </div>
+
+    <!-- 結果表示エリア -->
+    <section id="result-area" class="mt-8">
+        <!-- HTMX で動的に挿入 -->
+    </section>
+
+</div>
+{% endblock %}

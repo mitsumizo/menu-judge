@@ -38,13 +38,14 @@ def sample_image():
 class TestIndexRoute:
     """トップページのルートテスト."""
 
-    def test_index_endpoint_returns_status_ok(self, client):
-        """Test that the root endpoint returns status ok."""
+    def test_index_endpoint_returns_html(self, client):
+        """Test that the root endpoint returns the main page HTML."""
         response = client.get("/")
 
         assert response.status_code == 200
-        assert response.json["status"] == "ok"
-        assert response.json["message"] == "Menu Judge API is running"
+        assert response.content_type == "text/html; charset=utf-8"
+        assert b"Menu Judge" in response.data
+        assert b"index.html" in response.data or b"\xe6\xb5\xb7\xe5\xa4\x96\xe3\x83\xa1\xe3\x83\x8b\xe3\x83\xa5\xe3\x83\xbc\xe3\x82\x92" in response.data  # "海外メニューを" in UTF-8
 
     def test_index_rejects_post_method(self, client):
         """Test that POST method is not allowed on root endpoint."""
