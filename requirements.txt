@@ -4,6 +4,7 @@
 # Web framework
 Flask>=2.3.0,<4.0.0
 Werkzeug>=2.3.0,<4.0.0
+gunicorn>=21.0.0,<23.0.0
 
 # AI providers
 anthropic>=0.7.0,<1.0.0
