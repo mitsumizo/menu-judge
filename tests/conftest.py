@@ -1,10 +1,14 @@
 """Pytest fixtures for the Menu Judge application."""
 
 import base64
+from io import BytesIO
 
 import pytest
+from PIL import Image
 
 from app import create_app
+from app.models.dish import Category, Dish
+from app.services.ai.base import AnalysisResult
 
 
 @pytest.fixture
@@ -86,3 +90,41 @@ def mock_claude_response():
   ]
 }
 ```"""
+
+
+@pytest.fixture
+def real_menu_image():
+    """テスト用のメニュー画像を生成（統合テスト用）.
+
+    Returns:
+        bytes: JPEG形式の画像データ
+    """
+    img = Image.new("RGB", (800, 600), color="white")
+    buffer = BytesIO()
+    img.save(buffer, format="JPEG")
+    buffer.seek(0)
+    return buffer.read()
+
+
+@pytest.fixture
+def mock_analysis_result():
+    """モックの解析結果を生成.
+
+    Returns:
+        AnalysisResult: モックの解析結果
+    """
+    dishes = [
+        Dish(
+            original_name="Pad Thai",
+            japanese_name="パッタイ",
+            description="タイ風焼きそば",
+            spiciness=2,
+            sweetness=3,
+            ingredients=["米麺", "エビ", "卵"],
+            allergens=["甲殻類", "卵"],
+            category=Category.MAIN,
+        )
+    ]
+    return AnalysisResult(
+        dishes=dishes, raw_response="...", provider="claude", processing_time=1.5
+    )
