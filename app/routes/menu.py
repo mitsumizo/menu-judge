@@ -43,7 +43,7 @@ def allowed_file(filename: str) -> bool:
 
 def _create_error_response(
     error_message: str, error_code: str, status_code: int, title: str = "エラー"
-) -> Response | tuple[Response, int]:
+) -> tuple[Response, int]:
     """
     エラーレスポンスを作成（リクエストタイプに応じてJSONまたはHTML）.
 
@@ -54,7 +54,7 @@ def _create_error_response(
         title: HTMLレスポンスのタイトル
 
     Returns:
-        FlaskのResponseまたは(Response, status_code)のタプル
+        (Response, status_code)のタプル
     """
     # HTMXリクエストの場合はHTMLパーシャルを返す
     if request.headers.get("HX-Request") == "true":
