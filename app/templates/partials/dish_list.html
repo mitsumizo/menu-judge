@@ -1,35 +1,46 @@
 {#
-料理リストパーシャル - HTMX用
+料理一覧パーシャル（HTMX用）
 
-このテンプレートは/api/analyzeエンドポイントからHTMXリクエスト時に返される
-料理リストを表示する部分的HTMLです。
+使用方法:
+    HTMXリクエストで動的に読み込まれる料理一覧を表示
 
 引数:
-    dishes: Dishモデルのインスタンスのリスト
-    provider: 使用したAIプロバイダー名
+    dishes: 料理のリスト
+    provider: AIプロバイダー名
     processing_time: 処理時間（秒）
 #}
 {% from 'components/dish_card.html' import dish_card %}
 
 <div id="dish-list" class="space-y-4">
-    {% if dishes %}
-        <!-- メタ情報 -->
-        <div class="mb-4 p-3 bg-slate-800 rounded-lg">
-            <p class="text-sm text-slate-400">
-                {{ dishes|length }}件の料理を{{ provider }}で解析しました
-                （{{ "%.2f"|format(processing_time) }}秒）
-            </p>
-        </div>
+    <!-- 結果サマリー -->
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">
+            解析結果
+            <span class="text-sm text-slate-400">
+                ({{ dishes | length }}品)
+            </span>
+        </h2>
+        <span class="text-sm text-slate-400">
+            {{ provider }} で解析 | {{ "%.2f"|format(processing_time) }}秒
+        </span>
+    </div>
 
-        <!-- 料理カードリスト -->
-        <div class="grid gap-4 md:grid-cols-2">
-            {% for dish in dishes %}
-                {{ dish_card(dish) }}
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="p-4 bg-slate-800 rounded-lg text-center">
-            <p class="text-slate-400">料理が見つかりませんでした</p>
-        </div>
+    <!-- 料理カードグリッド -->
+    {% if dishes %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for dish in dishes %}
+            {{ dish_card(dish) }}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 料理がない場合 -->
+    {% if not dishes %}
+    <div class="text-center py-8">
+        <p class="text-slate-400">料理が検出されませんでした</p>
+        <p class="text-sm text-slate-500">
+            別の画像を試してください
+        </p>
+    </div>
     {% endif %}
 </div>

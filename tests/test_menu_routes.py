@@ -237,3 +237,80 @@ class TestAnalyzeMenuEndpoint:
         assert response.json["success"] is False
         assert response.json["code"] == "INVALID_FILE"
         assert "Invalid MIME type" in response.json["error"]
+
+    @patch("app.routes.menu.AIProviderFactory.create")
+    def test_htmx_request_returns_html_partial(self, mock_factory, client):
+        """HTMXリクエストの場合、HTMLパーシャルを返す."""
+        # モックの設定
+        mock_provider = Mock()
+        mock_provider.analyze_menu.return_value = create_mock_result()
+        mock_factory.return_value = mock_provider
+
+        # テスト画像を生成
+        img_bytes = create_test_image(format="PNG")
+
+        # HX-Requestヘッダーを付けてリクエスト
+        response = client.post(
+            "/api/analyze",
+            data={"image": (img_bytes, "test.png")},
+            content_type="multipart/form-data",
+            headers={"HX-Request": "true"},
+        )
+
+        assert response.status_code == 200
+        assert response.content_type == "text/html; charset=utf-8"
+        assert b"dish-list" in response.data
+        assert b"Pad Thai" in response.data
+        assert b"\xe3\x83\x91\xe3\x83\x83\xe3\x82\xbf\xe3\x82\xa4" in response.data  # パッタイ
+        assert b"mock" in response.data  # provider
+        assert mock_provider.analyze_menu.called
+
+    @patch("app.routes.menu.AIProviderFactory.create")
+    def test_non_htmx_request_returns_json(self, mock_factory, client):
+        """非HTMXリクエストの場合、JSONを返す（後方互換性）."""
+        # モックの設定
+        mock_provider = Mock()
+        mock_provider.analyze_menu.return_value = create_mock_result()
+        mock_factory.return_value = mock_provider
+
+        # テスト画像を生成
+        img_bytes = create_test_image(format="PNG")
+
+        # HX-Requestヘッダーなしでリクエスト
+        response = client.post(
+            "/api/analyze",
+            data={"image": (img_bytes, "test.png")},
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 200
+        assert response.content_type == "application/json"
+        assert response.json["success"] is True
+        assert len(response.json["dishes"]) == 1
+        assert response.json["dishes"][0]["original_name"] == "Pad Thai"
+        assert response.json["provider"] == "mock"
+
+    @patch("app.routes.menu.AIProviderFactory.create")
+    def test_htmx_request_with_empty_dishes(self, mock_factory, client):
+        """HTMXリクエストで料理が検出されない場合、空結果のHTMLを返す."""
+        # モックの設定（空の結果）
+        mock_provider = Mock()
+        empty_result = AnalysisResult(dishes=[], raw_response="mock response", provider="mock", processing_time=0.5)
+        mock_provider.analyze_menu.return_value = empty_result
+        mock_factory.return_value = mock_provider
+
+        # テスト画像を生成
+        img_bytes = create_test_image(format="PNG")
+
+        # HX-Requestヘッダーを付けてリクエスト
+        response = client.post(
+            "/api/analyze",
+            data={"image": (img_bytes, "test.png")},
+            content_type="multipart/form-data",
+            headers={"HX-Request": "true"},
+        )
+
+        assert response.status_code == 200
+        assert response.content_type == "text/html; charset=utf-8"
+        assert b"dish-list" in response.data
+        assert b"\xe6\x96\x99\xe7\x90\x86\xe3\x81\x8c\xe6\xa4\x9c\xe5\x87\xba" in response.data  # 料理が検出されませんでした

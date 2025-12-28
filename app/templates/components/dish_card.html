@@ -75,10 +75,12 @@
     {% endif %}
 
     <!-- カテゴリバッジ -->
+    {% if dish.category %}
     <div class="mt-3">
         <span class="px-2 py-1 bg-primary/20 text-primary rounded text-xs">
             {{ dish.category.value }}
         </span>
     </div>
+    {% endif %}
 </div>
 {% endmacro %}
