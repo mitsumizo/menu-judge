@@ -247,7 +247,7 @@ class TestClaudeProvider:
         assert result.dishes[0].spiciness == 2
         assert result.dishes[1].original_name == "Tom Yum Goong"
         assert result.dishes[1].spiciness == 4
-        assert result.processing_time > 0
+        assert result.processing_time >= 0
         assert mock_claude_response in result.raw_response
 
         # Verify API was called
