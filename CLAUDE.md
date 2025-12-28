@@ -188,15 +188,11 @@ menu-judge/
 
 ## 環境変数
 
-```
-# AIプロバイダー設定
-AI_PROVIDER=claude                    # claude | openai | gemini
+**重要:** APIキーは環境変数ではなく、**ユーザーがブラウザで入力**する仕様になっています。
 
-# API Keys（使用するプロバイダーのみ必須）
-ANTHROPIC_API_KEY=your_api_key_here   # Claude API用
-OPENAI_API_KEY=your_api_key_here      # OpenAI用
-GOOGLE_API_KEY=your_api_key_here      # Gemini用
+### サーバー側環境変数
 
+```bash
 # Flask設定
 # Note: FLASK_ENV is deprecated in Flask 2.3.0+
 ENV=development
@@ -206,6 +202,21 @@ SECRET_KEY=your_secret_key
 # アップロード設定
 MAX_UPLOAD_SIZE=10485760
 ```
+
+### クライアント側のAPIキー管理
+
+- **APIキーの入力**: ユーザーが初回アクセス時にブラウザでAPIキーを入力
+- **保存場所**: ブラウザのlocalStorageに保存（サーバーには送信されない）
+- **リクエスト**: 各APIリクエストのヘッダー `X-API-Key` でAPIキーを送信
+- **対応プロバイダー**: 現在はClaude APIのみ（将来的に拡張予定）
+
+### APIキーの取得方法
+
+1. [Anthropic Console](https://console.anthropic.com/settings/keys)にアクセス
+2. アカウント作成またはログイン
+3. "API Keys"セクションで新しいキーを作成
+4. 作成されたキー（`sk-ant-api03-...`形式）をコピー
+5. アプリケーションの設定画面で入力
 
 ## AIプロバイダー設計
 
@@ -360,6 +371,45 @@ GitHub Appインストール済み（`CLAUDE_CODE_OAUTH_TOKEN` 自動設定）
 
 ## 注意事項
 
+### 開発時
+
 - APIキーは絶対にコミットしない
 - 画像は一時保存後に削除する
 - ユーザーデータのプライバシーに配慮する
+
+### デプロイ時の重要事項
+
+⚠️ **セキュリティ上の重要な注意事項**
+
+1. **HTTPS必須**
+   - APIキーがHTTPSで暗号化された通信で送信されるため、本番環境では**必ずHTTPS**を使用してください
+   - HTTP（平文）で運用すると、APIキーが盗聴される可能性があります
+   - Let's Encryptなどで無料のSSL証明書を取得できます
+
+2. **CORS設定**
+   - 異なるドメインからのアクセスを想定する場合、適切なCORS設定を行ってください
+   - 本番環境では信頼できるオリジンのみを許可してください
+
+3. **レート制限**
+   - 悪意のあるユーザーによる大量リクエストを防ぐため、レート制限の実装を推奨します
+   - FlaskのFlask-Limiterなどを使用できます
+
+4. **本番サーバー**
+   - Flaskの開発サーバーは本番環境では使用しないでください
+   - Gunicorn、uWSGI、Waitressなどのプロダクション対応WSGIサーバーを使用してください
+
+5. **環境変数の管理**
+   - `SECRET_KEY`は必ず本番環境固有の強力なランダム値を設定してください
+   - 開発環境と本番環境で異なる値を使用してください
+
+6. **ログとモニタリング**
+   - APIキーをログに出力しないように注意してください
+   - エラーログやアクセスログを適切に管理してください
+
+### 推奨デプロイ先
+
+- **Vercel**: サーバーレス関数として簡単にデプロイ可能（自動HTTPS）
+- **Heroku**: Python対応、環境変数管理が容易（自動HTTPS）
+- **Render**: 無料プランあり、環境変数管理が容易（自動HTTPS）
+- **Railway**: モダンなUIで簡単デプロイ（自動HTTPS）
+- **AWS EC2/ECS**: 柔軟性が高いが設定が複雑（HTTPS設定が必要）

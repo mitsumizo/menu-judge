@@ -3,54 +3,83 @@
 {% block title %}Menu Judge - メニューを解析{% endblock %}
 
 {% block content %}
-<div x-data="{ analyzing: false }" class="max-w-4xl mx-auto">
+<div x-data="{ analyzing: false }" class="relative z-10 flex flex-col justify-center min-h-[calc(100vh-8rem)]">
 
     <!-- ヒーローセクション -->
-    <section class="text-center mb-8">
-        <h1 class="text-3xl md:text-4xl font-bold mb-4">
-            海外メニューを
-            <span class="text-primary">瞬時に解析</span>
+    <section class="max-w-4xl mx-auto text-center mb-12">
+        <h1 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight">
+            <span class="block text-white drop-shadow-sm">海外メニューを</span>
+            <span
+                class="pb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary-light via-accent to-secondary animate-gradient-text">
+                瞬時に解析
+            </span>
         </h1>
-        <p class="text-slate-400">
-            メニュー表の写真を撮るだけで、料理の詳細がわかります
+        <p class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            メニュー表の写真を撮るだけで、AIが料理の詳細、翻訳、評判を即座に教えてくれます。<br class="hidden md:inline">
+            あなたの食事体験を、もっと賢く、もっと美味しく。
         </p>
     </section>
 
     <!-- アップロードセクション -->
-    <section class="mb-8">
-        <form hx-post="{{ url_for('menu.analyze_menu') }}"
-              hx-target="#result-area"
-              hx-swap="innerHTML"
-              hx-indicator="#loading"
-              hx-encoding="multipart/form-data"
-              @htmx:before-request="analyzing = true"
-              @htmx:after-request="analyzing = false">
+    <section class="max-w-xl mx-auto w-full relative group">
+        <!-- Glow Effect -->
+        <div
+            class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 pointer-events-none">
+        </div>
 
-            {% from 'components/upload_zone.html' import upload_zone %}
-            {{ upload_zone() }}
+        <div class="relative bg-surface/50 backdrop-blur-xl ring-1 ring-white/10 rounded-xl p-8 shadow-2xl">
+            <form hx-post="{{ url_for('menu.analyze_menu') }}" hx-target="#result-area" hx-swap="innerHTML"
+                hx-indicator="#loading" hx-encoding="multipart/form-data" @htmx:before-request="analyzing = true"
+                @htmx:after-request="analyzing = false">
 
-            <!-- 解析ボタン -->
-            <div class="mt-4 text-center">
-                <button type="submit"
-                        :disabled="analyzing"
-                        class="px-8 py-3 bg-primary hover:bg-primary/80
-                               disabled:bg-slate-600 disabled:cursor-not-allowed
-                               text-white font-bold rounded-lg
-                               transition-all duration-300 transform hover:scale-105">
-                    <span x-show="!analyzing">メニューを解析</span>
-                    <span x-show="analyzing">解析中...</span>
-                </button>
-            </div>
-        </form>
+                {% from 'components/upload_zone.html' import upload_zone %}
+                {{ upload_zone() }}
+
+                <!-- 解析ボタン -->
+                <div class="mt-8 text-center">
+                    <button type="submit" :disabled="analyzing"
+                        class="group relative w-full flex items-center justify-center py-4 px-8 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+
+                        <!-- Shine effect -->
+                        <div
+                            class="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 group-hover:animate-shine pointer-events-none">
+                        </div>
+
+                        <span x-show="!analyzing" class="flex items-center gap-2 relative z-10">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            メニューを解析する
+                        </span>
+                        <span x-show="analyzing" class="flex items-center gap-2 relative z-10">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            AIが解析中...
+                        </span>
+                    </button>
+                    <p class="mt-4 text-xs text-slate-500">
+                        対応形式: JPG, PNG, WebP (最大10MB)
+                    </p>
+                </div>
+            </form>
+        </div>
     </section>
 
     <!-- ローディング表示 -->
-    <div id="loading" class="htmx-indicator">
+    <div id="loading"
+        class="htmx-indicator fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
         {% include 'components/loading.html' %}
     </div>
 
     <!-- 結果表示エリア -->
-    <section id="result-area" class="mt-8">
+    <section id="result-area" class="mt-12 w-full max-w-4xl mx-auto">
         <!-- HTMX で動的に挿入 -->
     </section>
 

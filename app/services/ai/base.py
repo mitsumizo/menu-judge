@@ -29,6 +29,15 @@ class AnalysisResult:
 class AIProvider(ABC):
     """Base class for AI providers."""
 
+    def __init__(self, api_key: str) -> None:
+        """
+        Initialize AI provider.
+
+        Args:
+            api_key: API key for the provider
+        """
+        self.api_key = api_key
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -54,17 +63,6 @@ class AIProvider(ABC):
 
         Raises:
             AIProviderError: API call error
-        """
-        pass
-
-    @classmethod
-    @abstractmethod
-    def is_available(cls) -> bool:
-        """
-        Check if provider is available.
-
-        Returns:
-            True if provider is available, False otherwise
         """
         pass
 

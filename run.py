@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # For production, use a proper WSGI server (Gunicorn, uWSGI)
     default_host = "0.0.0.0" if debug else "127.0.0.1"  # nosec B104
     host = os.environ.get("FLASK_HOST", default_host)
-    port = int(os.environ.get("FLASK_PORT", 5000))
+    port = int(os.environ.get("FLASK_PORT", 5001))
 
     if not debug:
         print("WARNING: Flask development server is not suitable for production.")

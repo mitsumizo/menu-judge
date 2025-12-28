@@ -240,3 +240,160 @@ function uploadZone() {
 
 // グローバルに公開
 window.uploadZone = uploadZone;
+
+/**
+ * APIキー設定管理のAlpine.jsコンポーネント
+ * @returns {Object} Alpine.jsコンポーネントオブジェクト
+ */
+function apiKeyManager() {
+    return {
+        // モーダル表示状態
+        showModal: false,
+
+        // APIキー
+        apiKey: '',
+
+        // APIキー入力フィールド（マスク用）
+        apiKeyInput: '',
+
+        // APIキーの表示/非表示
+        showApiKey: false,
+
+        // 初期化
+        init() {
+            // localStorageからAPIキーを読み込み
+            this.apiKey = this.getStoredApiKey();
+
+            // APIキーが未設定の場合、モーダルを表示
+            if (!this.apiKey) {
+                this.showModal = true;
+            }
+
+            // HTMX リクエストにAPIキーを追加
+            this.setupHtmxHeaders();
+
+            // HTMXエラーハンドリング
+            this.setupErrorHandling();
+        },
+
+        /**
+         * localStorageからAPIキーを取得
+         * @returns {string} APIキー（未設定の場合は空文字列）
+         */
+        getStoredApiKey() {
+            try {
+                return localStorage.getItem('menu_judge_api_key') || '';
+            } catch (e) {
+                console.error('Failed to load API key from localStorage:', e);
+                return '';
+            }
+        },
+
+        /**
+         * APIキーをlocalStorageに保存
+         * @param {string} key - 保存するAPIキー
+         */
+        saveApiKey(key) {
+            try {
+                if (key && key.trim()) {
+                    localStorage.setItem('menu_judge_api_key', key.trim());
+                    this.apiKey = key.trim();
+                    showToast('APIキーを保存しました', 'success');
+                    this.closeModal();
+                    this.setupHtmxHeaders();
+                } else {
+                    showToast('APIキーを入力してください', 'error');
+                }
+            } catch (e) {
+                console.error('Failed to save API key:', e);
+                showToast('APIキーの保存に失敗しました', 'error');
+            }
+        },
+
+        /**
+         * APIキーをlocalStorageから削除
+         */
+        deleteApiKey() {
+            if (confirm('APIキーを削除してもよろしいですか？')) {
+                try {
+                    localStorage.removeItem('menu_judge_api_key');
+                    this.apiKey = '';
+                    this.apiKeyInput = '';
+                    showToast('APIキーを削除しました', 'success');
+                    this.showModal = true;
+                } catch (e) {
+                    console.error('Failed to delete API key:', e);
+                    showToast('APIキーの削除に失敗しました', 'error');
+                }
+            }
+        },
+
+        /**
+         * モーダルを開く
+         */
+        openModal() {
+            this.apiKeyInput = this.apiKey;
+            this.showModal = true;
+        },
+
+        /**
+         * モーダルを閉じる
+         */
+        closeModal() {
+            // APIキーが未設定の場合は閉じられない
+            if (!this.apiKey) {
+                showToast('APIキーを設定してください', 'warning');
+                return;
+            }
+            this.showModal = false;
+            this.apiKeyInput = '';
+            this.showApiKey = false;
+        },
+
+        /**
+         * HTMXリクエストヘッダーにAPIキーを追加
+         */
+        setupHtmxHeaders() {
+            // HTMXのグローバル設定でヘッダーを追加
+            document.body.addEventListener('htmx:configRequest', (event) => {
+                if (this.apiKey) {
+                    event.detail.headers['X-API-Key'] = this.apiKey;
+                }
+            });
+        },
+
+        /**
+         * HTMXエラーハンドリングを設定
+         */
+        setupErrorHandling() {
+            // HTTPレスポンスエラーの処理
+            document.body.addEventListener('htmx:responseError', (event) => {
+                const status = event.detail.xhr.status;
+                const errorCode = event.detail.xhr.getResponseHeader('X-Error-Code');
+
+                // 401エラー（認証エラー）またはAPIキーエラーの場合
+                if (status === 401 || errorCode === 'NO_API_KEY') {
+                    showToast('APIキーが無効または未設定です。設定画面からAPIキーを入力してください。', 'error', 5000);
+                    this.showModal = true;
+                }
+                // その他のエラー
+                else if (status >= 400) {
+                    try {
+                        const response = JSON.parse(event.detail.xhr.responseText);
+                        showToast(response.error || `エラーが発生しました (${status})`, 'error');
+                    } catch (e) {
+                        showToast(`エラーが発生しました (${status})`, 'error');
+                    }
+                }
+            });
+
+            // ネットワークエラー（タイムアウト、オフライン等）の処理
+            document.body.addEventListener('htmx:sendError', (event) => {
+                showToast('ネットワークエラー: サーバーに接続できません。', 'error');
+            });
+        }
+    };
+}
+
+// グローバルに公開
+window.apiKeyManager = apiKeyManager;

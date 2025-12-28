@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
 from .base import AIProvider, AIProviderError, APIKeyMissingError
 from .claude_provider import ClaudeProvider
 
@@ -15,38 +13,36 @@ class UnknownProviderError(AIProviderError):
 
 
 class AIProviderFactory:
-    """環境変数に基づいてプロバイダーを生成."""
+    """AIプロバイダーを生成するファクトリークラス."""
 
     _providers: dict[str, type[AIProvider]] = {
         "claude": ClaudeProvider,
     }
 
     @classmethod
-    def create(cls, provider_name: str | None = None) -> AIProvider:
+    def create(cls, api_key: str, provider_name: str = "claude") -> AIProvider:
         """
         AIプロバイダーを生成.
 
         Args:
-            provider_name: プロバイダー名（Noneの場合は環境変数から取得）
+            api_key: APIキー
+            provider_name: プロバイダー名（デフォルト: claude）
 
         Returns:
             AIProvider: 生成されたプロバイダー
 
         Raises:
             UnknownProviderError: 未知のプロバイダーが指定された
-            APIKeyMissingError: APIキーが設定されていない
+            APIKeyMissingError: APIキーが空
         """
-        name = provider_name or os.getenv("AI_PROVIDER", "claude")
+        if not api_key or not api_key.strip():
+            raise APIKeyMissingError("API key is required")
 
-        if name not in cls._providers:
-            raise UnknownProviderError(f"Unknown provider: {name}")
+        if provider_name not in cls._providers:
+            raise UnknownProviderError(f"Unknown provider: {provider_name}")
 
-        provider = cls._providers[name]()
-
-        if not provider.is_available():
-            raise APIKeyMissingError(f"API key not configured for {name}")
-
-        return provider
+        provider_class = cls._providers[provider_name]
+        return provider_class(api_key)
 
     @classmethod
     def register(cls, name: str, provider_class: type[AIProvider]) -> None:
@@ -62,13 +58,9 @@ class AIProviderFactory:
     @classmethod
     def available_providers(cls) -> list[str]:
         """
-        利用可能なプロバイダー一覧.
+        登録されているプロバイダー一覧.
 
         Returns:
-            利用可能なプロバイダー名のリスト
+            プロバイダー名のリスト
         """
-        return [
-            name
-            for name, prov_cls in cls._providers.items()
-            if prov_cls.is_available()
-        ]
+        return list(cls._providers.keys())

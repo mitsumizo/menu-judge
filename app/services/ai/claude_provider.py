@@ -5,7 +5,6 @@ from __future__ import annotations
 import base64
 import json
 import logging
-import os
 import time
 
 import anthropic
@@ -24,15 +23,20 @@ logger = logging.getLogger(__name__)
 class ClaudeProvider(AIProvider):
     """Claude APIを使用した画像解析プロバイダー"""
 
-    MODEL = "claude-3-5-sonnet-20241022"
+    MODEL = "claude-3-7-sonnet-20250219"
     MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB (matches CLAUDE.md spec)
 
-    def __init__(self) -> None:
-        """Initialize Claude provider."""
-        self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = None
-        if self.api_key:
-            self.client = anthropic.Anthropic(api_key=self.api_key)
+    def __init__(self, api_key: str) -> None:
+        """
+        Initialize Claude provider.
+
+        Args:
+            api_key: Anthropic API key
+        """
+        super().__init__(api_key)
+        if not self.api_key:
+            raise APIKeyMissingError("API key is required")
+        self.client = anthropic.Anthropic(api_key=self.api_key)
 
     @property
     def name(self) -> str:
@@ -43,16 +47,6 @@ class ClaudeProvider(AIProvider):
             Provider name
         """
         return "claude"
-
-    @classmethod
-    def is_available(cls) -> bool:
-        """
-        Check if provider is available.
-
-        Returns:
-            True if provider is available, False otherwise
-        """
-        return os.getenv("ANTHROPIC_API_KEY") is not None
 
     def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
         """
@@ -69,9 +63,6 @@ class ClaudeProvider(AIProvider):
             APIKeyMissingError: API key is not configured
             APICallError: API call failed or image size exceeds limit
         """
-        if not self.is_available():
-            raise APIKeyMissingError("ANTHROPIC_API_KEY is not configured")
-
         # Validate image size
         if len(image_data) > self.MAX_IMAGE_SIZE:
             raise APICallError(

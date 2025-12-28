@@ -58,27 +58,28 @@ def _create_error_response(
     """
     # HTMXリクエストの場合はHTMLパーシャルを返す
     if request.headers.get("HX-Request") == "true":
-        return (
+        response = Response(
             render_template(
                 "partials/error.html",
                 title=title,
                 message=error_message,
                 code=error_code,
-            ),
-            status_code,
+            )
         )
+        response.status_code = status_code
+        response.headers["X-Error-Code"] = error_code
+        return response
 
     # 通常のリクエストの場合はJSONを返す
-    return (
-        jsonify(
-            {
-                "success": False,
-                "error": error_message,
-                "code": error_code,
-            }
-        ),
-        status_code,
+    response = jsonify(
+        {
+            "success": False,
+            "error": error_message,
+            "code": error_code,
+        }
     )
+    response.headers["X-Error-Code"] = error_code
+    return response, status_code
 
 
 def validate_image_file(file: FileStorage) -> tuple[bool, str | None, bytes | None]:
@@ -131,6 +132,8 @@ def analyze_menu() -> Response:
     メニュー画像を解析する.
 
     Request:
+        Headers:
+            X-API-Key: APIキー（必須）
         Content-Type: multipart/form-data
         Body: image (file)
 
@@ -145,6 +148,17 @@ def analyze_menu() -> Response:
     Returns:
         JSON形式の解析結果
     """
+    # APIキー取得
+    api_key = request.headers.get("X-API-Key")
+    if not api_key:
+        logger.warning("No API key provided")
+        return _create_error_response(
+            error_message="APIキーが提供されていません。設定画面からAPIキーを入力してください。",
+            error_code="NO_API_KEY",
+            status_code=401,
+            title="APIキー未設定",
+        )
+
     # ファイル存在チェック
     if "image" not in request.files:
         logger.warning("No image file in request")
@@ -171,7 +185,7 @@ def analyze_menu() -> Response:
         logger.info(f"Processing image: {file.filename}, size: {len(image_data)} bytes, MIME: {mime_type}")
 
         # AIプロバイダーを取得
-        provider = AIProviderFactory.create()
+        provider = AIProviderFactory.create(api_key=api_key)
 
         # メニュー解析
         result = provider.analyze_menu(image_data, mime_type)
