@@ -266,6 +266,31 @@ class TestClaudeProvider:
 
     @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}, clear=False)
     @patch("anthropic.Anthropic")
+    def test_image_size_at_boundary(self, mock_anthropic_class, mock_claude_response):
+        """Test that image at exactly MAX_IMAGE_SIZE is accepted."""
+        # Setup mock
+        mock_client = Mock()
+        mock_anthropic_class.return_value = mock_client
+
+        # Mock API response
+        mock_message = Mock()
+        mock_message.content = [Mock(text=mock_claude_response)]
+        mock_client.messages.create.return_value = mock_message
+
+        # Test with image exactly at MAX_IMAGE_SIZE
+        provider = ClaudeProvider()
+        boundary_image_data = b"x" * ClaudeProvider.MAX_IMAGE_SIZE
+        mime_type = "image/png"
+
+        # Should not raise - this is a valid boundary case
+        result = provider.analyze_menu(boundary_image_data, mime_type)
+
+        # Verify it succeeded
+        assert isinstance(result, AnalysisResult)
+        assert len(result.dishes) == 2
+
+    @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}, clear=False)
+    @patch("anthropic.Anthropic")
     def test_api_error_handling(self, mock_anthropic_class, sample_image):
         """Test API error handling."""
         from anthropic import APIError
