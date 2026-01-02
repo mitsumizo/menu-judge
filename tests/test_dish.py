@@ -101,6 +101,7 @@ class TestDish:
             category=Category.MAIN,
             price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
+            number=1,
         )
 
         result = dish.to_dict()
@@ -115,6 +116,7 @@ class TestDish:
         assert result["category"] == "main"
         assert result["price_range"] == "$$"
         assert result["image_url"] == "https://example.com/pad-thai.jpg"
+        assert result["number"] == 1
 
     def test_to_dict_with_none_values(self) -> None:
         """None値を含むto_dictメソッドのテスト"""
@@ -130,6 +132,7 @@ class TestDish:
 
         assert result["price_range"] is None
         assert result["image_url"] is None
+        assert result["number"] is None
         assert result["ingredients"] == []
         assert result["allergens"] == []
         assert result["category"] == "other"
@@ -147,6 +150,7 @@ class TestDish:
             "category": "main",
             "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
+            "number": 1,
         }
 
         dish = Dish.from_dict(data)
@@ -161,6 +165,7 @@ class TestDish:
         assert dish.category == Category.MAIN
         assert dish.price_range == PriceRange.MODERATE
         assert dish.image_url == "https://example.com/pad-thai.jpg"
+        assert dish.number == 1
 
     def test_from_dict_with_missing_optional_fields(self) -> None:
         """オプショナルフィールドが欠けている場合のfrom_dictメソッドのテスト"""
@@ -181,6 +186,7 @@ class TestDish:
         assert dish.category == Category.OTHER
         assert dish.price_range is None
         assert dish.image_url is None
+        assert dish.number is None
 
     def test_from_dict_with_invalid_category(self) -> None:
         """無効なカテゴリの場合、Category.OTHERにフォールバック"""
@@ -225,6 +231,7 @@ class TestDish:
             category=Category.MAIN,
             price_range=PriceRange.MODERATE,
             image_url="https://example.com/tom-yum.jpg",
+            number=2,
         )
 
         # to_dict -> from_dict
@@ -242,3 +249,4 @@ class TestDish:
         assert restored_dish.category == original_dish.category
         assert restored_dish.price_range == original_dish.price_range
         assert restored_dish.image_url == original_dish.image_url
+        assert restored_dish.number == original_dish.number

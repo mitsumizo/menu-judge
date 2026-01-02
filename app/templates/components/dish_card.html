@@ -12,7 +12,15 @@
 {% macro dish_card(dish) %}
 <div class="dish-card bg-surface rounded-xl p-4 shadow-lg
             hover:shadow-xl transition-all duration-300
-            border border-slate-700 hover:border-primary">
+            border border-slate-700 hover:border-primary relative">
+
+    <!-- 料理番号バッジ -->
+    {% if dish.number %}
+    <div class="absolute -top-3 -left-3 w-10 h-10 bg-primary rounded-full
+                flex items-center justify-center shadow-lg border-2 border-slate-900">
+        <span class="text-lg font-bold text-white">{{ dish.number }}</span>
+    </div>
+    {% endif %}
 
     <!-- ヘッダー -->
     <div class="flex justify-between items-start mb-3">
