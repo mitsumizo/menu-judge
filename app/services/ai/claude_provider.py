@@ -130,6 +130,7 @@ class ClaudeProvider(AIProvider):
         return """この画像はレストランのメニューです。画像内の各料理について、以下の情報をJSON形式で抽出してください。
 
 各料理について以下の情報を含めてください:
+- number: 料理の番号（画像内での位置に基づいて1から順番に付与。上から下、左から右の順）
 - original_name: 料理の原語名（メニューに記載されている通り）
 - japanese_name: 料理の日本語名（翻訳）
 - description: 料理の説明（日本語で50文字程度）
@@ -145,6 +146,7 @@ class ClaudeProvider(AIProvider):
 {
   "dishes": [
     {
+      "number": 1,
       "original_name": "Pad Thai",
       "japanese_name": "パッタイ",
       "description": "米麺を使ったタイ風焼きそば。エビ、卵、もやし、ピーナッツを使用",

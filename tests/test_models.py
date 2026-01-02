@@ -184,6 +184,7 @@ class TestDish:
             "category": "main",
             "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
+            "number": None,
         }
 
     def test_to_dict_with_none_values(self):
@@ -277,6 +278,7 @@ class TestDish:
         assert restored.category == original.category
         assert restored.price_range == original.price_range
         assert restored.image_url == original.image_url
+        assert restored.number == original.number
 
     def test_from_dict_with_enum_objects(self):
         """Test from_dict can handle Enum objects in addition to strings."""

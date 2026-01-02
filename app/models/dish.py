@@ -39,6 +39,7 @@ class Dish:
         category: 料理のカテゴリ
         price_range: 価格帯
         image_url: 画像URL
+        number: 料理の番号（メニュー画像との対応用）
     """
 
     original_name: str
@@ -51,6 +52,7 @@ class Dish:
     category: Category = Category.OTHER
     price_range: PriceRange | None = None
     image_url: str | None = None
+    number: int | None = None
 
     def __post_init__(self) -> None:
         """バリデーション処理"""
@@ -83,6 +85,7 @@ class Dish:
             "category": self.category.value,
             "price_range": self.price_range.value if self.price_range else None,
             "image_url": self.image_url,
+            "number": self.number,
         }
 
     @classmethod
@@ -130,4 +133,5 @@ class Dish:
             category=category,
             price_range=price_range,
             image_url=data.get("image_url"),
+            number=data.get("number"),
         )

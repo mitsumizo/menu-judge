@@ -115,6 +115,7 @@ class TestDish:
         assert result["category"] == "main"
         assert result["price_range"] == "$$"
         assert result["image_url"] == "https://example.com/pad-thai.jpg"
+        assert result["number"] is None
 
     def test_to_dict_with_none_values(self) -> None:
         """None値を含むto_dictメソッドのテスト"""
@@ -242,3 +243,4 @@ class TestDish:
         assert restored_dish.category == original_dish.category
         assert restored_dish.price_range == original_dish.price_range
         assert restored_dish.image_url == original_dish.image_url
+        assert restored_dish.number == original_dish.number
