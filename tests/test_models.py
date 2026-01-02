@@ -169,6 +169,7 @@ class TestDish:
             category=Category.MAIN,
             price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
+            number=1,
         )
 
         result = dish.to_dict()
@@ -184,6 +185,7 @@ class TestDish:
             "category": "main",
             "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
+            "number": 1,
         }
 
     def test_to_dict_with_none_values(self):
@@ -200,6 +202,7 @@ class TestDish:
 
         assert result["price_range"] is None
         assert result["image_url"] is None
+        assert result["number"] is None
 
     def test_from_dict(self):
         """Test creating Dish from dictionary."""
@@ -214,6 +217,7 @@ class TestDish:
             "category": "main",
             "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
+            "number": 1,
         }
 
         dish = Dish.from_dict(data)
@@ -228,6 +232,7 @@ class TestDish:
         assert dish.category == Category.MAIN
         assert dish.price_range == PriceRange.MODERATE
         assert dish.image_url == "https://example.com/pad-thai.jpg"
+        assert dish.number == 1
 
     def test_from_dict_with_missing_optional_fields(self):
         """Test from_dict with missing optional fields."""
@@ -246,6 +251,7 @@ class TestDish:
         assert dish.category == Category.OTHER
         assert dish.price_range is None
         assert dish.image_url is None
+        assert dish.number is None
 
     def test_to_dict_from_dict_roundtrip(self):
         """Test roundtrip conversion: Dish -> dict -> Dish."""
@@ -260,6 +266,7 @@ class TestDish:
             category=Category.MAIN,
             price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
+            number=1,
         )
 
         # to_dict -> from_dict
@@ -277,6 +284,7 @@ class TestDish:
         assert restored.category == original.category
         assert restored.price_range == original.price_range
         assert restored.image_url == original.image_url
+        assert restored.number == original.number
 
     def test_from_dict_with_enum_objects(self):
         """Test from_dict can handle Enum objects in addition to strings."""
