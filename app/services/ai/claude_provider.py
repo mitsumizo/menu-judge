@@ -17,6 +17,7 @@ from app.services.ai.base import (
     APIKeyMissingError,
     InvalidMenuImageError,
 )
+from app.services.ai.prompt_builder import PromptBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -27,17 +28,19 @@ class ClaudeProvider(AIProvider):
     MODEL = "claude-3-7-sonnet-20250219"
     MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB (matches CLAUDE.md spec)
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, language: str = 'en') -> None:
         """
         Initialize Claude provider.
 
         Args:
             api_key: Anthropic API key
+            language: Language code for responses ('en' or 'ja')
         """
-        super().__init__(api_key)
+        super().__init__(api_key, language)
         if not self.api_key:
             raise APIKeyMissingError("API key is required")
         self.client = anthropic.Anthropic(api_key=self.api_key)
+        self.prompt_builder = PromptBuilder(language)
 
     @property
     def name(self) -> str:
@@ -122,49 +125,12 @@ class ClaudeProvider(AIProvider):
 
     def _build_prompt(self) -> str:
         """
-        Build menu analysis prompt.
+        Build menu analysis prompt using the multilingual prompt builder.
 
         Returns:
-            Prompt text
+            Prompt text in the selected language
         """
-        return """This image is a restaurant menu. Please extract the following information for each dish in the image in JSON format.
-
-For each dish, include the following information:
-- original_name: Original dish name (as written on the menu)
-- japanese_name: Dish name translated into English (if not already in English, translate it)
-- description: Dish description (approximately 50 words in English)
-- spiciness: Spiciness level (integer from 1 to 5, where 1=not spicy, 5=very spicy)
-- sweetness: Sweetness level (integer from 1 to 5, where 1=not sweet, 5=very sweet)
-- ingredients: List of main ingredients (in English)
-- allergens: List of allergens (in English, e.g., eggs, dairy, wheat, soba, peanuts, shrimp, crab, etc.)
-- category: Dish category (one of "appetizer", "main", "dessert", "beverage", "other")
-- price_range: Price range (one of "$", "$$", "$$$", "$$$$", or null if cannot be determined)
-
-Output in the following JSON format:
-```json
-{
-  "dishes": [
-    {
-      "original_name": "Pad Thai",
-      "japanese_name": "Pad Thai",
-      "description": "Thai-style stir-fried rice noodles with shrimp, eggs, bean sprouts, and peanuts",
-      "spiciness": 2,
-      "sweetness": 3,
-      "ingredients": ["rice noodles", "shrimp", "eggs", "bean sprouts", "peanuts"],
-      "allergens": ["shellfish", "eggs", "nuts"],
-      "category": "main",
-      "price_range": "$$"
-    }
-  ]
-}
-```
-
-Important notes:
-- spiciness and sweetness must be integers from 1 to 5
-- If information is unknown, use empty lists for ingredients or allergens
-- If price_range cannot be determined, use null
-- Do not include any text other than JSON
-- Must output valid JSON format"""
+        return self.prompt_builder.build_menu_analysis_prompt()
 
     def _parse_response(self, response: str) -> list[Dish]:
         """

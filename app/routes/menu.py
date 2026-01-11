@@ -19,6 +19,7 @@ from werkzeug.datastructures import FileStorage
 
 from app.services.ai.base import AIProviderError, InvalidMenuImageError
 from app.services.ai.factory import AIProviderFactory
+from app.translations.loader import TranslationLoader
 
 # Logger setup
 logger = logging.getLogger(__name__)
@@ -136,6 +137,7 @@ def analyze_menu() -> Response:
     Request:
         Headers:
             X-API-Key: API key (required)
+            X-Language: Language code ('en' or 'ja', optional, default: 'en')
         Content-Type: multipart/form-data
         Body: image (file)
 
@@ -150,15 +152,23 @@ def analyze_menu() -> Response:
     Returns:
         Analysis results in JSON format
     """
+    # Get language from header
+    language = request.headers.get("X-Language", "en")
+    if language not in ["en", "ja"]:
+        language = "en"
+
     # Get API key
     api_key = request.headers.get("X-API-Key")
     if not api_key:
         logger.warning("No API key provided")
+        error_msg = TranslationLoader.get(language, 'toast.api_key_invalid',
+                                          'API key not provided. Please enter your API key in the settings.')
+        title_msg = TranslationLoader.get(language, 'error.api_key_not_set', 'API Key Not Set')
         return _create_error_response(
-            error_message="API key not provided. Please enter your API key in the settings.",
+            error_message=error_msg,
             error_code="NO_API_KEY",
             status_code=401,
-            title="API Key Not Set",
+            title=title_msg,
         )
 
     # Check file existence
@@ -184,10 +194,10 @@ def analyze_menu() -> Response:
         # Validation confirmed that content_type is in ALLOWED_MIME_TYPES
         mime_type = file.content_type
 
-        logger.info(f"Processing image: {file.filename}, size: {len(image_data)} bytes, MIME: {mime_type}")
+        logger.info(f"Processing image: {file.filename}, size: {len(image_data)} bytes, MIME: {mime_type}, Language: {language}")
 
-        # Get AI provider
-        provider = AIProviderFactory.create(api_key=api_key)
+        # Get AI provider with language support
+        provider = AIProviderFactory.create(api_key=api_key, language=language)
 
         # Analyze menu
         result = provider.analyze_menu(image_data, mime_type)
@@ -215,25 +225,31 @@ def analyze_menu() -> Response:
 
     except InvalidMenuImageError as e:
         logger.warning(f"Invalid menu image: {e}")
+        error_msg = str(e) if str(e) else TranslationLoader.get(language, 'toast.analysis_failed', 'Analysis failed')
+        title_msg = TranslationLoader.get(language, 'error.invalid_menu_image', 'Not a Menu Image')
         return _create_error_response(
-            error_message=str(e),
+            error_message=error_msg,
             error_code="INVALID_MENU_IMAGE",
             status_code=400,
-            title="Not a Menu Image",
+            title=title_msg,
         )
     except AIProviderError as e:
         logger.error(f"AI provider error: {e}")
+        error_msg = TranslationLoader.get(language, 'toast.analysis_failed', f'AI analysis failed: {str(e)}')
+        title_msg = TranslationLoader.get(language, 'error.analysis_error', 'AI Analysis Error')
         return _create_error_response(
-            error_message=f"AI analysis failed: {str(e)}",
+            error_message=error_msg,
             error_code="AI_ERROR",
             status_code=500,
-            title="AI Analysis Error",
+            title=title_msg,
         )
     except Exception as e:
         logger.error(f"Unexpected error: {e}", exc_info=True)
+        error_msg = TranslationLoader.get(language, 'toast.server_error', 'An unexpected error occurred. Please try again later.')
+        title_msg = TranslationLoader.get(language, 'error.unknown_error', 'Unexpected Error')
         return _create_error_response(
-            error_message="An unexpected error occurred. Please try again later.",
+            error_message=error_msg,
             error_code="INTERNAL_ERROR",
             status_code=500,
-            title="Unexpected Error",
+            title=title_msg,
         )

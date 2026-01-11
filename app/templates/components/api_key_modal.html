@@ -27,11 +27,10 @@
                                 </path>
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold text-white">API Key Settings</h3>
+                        <h3 class="text-xl font-bold text-white" x-text="t('api_key_modal.title', 'API Key Settings')"></h3>
                     </div>
                     <button @click="closeModal()" type="button"
-                        class="rounded-lg p-1 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                        :disabled="!apiKey">
+                        class="rounded-lg p-1 text-white/80 transition-colors hover:bg-white/10 hover:text-white">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12"></path>
@@ -51,12 +50,15 @@
                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <div class="text-sm text-slate-300 space-y-2">
-                            <p>Menu analysis requires Claude API.</p>
-                            <p>You can get your API key from <a href="https://console.anthropic.com/settings/keys" target="_blank"
+                            <p x-text="t('api_key_modal.description', 'Menu analysis requires Claude API.')"></p>
+                            <p>
+                                <span x-text="t('api_key_modal.get_key_text', 'You can get your API key from')"></span>
+                                <a href="https://console.anthropic.com/settings/keys" target="_blank"
                                     rel="noopener noreferrer"
-                                    class="text-blue-400 hover:text-blue-300 underline">Anthropic Console</a>.
+                                    class="text-blue-400 hover:text-blue-300 underline"
+                                    x-text="t('api_key_modal.get_key_link', 'Anthropic Console')"></a>.
                             </p>
-                            <p class="text-xs text-slate-400">※ API key is stored in browser's localStorage and never sent to server.</p>
+                            <p class="text-xs text-slate-400" x-text="t('api_key_modal.storage_notice')"></p>
                         </div>
                     </div>
                 </div>
@@ -64,12 +66,12 @@
                 <!-- API Key Input Form -->
                 <div class="space-y-4">
                     <div>
-                        <label for="api-key-input" class="block text-sm font-medium text-slate-300 mb-2">
-                            Anthropic API Key
+                        <label for="api-key-input" class="block text-sm font-medium text-slate-300 mb-2"
+                            x-text="t('api_key_modal.input_label', 'Anthropic API Key')">
                         </label>
                         <div class="relative">
                             <input :type="showApiKey ? 'text' : 'password'" id="api-key-input" x-model="apiKeyInput"
-                                placeholder="sk-ant-api03-..."
+                                :placeholder="t('api_key_modal.input_placeholder', 'sk-ant-api03-...')"
                                 class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 pr-12 text-white placeholder-slate-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                                 @keydown.enter="saveApiKey(apiKeyInput)">
                             <button @click="showApiKey = !showApiKey" type="button"
@@ -95,12 +97,12 @@
                     <!-- Button Area -->
                     <div class="flex gap-3">
                         <button @click="saveApiKey(apiKeyInput)" type="button"
-                            class="flex-1 rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-primary/30 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface">
-                            Save
+                            class="flex-1 rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-primary/30 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
+                            x-text="t('api_key_modal.save_button', 'Save')">
                         </button>
                         <button @click="deleteApiKey()" type="button" x-show="apiKey"
-                            class="rounded-lg border border-red-500/50 px-4 py-3 font-semibold text-red-400 transition-all hover:bg-red-500/10 hover:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-surface">
-                            Delete
+                            class="rounded-lg border border-red-500/50 px-4 py-3 font-semibold text-red-400 transition-all hover:bg-red-500/10 hover:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-surface"
+                            x-text="t('api_key_modal.delete_button', 'Delete')">
                         </button>
                     </div>
                 </div>

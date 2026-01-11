@@ -29,14 +29,16 @@ class AnalysisResult:
 class AIProvider(ABC):
     """Base class for AI providers."""
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, language: str = 'en') -> None:
         """
         Initialize AI provider.
 
         Args:
             api_key: API key for the provider
+            language: Language code for responses ('en' or 'ja')
         """
         self.api_key = api_key
+        self.language = language
 
     @property
     @abstractmethod

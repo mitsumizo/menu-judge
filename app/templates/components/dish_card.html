@@ -18,7 +18,7 @@ Arguments:
     <div class="flex justify-between items-start mb-3">
         <div>
             <h3 class="text-lg font-bold text-slate-50">
-                {{ dish.japanese_name }}
+                {{ dish.translated_name }}
             </h3>
             <p class="text-sm text-slate-400">
                 {{ dish.original_name }}
@@ -69,7 +69,7 @@ Arguments:
     {% if dish.allergens %}
     <div class="mt-2 p-2 bg-red-500/10 border border-red-500/30 rounded">
         <p class="text-xs text-red-400">
-            ⚠️ Allergens: {{ dish.allergens | join(', ') }}
+            ⚠️ {{ t('dish_card.allergens_label', 'Allergens:') }} {{ dish.allergens | join(', ') }}
         </p>
     </div>
     {% endif %}

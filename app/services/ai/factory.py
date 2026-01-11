@@ -20,13 +20,14 @@ class AIProviderFactory:
     }
 
     @classmethod
-    def create(cls, api_key: str, provider_name: str = "claude") -> AIProvider:
+    def create(cls, api_key: str, provider_name: str = "claude", language: str = 'en') -> AIProvider:
         """
         AIプロバイダーを生成.
 
         Args:
             api_key: APIキー
             provider_name: プロバイダー名（デフォルト: claude）
+            language: 言語コード（デフォルト: en）
 
         Returns:
             AIProvider: 生成されたプロバイダー
@@ -42,7 +43,7 @@ class AIProviderFactory:
             raise UnknownProviderError(f"Unknown provider: {provider_name}")
 
         provider_class = cls._providers[provider_name]
-        return provider_class(api_key)
+        return provider_class(api_key, language=language)
 
     @classmethod
     def register(cls, name: str, provider_class: type[AIProvider]) -> None:
