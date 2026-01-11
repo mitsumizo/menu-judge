@@ -1,31 +1,31 @@
 {#
-料理一覧パーシャル（HTMX用）
+Dish List Partial (for HTMX)
 
-使用方法:
-    HTMXリクエストで動的に読み込まれる料理一覧を表示
+Usage:
+    Display dish list dynamically loaded by HTMX requests
 
-引数:
-    dishes: 料理のリスト
-    provider: AIプロバイダー名
-    processing_time: 処理時間（秒）
+Arguments:
+    dishes: List of dishes
+    provider: AI provider name
+    processing_time: Processing time (seconds)
 #}
 {% from 'components/dish_card.html' import dish_card %}
 
 <div id="dish-list" class="space-y-4">
-    <!-- 結果サマリー -->
+    <!-- Results Summary -->
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">
-            解析結果
+            Analysis Results
             <span class="text-sm text-slate-400">
-                ({{ dishes | length }}品)
+                ({{ dishes | length }} dishes)
             </span>
         </h2>
         <span class="text-sm text-slate-400">
-            {{ provider }} で解析 | {{ "%.2f"|format(processing_time) }}秒
+            Analyzed with {{ provider }} | {{ "%.2f"|format(processing_time) }}s
         </span>
     </div>
 
-    <!-- 料理カードグリッド -->
+    <!-- Dish Card Grid -->
     {% if dishes %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for dish in dishes %}
@@ -34,12 +34,12 @@
     </div>
     {% endif %}
 
-    <!-- 料理がない場合 -->
+    <!-- No Dishes Found -->
     {% if not dishes %}
     <div class="text-center py-8">
-        <p class="text-slate-400">料理が検出されませんでした</p>
+        <p class="text-slate-400">No dishes detected</p>
         <p class="text-sm text-slate-500">
-            別の画像を試してください
+            Please try a different image
         </p>
     </div>
     {% endif %}

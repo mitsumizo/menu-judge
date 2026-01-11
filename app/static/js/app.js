@@ -1,18 +1,18 @@
 /**
- * Menu Judge - カスタムJavaScript
- * Alpine.jsと連携してインタラクティブな機能を提供
+ * Menu Judge - Custom JavaScript
+ * Provides interactive features in conjunction with Alpine.js
  */
 
-// Toast通知の定数
-const TOAST_ANIMATION_DELAY = 10;  // アニメーション開始までの遅延（ミリ秒）
-const TOAST_FADE_DURATION = 300;   // フェードアウトのアニメーション時間（ミリ秒）
-const TOAST_DEFAULT_DURATION = 3000; // デフォルトの表示時間（ミリ秒）
+// Toast notification constants
+const TOAST_ANIMATION_DELAY = 10;  // Delay before animation starts (milliseconds)
+const TOAST_FADE_DURATION = 300;   // Fade out animation duration (milliseconds)
+const TOAST_DEFAULT_DURATION = 3000; // Default display duration (milliseconds)
 
 /**
- * Toast通知を表示する
- * @param {string} message - 表示するメッセージ
- * @param {string} type - メッセージタイプ (success, error, info, warning)
- * @param {number} duration - 表示時間（ミリ秒）
+ * Display toast notification
+ * @param {string} message - Message to display
+ * @param {string} type - Message type (success, error, info, warning)
+ * @param {number} duration - Display duration (milliseconds)
  */
 function showToast(message, type = 'info', duration = TOAST_DEFAULT_DURATION) {
     const container = document.getElementById('toast-container');
@@ -103,7 +103,7 @@ function uploadZone() {
 
             // 複数ファイルのドロップをチェック
             if (files.length > 1) {
-                showToast('一度に処理できる画像は1枚です', 'warning');
+                showToast('Only one image can be processed at a time', 'warning');
                 return;
             }
 
@@ -112,7 +112,7 @@ function uploadZone() {
 
                 // 早期にファイルサイズをチェック（パフォーマンス向上）
                 if (file.size > MAX_FILE_SIZE) {
-                    showToast('ファイルサイズが大きすぎます。10MB以下の画像を選択してください。', 'error');
+                    showToast('File size is too large. Please select an image under 10MB.', 'error');
                     return;
                 }
 
@@ -128,7 +128,7 @@ function uploadZone() {
             // ファイルタイプのバリデーション
             if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
                 showToast(
-                    '対応していない画像形式です。JPEG、PNG、WebPのいずれかを選択してください。',
+                    'Unsupported image format. Please select JPEG, PNG, or WebP.',
                     'error'
                 );
                 return;
@@ -137,7 +137,7 @@ function uploadZone() {
             // ファイルサイズのバリデーション
             if (file.size > MAX_FILE_SIZE) {
                 showToast(
-                    'ファイルサイズが大きすぎます。10MB以下の画像を選択してください。',
+                    'File size is too large. Please select an image under 10MB.',
                     'error'
                 );
                 return;
@@ -149,7 +149,7 @@ function uploadZone() {
             // プレビュー生成
             this.generatePreview(file);
 
-            showToast('画像を読み込みました', 'success');
+            showToast('Image loaded successfully', 'success');
         },
 
         /**
@@ -189,7 +189,7 @@ function uploadZone() {
          */
         uploadFile() {
             if (!this.file) {
-                showToast('ファイルが選択されていません', 'error');
+                showToast('No file selected', 'error');
                 return;
             }
 
@@ -218,20 +218,20 @@ function uploadZone() {
             .then(data => {
                 this.isUploading = false;
                 if (data.success) {
-                    showToast('解析が完了しました', 'success');
+                    showToast('Analysis complete', 'success');
                     // 結果を表示（HTMXまたはAlpine.jsで処理）
                     // この部分は後で実装
                 } else {
-                    showToast(data.error || '解析に失敗しました', 'error');
+                    showToast(data.error || 'Analysis failed', 'error');
                 }
             })
             .catch(error => {
                 this.isUploading = false;
                 // ネットワークエラー（オフライン、タイムアウト、CORS等）とAPIエラーを区別
                 if (error instanceof TypeError) {
-                    showToast('ネットワークエラー: 接続を確認してください', 'error');
+                    showToast('Network error: Please check your connection', 'error');
                 } else {
-                    showToast(error.message || 'エラーが発生しました', 'error');
+                    showToast(error.message || 'An error occurred', 'error');
                 }
             });
         }
@@ -298,15 +298,15 @@ function apiKeyManager() {
                 if (key && key.trim()) {
                     localStorage.setItem('menu_judge_api_key', key.trim());
                     this.apiKey = key.trim();
-                    showToast('APIキーを保存しました', 'success');
+                    showToast('API key saved', 'success');
                     this.closeModal();
                     this.setupHtmxHeaders();
                 } else {
-                    showToast('APIキーを入力してください', 'error');
+                    showToast('Please enter an API key', 'error');
                 }
             } catch (e) {
                 console.error('Failed to save API key:', e);
-                showToast('APIキーの保存に失敗しました', 'error');
+                showToast('Failed to save API key', 'error');
             }
         },
 
@@ -314,16 +314,16 @@ function apiKeyManager() {
          * APIキーをlocalStorageから削除
          */
         deleteApiKey() {
-            if (confirm('APIキーを削除してもよろしいですか？')) {
+            if (confirm('Are you sure you want to delete the API key?')) {
                 try {
                     localStorage.removeItem('menu_judge_api_key');
                     this.apiKey = '';
                     this.apiKeyInput = '';
-                    showToast('APIキーを削除しました', 'success');
+                    showToast('API key deleted', 'success');
                     this.showModal = true;
                 } catch (e) {
                     console.error('Failed to delete API key:', e);
-                    showToast('APIキーの削除に失敗しました', 'error');
+                    showToast('Failed to delete API key', 'error');
                 }
             }
         },
@@ -342,7 +342,7 @@ function apiKeyManager() {
         closeModal() {
             // APIキーが未設定の場合は閉じられない
             if (!this.apiKey) {
-                showToast('APIキーを設定してください', 'warning');
+                showToast('Please set up your API key', 'warning');
                 return;
             }
             this.showModal = false;
@@ -373,7 +373,7 @@ function apiKeyManager() {
 
                 // 401エラー（認証エラー）またはAPIキーエラーの場合
                 if (status === 401 || errorCode === 'NO_API_KEY') {
-                    showToast('APIキーが無効または未設定です。設定画面からAPIキーを入力してください。', 'error', 5000);
+                    showToast('API key is invalid or not set. Please enter your API key in the settings.', 'error', 5000);
                     this.showModal = true;
                 }
                 // その他のエラー
@@ -389,7 +389,7 @@ function apiKeyManager() {
 
             // ネットワークエラー（タイムアウト、オフライン等）の処理
             document.body.addEventListener('htmx:sendError', (event) => {
-                showToast('ネットワークエラー: サーバーに接続できません。', 'error');
+                showToast('Network error: Cannot connect to server.', 'error');
             });
         }
     };

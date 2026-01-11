@@ -1,12 +1,12 @@
 {#
-料理カードコンポーネント
+Dish Card Component
 
-使用方法:
+Usage:
     {% from 'components/dish_card.html' import dish_card %}
     {{ dish_card(dish) }}
 
-引数:
-    dish: Dishモデルのインスタンス
+Arguments:
+    dish: Dish model instance
 #}
 
 {% macro dish_card(dish) %}
@@ -14,7 +14,7 @@
             hover:shadow-xl transition-all duration-300
             border border-slate-700 hover:border-primary">
 
-    <!-- ヘッダー -->
+    <!-- Header -->
     <div class="flex justify-between items-start mb-3">
         <div>
             <h3 class="text-lg font-bold text-slate-50">
@@ -31,12 +31,12 @@
         {% endif %}
     </div>
 
-    <!-- 説明 -->
+    <!-- Description -->
     <p class="text-slate-300 text-sm mb-3">
         {{ dish.description }}
     </p>
 
-    <!-- 辛さ・甘さインジケーター -->
+    <!-- Spiciness & Sweetness Indicators -->
     <div class="flex gap-4 mb-3">
         <div class="flex items-center gap-1">
             <span class="text-sm">🌶️</span>
@@ -56,7 +56,7 @@
         </div>
     </div>
 
-    <!-- 材料タグ -->
+    <!-- Ingredient Tags -->
     <div class="flex flex-wrap gap-1 mb-3">
         {% for ingredient in dish.ingredients %}
         <span class="px-2 py-0.5 bg-slate-700 rounded-full text-xs text-slate-300">
@@ -65,16 +65,16 @@
         {% endfor %}
     </div>
 
-    <!-- アレルギー警告 -->
+    <!-- Allergy Warning -->
     {% if dish.allergens %}
     <div class="mt-2 p-2 bg-red-500/10 border border-red-500/30 rounded">
         <p class="text-xs text-red-400">
-            ⚠️ アレルギー: {{ dish.allergens | join(', ') }}
+            ⚠️ Allergens: {{ dish.allergens | join(', ') }}
         </p>
     </div>
     {% endif %}
 
-    <!-- カテゴリバッジ -->
+    <!-- Category Badge -->
     {% if dish.category %}
     <div class="mt-3">
         <span class="px-2 py-1 bg-primary/20 text-primary rounded text-xs">

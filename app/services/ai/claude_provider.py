@@ -127,31 +127,31 @@ class ClaudeProvider(AIProvider):
         Returns:
             Prompt text
         """
-        return """この画像はレストランのメニューです。画像内の各料理について、以下の情報をJSON形式で抽出してください。
+        return """This image is a restaurant menu. Please extract the following information for each dish in the image in JSON format.
 
-各料理について以下の情報を含めてください:
-- original_name: 料理の原語名（メニューに記載されている通り）
-- japanese_name: 料理の日本語名（翻訳）
-- description: 料理の説明（日本語で50文字程度）
-- spiciness: 辛さレベル（1〜5の整数。1=辛くない、5=非常に辛い）
-- sweetness: 甘さレベル（1〜5の整数。1=甘くない、5=非常に甘い）
-- ingredients: 主な材料のリスト（日本語）
-- allergens: アレルゲンのリスト（日本語。卵、乳製品、小麦、そば、落花生、えび、かに、etc.）
-- category: 料理のカテゴリ（"appetizer", "main", "dessert", "beverage", "other"のいずれか）
-- price_range: 価格帯（"$", "$$", "$$$", "$$$$"のいずれか。判断できない場合はnull）
+For each dish, include the following information:
+- original_name: Original dish name (as written on the menu)
+- japanese_name: Dish name translated into English (if not already in English, translate it)
+- description: Dish description (approximately 50 words in English)
+- spiciness: Spiciness level (integer from 1 to 5, where 1=not spicy, 5=very spicy)
+- sweetness: Sweetness level (integer from 1 to 5, where 1=not sweet, 5=very sweet)
+- ingredients: List of main ingredients (in English)
+- allergens: List of allergens (in English, e.g., eggs, dairy, wheat, soba, peanuts, shrimp, crab, etc.)
+- category: Dish category (one of "appetizer", "main", "dessert", "beverage", "other")
+- price_range: Price range (one of "$", "$$", "$$$", "$$$$", or null if cannot be determined)
 
-以下のJSON形式で出力してください:
+Output in the following JSON format:
 ```json
 {
   "dishes": [
     {
       "original_name": "Pad Thai",
-      "japanese_name": "パッタイ",
-      "description": "米麺を使ったタイ風焼きそば。エビ、卵、もやし、ピーナッツを使用",
+      "japanese_name": "Pad Thai",
+      "description": "Thai-style stir-fried rice noodles with shrimp, eggs, bean sprouts, and peanuts",
       "spiciness": 2,
       "sweetness": 3,
-      "ingredients": ["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
-      "allergens": ["甲殻類", "卵", "ナッツ"],
+      "ingredients": ["rice noodles", "shrimp", "eggs", "bean sprouts", "peanuts"],
+      "allergens": ["shellfish", "eggs", "nuts"],
       "category": "main",
       "price_range": "$$"
     }
@@ -159,12 +159,12 @@ class ClaudeProvider(AIProvider):
 }
 ```
 
-重要な注意事項:
-- spiciness と sweetness は必ず1〜5の整数にしてください
-- 情報が不明な場合、ingredients や allergens は空のリストにしてください
-- price_range が判断できない場合は null にしてください
-- JSON以外のテキストは含めないでください
-- 必ず有効なJSON形式で出力してください"""
+Important notes:
+- spiciness and sweetness must be integers from 1 to 5
+- If information is unknown, use empty lists for ingredients or allergens
+- If price_range cannot be determined, use null
+- Do not include any text other than JSON
+- Must output valid JSON format"""
 
     def _parse_response(self, response: str) -> list[Dish]:
         """
@@ -209,8 +209,8 @@ class ClaudeProvider(AIProvider):
 
             if not dishes:
                 raise InvalidMenuImageError(
-                    "画像からメニューを検出できませんでした。"
-                    "メニュー表の写真であることを確認してください。"
+                    "Could not detect menu from image. "
+                    "Please verify that the image is a photo of a menu."
                 )
 
             return dishes

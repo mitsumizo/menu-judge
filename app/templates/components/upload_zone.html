@@ -1,28 +1,28 @@
 {#
-画像アップロードゾーンコンポーネント
+Image Upload Zone Component
 
-使用方法:
+Usage:
 {% from 'components/upload_zone.html' import upload_zone %}
 {{ upload_zone() }}
 
-機能:
-- カメラ撮影（モバイル優先）
-- ファイル選択
-- ドラッグ&ドロップ
-- バリデーション（JPEG, PNG, WebP / 10MB以下）
-- プレビュー表示
+Features:
+- Camera capture (mobile-first)
+- File selection
+- Drag & drop
+- Validation (JPEG, PNG, WebP / Max 10MB)
+- Preview display
 #}
 
 {% macro upload_zone() %}
 <div x-data="uploadZone()" class="upload-zone w-full">
-    <!-- カメラ撮影ボタン（モバイル優先） -->
+    <!-- Camera Capture Button (Mobile-first) -->
     <div class="mb-6 md:hidden">
         <label class="btn-primary cursor-pointer w-full flex items-center justify-center gap-3
                       bg-gradient-to-r from-primary to-primary-light text-white
                       font-semibold py-4 px-6 rounded-xl
                       shadow-lg hover:shadow-xl shadow-primary/20
                       active:scale-95 transition-all duration-200">
-            <input type="file" name="image" accept="image/*" capture="environment" aria-label="カメラでメニューを撮影"
+            <input type="file" name="image" accept="image/*" capture="environment" aria-label="Capture menu with camera"
                 @change="handleFileSelect($event)" class="hidden">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -31,11 +31,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span class="text-lg">カメラで撮影</span>
+            <span class="text-lg">Take Photo</span>
         </label>
     </div>
 
-    <!-- ドラッグ&ドロップエリア -->
+    <!-- Drag & Drop Area -->
     <div class="drop-zone border-2 border-dashed rounded-xl p-8 md:p-12 text-center
                 transition-all duration-300 relative overflow-hidden group"
         :class="isDragging ? 'border-primary bg-primary/10' : 'border-slate-700 bg-surface/50 hover:border-slate-500 hover:bg-surface'"
@@ -54,30 +54,30 @@
 
             <div class="space-y-1 pointer-events-none">
                 <p class="text-xl font-medium text-slate-200">
-                    画像をここにドラッグ&ドロップ
+                    Drag & drop image here
                 </p>
                 <p class="text-slate-400">
-                    または
+                    or
                 </p>
             </div>
 
             <label class="cursor-pointer relative z-20">
                 <span
                     class="inline-block py-2 px-6 rounded-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-colors border border-slate-600 hover:border-slate-500">
-                    ファイルを選択
+                    Choose File
                 </span>
-                <input type="file" name="image" accept=".jpg,.jpeg,.png,.webp" aria-label="メニュー画像を選択"
+                <input type="file" name="image" accept=".jpg,.jpeg,.png,.webp" aria-label="Select menu image"
                     @change="handleFileSelect($event)" class="hidden">
             </label>
         </div>
     </div>
 
-    <!-- プレビュー -->
+    <!-- Preview -->
     <div x-show="preview" x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 translateY-4" x-transition:enter-end="opacity-100 translateY-0"
         class="mt-6">
         <div class="relative group rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-            <img :src="preview" :alt="'プレビュー: ' + (file?.name || 'アップロード画像')"
+            <img :src="preview" :alt="'Preview: ' + (file?.name || 'Uploaded image')"
                 class="w-full h-auto max-h-[400px] object-contain bg-black/50 backdrop-blur-sm">
 
             <div
@@ -89,7 +89,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    画像を削除
+                    Remove Image
                 </button>
             </div>
         </div>
