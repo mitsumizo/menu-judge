@@ -46,7 +46,6 @@ For each dish, include the following information:
 - {t['field_ingredients']}
 - {t['field_allergens']}
 - {t['field_category']}
-- {t['field_price_range']}
 
 {t['output_format_intro']}
 ```json
@@ -75,8 +74,7 @@ For each dish, include the following information:
                     "sweetness": 3,
                     "ingredients": t['example_ingredients'],
                     "allergens": t['example_allergens'],
-                    "category": "main",
-                    "price_range": "$$"
+                    "category": "main"
                 }
             ]
         }

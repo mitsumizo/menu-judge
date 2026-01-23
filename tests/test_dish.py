@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.models import Category, Dish, PriceRange
+from app.models import Category, Dish
 
 
 class TestDish:
@@ -19,7 +19,6 @@ class TestDish:
             ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
             allergens=["甲殻類", "卵", "ナッツ"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
         )
 
@@ -31,7 +30,6 @@ class TestDish:
         assert dish.ingredients == ["米麺", "エビ", "卵", "もやし", "ピーナッツ"]
         assert dish.allergens == ["甲殻類", "卵", "ナッツ"]
         assert dish.category == Category.MAIN
-        assert dish.price_range == PriceRange.MODERATE
         assert dish.image_url == "https://example.com/pad-thai.jpg"
 
     def test_create_dish_with_defaults(self) -> None:
@@ -47,7 +45,6 @@ class TestDish:
         assert dish.ingredients == []
         assert dish.allergens == []
         assert dish.category == Category.OTHER
-        assert dish.price_range is None
         assert dish.image_url is None
 
     @pytest.mark.parametrize("spiciness", [0, -1, 6, 10])
@@ -99,7 +96,6 @@ class TestDish:
             ingredients=["米麺", "エビ"],
             allergens=["甲殻類"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
         )
 
@@ -113,7 +109,6 @@ class TestDish:
         assert result["ingredients"] == ["米麺", "エビ"]
         assert result["allergens"] == ["甲殻類"]
         assert result["category"] == "main"
-        assert result["price_range"] == "$$"
         assert result["image_url"] == "https://example.com/pad-thai.jpg"
 
     def test_to_dict_with_none_values(self) -> None:
@@ -128,7 +123,6 @@ class TestDish:
 
         result = dish.to_dict()
 
-        assert result["price_range"] is None
         assert result["image_url"] is None
         assert result["ingredients"] == []
         assert result["allergens"] == []
@@ -145,7 +139,6 @@ class TestDish:
             "ingredients": ["米麺", "エビ"],
             "allergens": ["甲殻類"],
             "category": "main",
-            "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
         }
 
@@ -159,7 +152,6 @@ class TestDish:
         assert dish.ingredients == ["米麺", "エビ"]
         assert dish.allergens == ["甲殻類"]
         assert dish.category == Category.MAIN
-        assert dish.price_range == PriceRange.MODERATE
         assert dish.image_url == "https://example.com/pad-thai.jpg"
 
     def test_from_dict_with_missing_optional_fields(self) -> None:
@@ -179,7 +171,6 @@ class TestDish:
         assert dish.ingredients == []
         assert dish.allergens == []
         assert dish.category == Category.OTHER
-        assert dish.price_range is None
         assert dish.image_url is None
 
     def test_from_dict_with_invalid_category(self) -> None:
@@ -197,21 +188,6 @@ class TestDish:
 
         assert dish.category == Category.OTHER
 
-    def test_from_dict_with_invalid_price_range(self) -> None:
-        """無効な価格帯の場合、Noneにフォールバック"""
-        data = {
-            "original_name": "Test Dish",
-            "japanese_name": "テスト料理",
-            "description": "無効な価格帯のテスト",
-            "spiciness": 3,
-            "sweetness": 3,
-            "price_range": "$$$$$",  # 無効な値
-        }
-
-        dish = Dish.from_dict(data)
-
-        assert dish.price_range is None
-
     def test_roundtrip_to_dict_from_dict(self) -> None:
         """to_dictとfrom_dictのラウンドトリップテスト"""
         original_dish = Dish(
@@ -223,7 +199,6 @@ class TestDish:
             ingredients=["エビ", "レモングラス", "唐辛子"],
             allergens=["甲殻類"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/tom-yum.jpg",
         )
 
@@ -240,5 +215,4 @@ class TestDish:
         assert restored_dish.ingredients == original_dish.ingredients
         assert restored_dish.allergens == original_dish.allergens
         assert restored_dish.category == original_dish.category
-        assert restored_dish.price_range == original_dish.price_range
         assert restored_dish.image_url == original_dish.image_url

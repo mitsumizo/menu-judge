@@ -64,15 +64,6 @@ class Category(Enum):
     OTHER = "other"
 
 
-class PriceRange(Enum):
-    """価格帯"""
-
-    BUDGET = "$"
-    MODERATE = "$$"
-    EXPENSIVE = "$$$"
-    LUXURY = "$$$$"
-
-
 @dataclass
 class Dish:
     """料理データモデル
@@ -86,7 +77,6 @@ class Dish:
         ingredients: 材料のリスト
         allergens: アレルゲンのリスト
         category: 料理のカテゴリ
-        price_range: 価格帯
         image_url: 画像URL
         bounding_box: メニュー画像上の位置（正規化座標）
     """
@@ -99,7 +89,6 @@ class Dish:
     ingredients: list[str] = field(default_factory=list)
     allergens: list[str] = field(default_factory=list)
     category: Category = Category.OTHER
-    price_range: PriceRange | None = None
     image_url: str | None = None
     bounding_box: BoundingBox | None = None
 
@@ -132,7 +121,6 @@ class Dish:
             "ingredients": self.ingredients,
             "allergens": self.allergens,
             "category": self.category.value,
-            "price_range": self.price_range.value if self.price_range else None,
             "image_url": self.image_url,
             "bounding_box": self.bounding_box.to_dict() if self.bounding_box else None,
         }
@@ -166,11 +154,6 @@ class Dish:
         except (ValueError, KeyError):
             category = Category.OTHER
 
-        try:
-            price_range = PriceRange(data["price_range"]) if data.get("price_range") else None
-        except (ValueError, KeyError):
-            price_range = None
-
         # BoundingBoxの変換（無効な値はNoneにフォールバック）
         bounding_box = None
         if data.get("bounding_box"):
@@ -188,7 +171,6 @@ class Dish:
             ingredients=data.get("ingredients", []),
             allergens=data.get("allergens", []),
             category=category,
-            price_range=price_range,
             image_url=data.get("image_url"),
             bounding_box=bounding_box,
         )

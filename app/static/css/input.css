@@ -31,6 +31,16 @@
     100% { width: 100%; }
 }
 
+/* Indeterminate progress bar animation */
+@keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+}
+
+.animate-indeterminate {
+    animation: indeterminate 1.5s ease-in-out infinite;
+}
+
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }

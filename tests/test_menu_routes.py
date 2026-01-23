@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 from PIL import Image
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import Category, Dish
 from app.services.ai.base import AIProviderError, AnalysisResult, InvalidMenuImageError
 
 
@@ -45,7 +45,6 @@ def create_mock_result():
             ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
             allergens=["甲殻類", "卵", "ナッツ"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
         )
     ]
     return AnalysisResult(dishes=dishes, raw_response="mock response", provider="mock", processing_time=1.0)

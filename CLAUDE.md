@@ -104,7 +104,6 @@ Text:       #F8FAFC (Slate 50)
     - 甘さレベル（1-5段階）
     - 主な材料リスト
     - アレルギー情報（可能な場合）
-    - 推定価格帯
 
 - [ ] 結果表示機能
   - カード形式で各料理を表示
@@ -278,8 +277,7 @@ class AIProviderFactory:
       "sweetness": 3,
       "ingredients": ["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
       "allergens": ["甲殻類", "卵", "ナッツ"],
-      "category": "main",
-      "price_range": "$$"
+      "category": "main"
     }
   ]
 }

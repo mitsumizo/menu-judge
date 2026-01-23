@@ -5,7 +5,7 @@ from typing import Generator
 import pytest
 from flask import Flask, render_template_string
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import Category, Dish
 
 
 @pytest.fixture
@@ -30,7 +30,6 @@ def sample_dish() -> Dish:
         ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
         allergens=["甲殻類", "卵", "ナッツ"],
         category=Category.MAIN,
-        price_range=PriceRange.MODERATE,
     )
 
 
@@ -49,34 +48,6 @@ def test_dish_card_renders_basic_info(app: Flask, sample_dish: Dish) -> None:
 
         # 説明が表示される
         assert "米麺を使ったタイ風焼きそば" in html
-
-
-def test_dish_card_renders_price_range(app: Flask, sample_dish: Dish) -> None:
-    """価格帯が表示されることを確認"""
-    with app.app_context():
-        template = """
-        {% from 'components/dish_card.html' import dish_card %}
-        {{ dish_card(dish) }}
-        """
-        html = render_template_string(template, dish=sample_dish)
-
-        # 価格帯が表示される
-        assert "$$" in html
-
-
-def test_dish_card_renders_without_price_range(app: Flask, sample_dish: Dish) -> None:
-    """価格帯がない場合でもレンダリングできることを確認"""
-    sample_dish.price_range = None
-
-    with app.app_context():
-        template = """
-        {% from 'components/dish_card.html' import dish_card %}
-        {{ dish_card(dish) }}
-        """
-        html = render_template_string(template, dish=sample_dish)
-
-        # 基本情報は表示される
-        assert "パッタイ" in html
 
 
 def test_dish_card_renders_spiciness_indicator(app: Flask, sample_dish: Dish) -> None:

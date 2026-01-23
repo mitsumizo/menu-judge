@@ -73,8 +73,7 @@ def mock_claude_response():
       "sweetness": 3,
       "ingredients": ["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
       "allergens": ["甲殻類", "卵", "ナッツ"],
-      "category": "main",
-      "price_range": "$$"
+      "category": "main"
     },
     {
       "original_name": "Tom Yum Goong",
@@ -84,8 +83,7 @@ def mock_claude_response():
       "sweetness": 1,
       "ingredients": ["エビ", "レモングラス", "ライム", "唐辛子"],
       "allergens": ["甲殻類"],
-      "category": "appetizer",
-      "price_range": "$$$"
+      "category": "appetizer"
     }
   ]
 }

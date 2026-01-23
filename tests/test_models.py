@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.models.dish import BoundingBox, Category, Dish, PriceRange
+from app.models.dish import BoundingBox, Category, Dish
 
 
 class TestDish:
@@ -19,7 +19,6 @@ class TestDish:
             ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
             allergens=["甲殻類", "卵", "ナッツ"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
         )
 
@@ -31,7 +30,6 @@ class TestDish:
         assert dish.ingredients == ["米麺", "エビ", "卵", "もやし", "ピーナッツ"]
         assert dish.allergens == ["甲殻類", "卵", "ナッツ"]
         assert dish.category == Category.MAIN
-        assert dish.price_range == PriceRange.MODERATE
         assert dish.image_url == "https://example.com/pad-thai.jpg"
 
     def test_dish_creation_with_default_values(self):
@@ -47,7 +45,6 @@ class TestDish:
         assert dish.ingredients == []
         assert dish.allergens == []
         assert dish.category == Category.OTHER
-        assert dish.price_range is None
         assert dish.image_url is None
 
     def test_spiciness_validation_below_range(self):
@@ -167,7 +164,6 @@ class TestDish:
             ingredients=["米麺", "エビ"],
             allergens=["甲殻類"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
         )
 
@@ -182,7 +178,6 @@ class TestDish:
             "ingredients": ["米麺", "エビ"],
             "allergens": ["甲殻類"],
             "category": "main",
-            "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
             "bounding_box": None,
         }
@@ -199,7 +194,6 @@ class TestDish:
 
         result = dish.to_dict()
 
-        assert result["price_range"] is None
         assert result["image_url"] is None
         assert result["bounding_box"] is None
 
@@ -214,7 +208,6 @@ class TestDish:
             "ingredients": ["米麺", "エビ"],
             "allergens": ["甲殻類"],
             "category": "main",
-            "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
         }
 
@@ -228,7 +221,6 @@ class TestDish:
         assert dish.ingredients == ["米麺", "エビ"]
         assert dish.allergens == ["甲殻類"]
         assert dish.category == Category.MAIN
-        assert dish.price_range == PriceRange.MODERATE
         assert dish.image_url == "https://example.com/pad-thai.jpg"
 
     def test_from_dict_with_missing_optional_fields(self):
@@ -246,7 +238,6 @@ class TestDish:
         assert dish.ingredients == []
         assert dish.allergens == []
         assert dish.category == Category.OTHER
-        assert dish.price_range is None
         assert dish.image_url is None
 
     def test_to_dict_from_dict_roundtrip(self):
@@ -260,7 +251,6 @@ class TestDish:
             ingredients=["米麺", "エビ", "卵"],
             allergens=["甲殻類", "卵"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
             bounding_box=BoundingBox(x=0.1, y=0.2, width=0.3, height=0.1),
         )
@@ -278,7 +268,6 @@ class TestDish:
         assert restored.ingredients == original.ingredients
         assert restored.allergens == original.allergens
         assert restored.category == original.category
-        assert restored.price_range == original.price_range
         assert restored.image_url == original.image_url
         assert restored.bounding_box.x == original.bounding_box.x
         assert restored.bounding_box.y == original.bounding_box.y
@@ -294,13 +283,11 @@ class TestDish:
             "spiciness": 1,
             "sweetness": 1,
             "category": Category.APPETIZER,
-            "price_range": PriceRange.BUDGET,
         }
 
         dish = Dish.from_dict(data)
 
         assert dish.category == Category.APPETIZER
-        assert dish.price_range == PriceRange.BUDGET
 
     def test_from_dict_missing_required_fields(self):
         """Test from_dict raises ValueError when required fields are missing."""
@@ -345,24 +332,6 @@ class TestCategory:
         assert Category("dessert") == Category.DESSERT
         assert Category("beverage") == Category.BEVERAGE
         assert Category("other") == Category.OTHER
-
-
-class TestPriceRange:
-    """Test cases for PriceRange enum."""
-
-    def test_price_range_values(self):
-        """Test that all price range values are defined correctly."""
-        assert PriceRange.BUDGET.value == "$"
-        assert PriceRange.MODERATE.value == "$$"
-        assert PriceRange.EXPENSIVE.value == "$$$"
-        assert PriceRange.LUXURY.value == "$$$$"
-
-    def test_price_range_from_string(self):
-        """Test creating PriceRange from string value."""
-        assert PriceRange("$") == PriceRange.BUDGET
-        assert PriceRange("$$") == PriceRange.MODERATE
-        assert PriceRange("$$$") == PriceRange.EXPENSIVE
-        assert PriceRange("$$$$") == PriceRange.LUXURY
 
 
 class TestBoundingBox:

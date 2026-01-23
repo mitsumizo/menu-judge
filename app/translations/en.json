@@ -59,7 +59,6 @@
     "spiciness": "Spiciness",
     "sweetness": "Sweetness",
     "category": "Category",
-    "price_range": "Price",
     "ingredients": "Ingredients",
     "description": "Description",
     "original_name": "Original Name",
@@ -75,7 +74,8 @@
     "step4_title": "Almost done...",
     "step4_sub": "Finalizing results",
     "elapsed": "Elapsed:",
-    "please_wait": "Please wait a moment."
+    "please_wait": "Please wait a moment.",
+    "step": "Step"
   },
   "results": {
     "title": "Analysis Results",
@@ -115,9 +115,8 @@
     "field_ingredients": "ingredients: List of main ingredients (in English)",
     "field_allergens": "allergens: List of allergens (in English, e.g., eggs, dairy, wheat, soba, peanuts, shrimp, crab, etc.)",
     "field_category": "category: Dish category (one of \"appetizer\", \"main\", \"dessert\", \"beverage\", \"other\")",
-    "field_price_range": "price_range: Price range (one of \"$\", \"$$\", \"$$$\", \"$$$$\", or null if cannot be determined)",
     "output_format_intro": "Output in the following JSON format:",
-    "notes": "Important notes:\n- spiciness and sweetness must be integers from 1 to 5\n- If information is unknown, use empty lists for ingredients or allergens\n- If price_range cannot be determined, use null\n- Do not include any text other than JSON\n- Must output valid JSON format",
+    "notes": "Important notes:\n- spiciness and sweetness must be integers from 1 to 5\n- If information is unknown, use empty lists for ingredients or allergens\n- Do not include any text other than JSON\n- Must output valid JSON format",
     "example_dish_name": "Pad Thai",
     "example_description": "Thai-style stir-fried rice noodles with shrimp, eggs, bean sprouts, and peanuts",
     "example_ingredients": ["rice noodles", "shrimp", "eggs", "bean sprouts", "peanuts"],

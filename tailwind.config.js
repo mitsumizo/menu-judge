@@ -32,6 +32,7 @@ module.exports = {
       animation: {
         'shine': 'shine 1.5s infinite',
         'gradient-text': 'gradient-text 8s ease infinite',
+        'indeterminate': 'indeterminate 1.5s ease-in-out infinite',
       },
       keyframes: {
         shine: {
@@ -46,6 +47,10 @@ module.exports = {
             'background-size': '200% 200%',
             'background-position': 'right center'
           },
+        },
+        'indeterminate': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(300%)' },
         },
       },
     },

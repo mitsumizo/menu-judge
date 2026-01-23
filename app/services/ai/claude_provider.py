@@ -133,17 +133,31 @@ class ClaudeProvider(AIProvider):
         # Get base prompt from multilingual prompt builder
         base_prompt = self.prompt_builder.build_menu_analysis_prompt()
 
-        # Add bounding_box field instructions
+        # Add bounding_box field instructions with improved guidance
         bounding_box_instruction = """
-- bounding_box: The location of the dish in the menu image (normalized coordinates)
-  - x: X coordinate of the left edge (0-1, 0=left edge, 1=right edge)
-  - y: Y coordinate of the top edge (0-1, 0=top edge, 1=bottom edge)
-  - width: Width (0-1)
-  - height: Height (0-1)
+- bounding_box: The location of the dish entry in the menu image (REQUIRED for each dish)
+  IMPORTANT: Think of the image as a 1.0 x 1.0 coordinate system where:
+  - (0, 0) is the TOP-LEFT corner of the image
+  - (1, 1) is the BOTTOM-RIGHT corner of the image
 
-Additional notes for bounding_box:
-- bounding_box should enclose the area where the dish name and description are written
-- If bounding_box coordinates are unclear, set it to null"""
+  - x: X coordinate of the LEFT edge of the dish entry (0.0 to 1.0)
+  - y: Y coordinate of the TOP edge of the dish entry (0.0 to 1.0)
+  - width: Width of the bounding box (0.0 to 1.0)
+  - height: Height of the bounding box (0.0 to 1.0)
+
+  CRITICAL guidelines for bounding_box:
+  1. The bounding box should tightly enclose ONLY the dish name and its price/description text
+  2. Analyze the vertical position of each dish in the menu from TOP to BOTTOM
+     - First dish on the page should have a smaller y value (closer to 0)
+     - Last dish on the page should have a larger y value (closer to 1)
+  3. For a typical single-column menu:
+     - x is usually around 0.05-0.15 (dishes start near the left edge with some margin)
+     - width is usually around 0.7-0.9 (dishes span most of the width)
+  4. For a multi-column menu:
+     - Left column: x around 0.02-0.1
+     - Right column: x around 0.5-0.55
+  5. Height should match the actual text height of that dish entry (usually 0.03-0.1)
+  6. ALWAYS provide bounding_box coordinates - do not set to null unless truly impossible"""
 
         # Insert bounding_box instructions before the output format section
         if "```json" in base_prompt:

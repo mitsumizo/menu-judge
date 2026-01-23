@@ -80,6 +80,11 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(main_bp)
     app.register_blueprint(menu_bp)
 
+    # Register development blueprints (only in debug mode)
+    if os.environ.get("FLASK_DEBUG") == "1" or app.debug:
+        from app.routes.dev import dev_bp
+        app.register_blueprint(dev_bp)
+
     # Register context processor for template global functions
     @app.context_processor
     def inject_now():

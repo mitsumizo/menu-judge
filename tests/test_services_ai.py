@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import Category, Dish
 from app.services.ai.base import (
     AIProvider,
     AIProviderError,
@@ -33,7 +33,6 @@ class TestAnalysisResult:
             ingredients=["米麺", "エビ"],
             allergens=["甲殻類"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
         )
 
         dish2 = Dish(
@@ -45,7 +44,6 @@ class TestAnalysisResult:
             ingredients=["エビ", "レモングラス", "唐辛子"],
             allergens=["甲殻類"],
             category=Category.APPETIZER,
-            price_range=PriceRange.BUDGET,
         )
 
         result = AnalysisResult(
@@ -244,7 +242,6 @@ class TestClaudeProvider:
             assert "ingredients" in prompt
             assert "allergens" in prompt
             assert "category" in prompt
-            assert "price_range" in prompt
 
     def test_parse_response_valid_json(self):
         """Test parsing valid JSON response."""
@@ -262,7 +259,6 @@ class TestClaudeProvider:
                         "ingredients": ["米麺", "エビ", "卵"],
                         "allergens": ["甲殻類", "卵"],
                         "category": "main",
-                        "price_range": "$$",
                     }
                 ]
             }
@@ -275,7 +271,6 @@ class TestClaudeProvider:
             assert dishes[0].spiciness == 2
             assert dishes[0].sweetness == 3
             assert dishes[0].category == Category.MAIN
-            assert dishes[0].price_range == PriceRange.MODERATE
 
     def test_parse_response_with_markdown_code_block(self):
         """Test parsing JSON wrapped in markdown code block."""
@@ -293,7 +288,6 @@ class TestClaudeProvider:
                         "ingredients": ["エビ", "レモングラス"],
                         "allergens": ["甲殻類"],
                         "category": "appetizer",
-                        "price_range": "$",
                     }
                 ]
             }
@@ -360,7 +354,6 @@ class TestClaudeProvider:
                         "ingredients": ["材料1"],
                         "allergens": [],
                         "category": "main",
-                        "price_range": "$$",
                     },
                 ]
             }
@@ -411,7 +404,6 @@ class TestClaudeProvider:
                         "ingredients": ["鶏肉", "ココナッツミルク", "バジル"],
                         "allergens": [],
                         "category": "main",
-                        "price_range": "$$",
                     }
                 ]
             }

@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import Category, Dish
 from app.services.ai.base import AnalysisResult, APICallError, APIKeyMissingError
 from app.services.ai.claude_provider import ClaudeProvider
 from app.services.ai.factory import AIProviderFactory, UnknownProviderError
@@ -25,7 +25,6 @@ class TestDishModel:
             ingredients=["米麺", "エビ", "卵"],
             allergens=["甲殻類", "卵"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
         )
 
         assert dish.original_name == "Pad Thai"
@@ -36,7 +35,6 @@ class TestDishModel:
         assert dish.ingredients == ["米麺", "エビ", "卵"]
         assert dish.allergens == ["甲殻類", "卵"]
         assert dish.category == Category.MAIN
-        assert dish.price_range == PriceRange.MODERATE
 
     def test_dish_to_dict(self):
         """Test converting Dish to dictionary."""
@@ -49,7 +47,6 @@ class TestDishModel:
             ingredients=["エビ", "レモングラス"],
             allergens=["甲殻類"],
             category=Category.APPETIZER,
-            price_range=PriceRange.EXPENSIVE,
         )
 
         result = dish.to_dict()
@@ -63,7 +60,6 @@ class TestDishModel:
         assert result["ingredients"] == ["エビ", "レモングラス"]
         assert result["allergens"] == ["甲殻類"]
         assert result["category"] == "appetizer"
-        assert result["price_range"] == "$$$"
 
     def test_dish_validation_spiciness_out_of_range(self):
         """Test validation for spiciness out of range (1-5)."""
@@ -136,7 +132,6 @@ class TestDishModel:
             "ingredients": ["鶏肉", "野菜", "スパイス"],
             "allergens": ["乳製品"],
             "category": "main",
-            "price_range": "$$",
         }
 
         dish = Dish.from_dict(data)
@@ -149,7 +144,6 @@ class TestDishModel:
         assert dish.ingredients == ["鶏肉", "野菜", "スパイス"]
         assert dish.allergens == ["乳製品"]
         assert dish.category == Category.MAIN
-        assert dish.price_range == PriceRange.MODERATE
 
     def test_dish_from_dict_missing_required_fields(self):
         """Test creating Dish from dictionary with missing required fields."""
@@ -177,7 +171,6 @@ class TestDishModel:
         assert dish.ingredients == []
         assert dish.allergens == []
         assert dish.category == Category.OTHER
-        assert dish.price_range is None
 
     def test_dish_from_dict_invalid_category_fallback(self):
         """Test that invalid category falls back to OTHER."""

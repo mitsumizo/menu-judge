@@ -59,7 +59,6 @@ class Dish:
     ingredients: list[str]
     allergens: list[str]
     category: str
-    price_range: Optional[str] = None
 ```
 
 ## ステップ2: 失敗するテストを書く（RED）

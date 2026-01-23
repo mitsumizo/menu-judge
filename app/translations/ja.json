@@ -59,7 +59,6 @@
     "spiciness": "辛さ",
     "sweetness": "甘さ",
     "category": "カテゴリ",
-    "price_range": "価格帯",
     "ingredients": "材料",
     "description": "説明",
     "original_name": "料理名（原語）",
@@ -75,7 +74,8 @@
     "step4_title": "もうすぐ完了...",
     "step4_sub": "結果を最終処理中",
     "elapsed": "経過時間:",
-    "please_wait": "しばらくお待ちください。"
+    "please_wait": "しばらくお待ちください。",
+    "step": "ステップ"
   },
   "results": {
     "title": "解析結果",
@@ -115,9 +115,8 @@
     "field_ingredients": "ingredients: 主な材料のリスト（日本語）",
     "field_allergens": "allergens: アレルゲンのリスト（日本語、例: 卵、乳製品、小麦、そば、ピーナッツ、エビ、カニなど）",
     "field_category": "category: 料理のカテゴリ（\"appetizer\"、\"main\"、\"dessert\"、\"beverage\"、\"other\"のいずれか）",
-    "field_price_range": "price_range: 価格帯（\"$\"、\"$$\"、\"$$$\"、\"$$$$\"のいずれか、判別できない場合はnull）",
     "output_format_intro": "以下のJSON形式で出力してください:",
-    "notes": "重要な注意事項:\n- spicinessとsweetnessは1から5の整数でなければなりません\n- 情報が不明な場合、ingredientsまたはallergensには空のリストを使用してください\n- price_rangeが判別できない場合はnullを使用してください\n- JSON以外のテキストを含めないでください\n- 有効なJSON形式で出力する必要があります",
+    "notes": "重要な注意事項:\n- spicinessとsweetnessは1から5の整数でなければなりません\n- 情報が不明な場合、ingredientsまたはallergensには空のリストを使用してください\n- JSON以外のテキストを含めないでください\n- 有効なJSON形式で出力する必要があります",
     "example_dish_name": "パッタイ",
     "example_description": "タイ風焼きそば。米麺を使い、エビ、卵、もやし、ピーナッツを炒めた料理",
     "example_ingredients": ["米麺", "エビ", "卵", "もやし", "ピーナッツ"],

@@ -70,7 +70,7 @@ Arguments:
         x-ref="imageModalContainer"
     >
         <!-- Modal Content -->
-        <div class="relative w-full max-w-4xl max-h-[90vh] overflow-auto bg-surface rounded-xl shadow-2xl"
+        <div class="relative w-full max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-auto bg-surface rounded-xl shadow-2xl"
              x-ref="imageModalContent"
              x-init="$watch('showImageModal', value => { if (value) FocusTrap.setInitialFocus($refs.imageModalContent) })">
             <!-- Close Button -->

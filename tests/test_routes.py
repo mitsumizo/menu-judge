@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 from PIL import Image
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import Category, Dish
 from app.services.ai.base import AIProviderError, AnalysisResult
 
 
@@ -112,7 +112,6 @@ class TestAnalyzeRoute:
                     ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
                     allergens=["甲殻類", "卵", "ナッツ"],
                     category=Category.MAIN,
-                    price_range=PriceRange.MODERATE,
                 )
             ],
             raw_response="mock response",
@@ -144,7 +143,6 @@ class TestAnalyzeRoute:
                     ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
                     allergens=["甲殻類", "卵", "ナッツ"],
                     category=Category.MAIN,
-                    price_range=PriceRange.MODERATE,
                 )
             ],
             raw_response="mock response",
