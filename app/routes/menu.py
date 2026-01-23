@@ -18,7 +18,7 @@ from PIL import Image
 from werkzeug.datastructures import FileStorage
 
 from app.services.ai.base import AIProviderError, InvalidMenuImageError
-from app.services.ai.factory import AIProviderFactory
+from app.services.ai.factory import AIProviderFactory, UnknownProviderError
 from app.translations.loader import TranslationLoader
 
 # Logger setup
@@ -194,10 +194,18 @@ def analyze_menu() -> Response:
         # Validation confirmed that content_type is in ALLOWED_MIME_TYPES
         mime_type = file.content_type
 
-        logger.info(f"Processing image: {file.filename}, size: {len(image_data)} bytes, MIME: {mime_type}, Language: {language}")
+        # Get AI provider from header (default: claude)
+        provider_name = request.headers.get("X-AI-Provider", "claude")
+
+        logger.info(
+            f"Processing image: {file.filename}, size: {len(image_data)} bytes, "
+            f"MIME: {mime_type}, Language: {language}, Provider: {provider_name}"
+        )
 
         # Get AI provider with language support
-        provider = AIProviderFactory.create(api_key=api_key, language=language)
+        provider = AIProviderFactory.create(
+            api_key=api_key, provider_name=provider_name, language=language
+        )
 
         # Analyze menu
         result = provider.analyze_menu(image_data, mime_type)
@@ -223,6 +231,21 @@ def analyze_menu() -> Response:
 
         return jsonify(response_data), 200
 
+    except UnknownProviderError as e:
+        logger.warning(f"Unknown provider requested: {e}")
+        default_msg = "This provider is not yet implemented."
+        error_msg = TranslationLoader.get(
+            language, 'api_key_modal.provider_not_implemented', default_msg
+        )
+        title_msg = TranslationLoader.get(
+            language, 'error.provider_not_implemented', 'Provider Not Implemented'
+        )
+        return _create_error_response(
+            error_message=error_msg,
+            error_code="PROVIDER_NOT_IMPLEMENTED",
+            status_code=400,
+            title=title_msg,
+        )
     except InvalidMenuImageError as e:
         logger.warning(f"Invalid menu image: {e}")
         error_msg = str(e) if str(e) else TranslationLoader.get(language, 'toast.analysis_failed', 'Analysis failed')

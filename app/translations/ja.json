@@ -19,19 +19,37 @@
     "loading": "読み込み中..."
   },
   "api_key_modal": {
-    "title": "APIキー設定",
-    "description": "メニュー解析にはClaude APIが必要です。",
+    "title": "API設定",
+    "description": "メニュー解析にはAI APIが必要です。",
     "get_key_text": "APIキーは以下から取得できます",
-    "get_key_link": "Anthropic コンソール",
+    "get_key_link": "プロバイダーのコンソール",
     "storage_notice": "※ APIキーはブラウザのlocalStorageに保存され、サーバーには送信されません。",
-    "input_label": "Anthropic APIキー",
-    "input_placeholder": "sk-ant-api03-...",
+    "provider_label": "AIプロバイダー",
+    "provider_select_placeholder": "AIプロバイダーを選択",
+    "input_label": "APIキー",
+    "input_placeholder": "APIキーを入力",
     "save_button": "保存",
     "delete_button": "削除",
     "delete_confirm": "APIキーを削除してもよろしいですか？",
     "close_modal": "閉じる",
     "show_api_key": "APIキーを表示",
-    "hide_api_key": "APIキーを非表示"
+    "hide_api_key": "APIキーを非表示",
+    "provider_not_implemented": "このプロバイダーはまだ実装されていません。現在はClaudeを選択してください。",
+    "provider_console_links": {
+      "claude": "Anthropic コンソール",
+      "openai": "OpenAI Platform",
+      "gemini": "Google AI Studio"
+    },
+    "provider_console_urls": {
+      "claude": "https://console.anthropic.com/settings/keys",
+      "openai": "https://platform.openai.com/api-keys",
+      "gemini": "https://aistudio.google.com/app/apikey"
+    },
+    "provider_placeholder": {
+      "claude": "sk-ant-api03-...",
+      "openai": "sk-proj-...",
+      "gemini": "AIza..."
+    }
   },
   "toast": {
     "image_loaded": "画像が読み込まれました",
@@ -94,6 +112,7 @@
     "invalid_request": "無効なリクエスト",
     "server_error": "サーバーエラー",
     "analysis_error": "解析エラー",
+    "provider_not_implemented": "プロバイダー未実装",
     "file_error": "ファイルエラー",
     "network_error": "ネットワークエラー",
     "unknown_error": "不明なエラー"
