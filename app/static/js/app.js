@@ -16,6 +16,77 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
+/**
+ * Focus trap utility for modals
+ * Keeps focus within a container element when Tab key is pressed
+ */
+const FocusTrap = {
+    /**
+     * Get all focusable elements within a container
+     * @param {HTMLElement} container - The container element
+     * @returns {HTMLElement[]} Array of focusable elements
+     */
+    getFocusableElements(container) {
+        const selector = [
+            'a[href]',
+            'button:not([disabled])',
+            'input:not([disabled])',
+            'select:not([disabled])',
+            'textarea:not([disabled])',
+            '[tabindex]:not([tabindex="-1"])'
+        ].join(', ');
+        return Array.from(container.querySelectorAll(selector)).filter(
+            el => !el.hasAttribute('disabled') && el.offsetParent !== null
+        );
+    },
+
+    /**
+     * Handle Tab key press to trap focus
+     * @param {KeyboardEvent} event - The keyboard event
+     * @param {HTMLElement} container - The container element
+     */
+    handleTab(event, container) {
+        if (event.key !== 'Tab') return;
+
+        const focusableElements = this.getFocusableElements(container);
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey) {
+            // Shift+Tab: Moving backwards
+            if (document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement.focus();
+            }
+        } else {
+            // Tab: Moving forwards
+            if (document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement.focus();
+            }
+        }
+    },
+
+    /**
+     * Set initial focus to the first focusable element
+     * @param {HTMLElement} container - The container element
+     */
+    setInitialFocus(container) {
+        const focusableElements = this.getFocusableElements(container);
+        if (focusableElements.length > 0) {
+            // Small delay to ensure element is visible
+            requestAnimationFrame(() => {
+                focusableElements[0].focus();
+            });
+        }
+    }
+};
+
+// Expose globally
+window.FocusTrap = FocusTrap;
+
 // Toast notification constants
 const TOAST_ANIMATION_DELAY = 10;  // Delay before animation starts (milliseconds)
 const TOAST_FADE_DURATION = 300;   // Fade out animation duration (milliseconds)
@@ -224,7 +295,7 @@ function uploadZone() {
             .then(async response => {
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `サーバーエラー: ${response.status}`);
+                    throw new Error(errorData.error || t('error.server_error', 'Server Error') + `: ${response.status}`);
                 }
                 return response.json();
             })
@@ -366,15 +437,23 @@ function apiKeyManager() {
          * HTMXリクエストヘッダーにAPIキーを追加
          */
         setupHtmxHeaders() {
-            // HTMXのグローバル設定でヘッダーを追加
-            document.body.addEventListener('htmx:configRequest', (event) => {
+            // Remove existing listener if present (prevents duplicates)
+            if (this._htmxConfigHandler) {
+                document.body.removeEventListener('htmx:configRequest', this._htmxConfigHandler);
+            }
+
+            // Create and store the handler
+            this._htmxConfigHandler = (event) => {
                 if (this.apiKey) {
                     event.detail.headers['X-API-Key'] = this.apiKey;
                 }
                 // Add language header
                 const language = getCurrentLanguage();
                 event.detail.headers['X-Language'] = language;
-            });
+            };
+
+            // Add the listener
+            document.body.addEventListener('htmx:configRequest', this._htmxConfigHandler);
         },
 
         /**
@@ -391,13 +470,13 @@ function apiKeyManager() {
                     showToast(t('toast.api_key_invalid'), 'error', 5000);
                     this.showModal = true;
                 }
-                // その他のエラー
+                // Other errors
                 else if (status >= 400) {
                     try {
                         const response = JSON.parse(event.detail.xhr.responseText);
-                        showToast(response.error || `エラーが発生しました (${status})`, 'error');
+                        showToast(response.error || t('error.unknown_error', 'Unknown Error') + ` (${status})`, 'error');
                     } catch (e) {
-                        showToast(`エラーが発生しました (${status})`, 'error');
+                        showToast(t('error.unknown_error', 'Unknown Error') + ` (${status})`, 'error');
                     }
                 }
             });

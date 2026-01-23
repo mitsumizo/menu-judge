@@ -1,5 +1,24 @@
-<!-- Spinner Loading -->
-<div class="loading-container flex flex-col items-center" role="status" aria-live="polite">
+{#
+Loading Component with Progressive Messages
+
+Features:
+- Animated spinner with gradient
+- Progressive status messages that change over time
+- i18n support
+- Screen reader accessible
+- Visual progress indicator
+#}
+
+<!-- Spinner Loading with Progressive Messages -->
+<div class="loading-container flex flex-col items-center"
+     role="status"
+     aria-live="polite"
+     x-data="loadingProgress()"
+     x-init="startProgress()"
+     @htmx:after-swap.window="destroy()"
+     @htmx:before-request.window="startProgress()"
+     x-effect="$cleanup(() => destroy())">
+
     <!-- Spinner -->
     <div class="relative mb-6">
         <div class="absolute inset-0 bg-primary blur-xl opacity-30 animate-pulse"></div>
@@ -16,25 +35,98 @@
         </svg>
     </div>
 
-    <!-- Message -->
-    <h3 class="text-xl font-bold text-white mb-2 animate-pulse">Analyzing menu with AI...</h3>
-    <p class="text-slate-400 font-medium">
-        Extracting dish details
+    <!-- Progressive Messages -->
+    <h3 class="text-xl font-bold text-white mb-2 transition-all duration-300"
+        x-text="currentMessage">
+    </h3>
+    <p class="text-slate-400 font-medium transition-opacity duration-300"
+       x-text="currentSubMessage">
+    </p>
+
+    <!-- Elapsed Time -->
+    <p class="text-xs text-slate-500 mt-2" x-show="elapsedSeconds > 3">
+        <span x-text="t('loading.elapsed', 'Elapsed:')"></span>
+        <span x-text="elapsedSeconds + 's'"></span>
     </p>
 
     <!-- Screen reader text -->
-    <span class="sr-only">Analyzing menu. Please wait a moment.</span>
+    <span class="sr-only" x-text="currentMessage + '. ' + t('loading.please_wait', 'Please wait a moment.')"></span>
 
     <!-- Progress bar -->
-    <div class="mt-8 w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-primary via-accent to-secondary animate-progress w-full origin-left">
+    <div class="mt-8 w-64 h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-primary via-accent to-secondary rounded-full transition-all duration-500 ease-out"
+             :style="'width: ' + progress + '%'">
         </div>
     </div>
+
+    <!-- Progress percentage -->
+    <p class="text-xs text-slate-500 mt-2" x-text="Math.round(progress) + '%'"></p>
 </div>
 
-<!-- Skeleton UI version -->
-<div class="skeleton-container space-y-4 hidden">
-    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
-    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
-    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
-</div>
+<script>
+/**
+ * Loading progress component with progressive messages
+ */
+function loadingProgress() {
+    return {
+        progress: 0,
+        step: 0,
+        elapsedSeconds: 0,
+        intervalId: null,
+        timerIntervalId: null,
+
+        // Message steps with timing (seconds)
+        steps: [
+            { message: 'loading.step1_title', sub: 'loading.step1_sub', duration: 2 },
+            { message: 'loading.step2_title', sub: 'loading.step2_sub', duration: 3 },
+            { message: 'loading.step3_title', sub: 'loading.step3_sub', duration: 4 },
+            { message: 'loading.step4_title', sub: 'loading.step4_sub', duration: 5 },
+        ],
+
+        get currentMessage() {
+            const key = this.steps[this.step]?.message || 'loading.step1_title';
+            return t(key, 'Analyzing menu with AI...');
+        },
+
+        get currentSubMessage() {
+            const key = this.steps[this.step]?.sub || 'loading.step1_sub';
+            return t(key, 'Uploading image...');
+        },
+
+        startProgress() {
+            // Reset state
+            this.progress = 0;
+            this.step = 0;
+            this.elapsedSeconds = 0;
+
+            // Progress animation (smooth increment)
+            this.intervalId = setInterval(() => {
+                if (this.progress < 95) {
+                    // Slow down as we approach the end
+                    const increment = Math.max(0.5, (95 - this.progress) / 20);
+                    this.progress = Math.min(95, this.progress + increment);
+
+                    // Update step based on progress
+                    if (this.progress > 75 && this.step < 3) {
+                        this.step = 3;
+                    } else if (this.progress > 50 && this.step < 2) {
+                        this.step = 2;
+                    } else if (this.progress > 25 && this.step < 1) {
+                        this.step = 1;
+                    }
+                }
+            }, 200);
+
+            // Elapsed time counter
+            this.timerIntervalId = setInterval(() => {
+                this.elapsedSeconds++;
+            }, 1000);
+        },
+
+        destroy() {
+            if (this.intervalId) clearInterval(this.intervalId);
+            if (this.timerIntervalId) clearInterval(this.timerIntervalId);
+        }
+    };
+}
+</script>

@@ -10,7 +10,9 @@
     "settings": "設定",
     "take_photo": "写真を撮る",
     "drag_drop": "ここに画像をドラッグ&ドロップ",
+    "drop_here": "ドロップしてください！",
     "or": "または",
+    "or_click": "またはクリックして選択",
     "choose_file": "ファイルを選択",
     "remove_image": "画像を削除",
     "no_results": "まだ結果がありません。メニュー画像をアップロードして開始してください！",
@@ -63,7 +65,31 @@
     "original_name": "料理名（原語）",
     "no_description": "説明がありません"
   },
+  "loading": {
+    "step1_title": "画像をアップロード中...",
+    "step1_sub": "メニューを解析準備中です",
+    "step2_title": "メニューを解析中...",
+    "step2_sub": "AIがメニュー項目を読み取っています",
+    "step3_title": "料理の詳細を抽出中...",
+    "step3_sub": "材料とアレルゲンを識別中",
+    "step4_title": "もうすぐ完了...",
+    "step4_sub": "結果を最終処理中",
+    "elapsed": "経過時間:",
+    "please_wait": "しばらくお待ちください。"
+  },
+  "results": {
+    "title": "解析結果",
+    "dish_count": "品",
+    "view_menu_image": "メニュー画像を見る",
+    "analyzed_with": "解析エンジン:",
+    "no_dishes_detected": "料理が検出されませんでした",
+    "try_different_image": "別の画像をお試しください",
+    "hover_hint": "番号にホバーすると対応する料理がハイライトされます"
+  },
   "error": {
+    "title": "エラーが発生しました",
+    "close": "閉じる",
+    "error_code": "エラーコード:",
     "api_key_not_set": "APIキーが未設定",
     "invalid_request": "無効なリクエスト",
     "server_error": "サーバーエラー",

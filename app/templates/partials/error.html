@@ -1,36 +1,45 @@
 <div id="error-message"
      role="alert"
      aria-live="assertive"
-     class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 animate-shake">
-    <div class="flex items-start gap-3">
+     class="bg-red-500/10 border border-red-500/30 rounded-xl p-6 animate-shake max-w-xl mx-auto">
+    <div class="flex items-start gap-4">
         <!-- Error Icon -->
-        <div class="text-red-500 text-xl">⚠️</div>
+        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
 
         <div class="flex-1">
             <!-- Error Title -->
-            <h3 class="font-bold text-red-400">
-                {{ title | default('An Error Occurred') }}
+            <h3 class="font-bold text-red-400 text-lg">
+                {{ title | default(t('error.title', 'An Error Occurred')) }}
             </h3>
 
             <!-- Error Message -->
-            <p class="text-sm text-slate-300 mt-1">
+            <p class="text-sm text-slate-300 mt-2 leading-relaxed">
                 {{ message }}
             </p>
 
             <!-- Error Code -->
             {% if code %}
-            <p class="text-xs text-slate-500 mt-2">
-                Error Code: {{ code }}
+            <p class="text-xs text-slate-500 mt-3 font-mono bg-slate-800/50 px-2 py-1 rounded inline-block">
+                {{ t('error.error_code', 'Error Code:') }} {{ code }}
             </p>
             {% endif %}
 
-            <!-- Retry Button -->
-            <button class="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30
-                           text-red-400 rounded transition-colors"
-                    aria-label="Close error message"
-                    onclick="document.getElementById('error-message').remove()">
-                Close
-            </button>
+            <!-- Close Button -->
+            <div class="mt-4">
+                <button class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30
+                               border border-red-500/30 hover:border-red-500/50
+                               text-red-400 rounded-lg transition-all
+                               focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                        aria-label="{{ t('error.close', 'Close') }}"
+                        onclick="document.getElementById('error-message').remove()">
+                    {{ t('error.close', 'Close') }}
+                </button>
+            </div>
         </div>
     </div>
 </div>

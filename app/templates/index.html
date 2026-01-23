@@ -71,14 +71,29 @@
         </div>
     </section>
 
-    <!-- Loading Indicator -->
+    <!-- Loading Overlay -->
     <div id="loading"
         class="htmx-indicator fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
         {% include 'components/loading.html' %}
     </div>
 
-    <!-- Results Area -->
-    <section id="result-area" class="mt-12 w-full max-w-4xl mx-auto">
+    <!-- Skeleton placeholder shown during analysis (outside HTMX target) -->
+    <div x-show="analyzing"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         class="mt-12 w-full max-w-6xl mx-auto">
+        {% from 'components/skeleton_card.html' import skeleton_grid %}
+        {{ skeleton_grid(count=6) }}
+    </div>
+
+    <!-- Results Area (HTMX target) -->
+    <section id="result-area"
+             x-show="!analyzing"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             class="mt-12 w-full max-w-6xl mx-auto">
         <!-- Dynamically inserted by HTMX -->
     </section>
 

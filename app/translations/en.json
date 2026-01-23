@@ -10,7 +10,9 @@
     "settings": "Settings",
     "take_photo": "Take Photo",
     "drag_drop": "Drag & drop image here",
+    "drop_here": "Drop here!",
     "or": "or",
+    "or_click": "or click to browse",
     "choose_file": "Choose File",
     "remove_image": "Remove Image",
     "no_results": "No results yet. Upload a menu image to get started!",
@@ -63,7 +65,31 @@
     "original_name": "Original Name",
     "no_description": "No description available"
   },
+  "loading": {
+    "step1_title": "Uploading image...",
+    "step1_sub": "Preparing your menu for analysis",
+    "step2_title": "Analyzing menu...",
+    "step2_sub": "AI is reading the menu items",
+    "step3_title": "Extracting dish details...",
+    "step3_sub": "Identifying ingredients and allergens",
+    "step4_title": "Almost done...",
+    "step4_sub": "Finalizing results",
+    "elapsed": "Elapsed:",
+    "please_wait": "Please wait a moment."
+  },
+  "results": {
+    "title": "Analysis Results",
+    "dish_count": "dishes",
+    "view_menu_image": "View Menu Image",
+    "analyzed_with": "Analyzed with",
+    "no_dishes_detected": "No dishes detected",
+    "try_different_image": "Please try a different image",
+    "hover_hint": "Hover over numbers to highlight corresponding dishes"
+  },
   "error": {
+    "title": "An Error Occurred",
+    "close": "Close",
+    "error_code": "Error Code:",
     "api_key_not_set": "API Key Not Set",
     "invalid_request": "Invalid Request",
     "server_error": "Server Error",
