@@ -8,7 +8,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask
+from flask import Flask, request
+from app.translations.loader import TranslationLoader
 
 
 def create_app(config: dict | None = None) -> Flask:
@@ -84,5 +85,42 @@ def create_app(config: dict | None = None) -> Flask:
     def inject_now():
         """Inject now function into Jinja2 templates."""
         return {"now": datetime.now}
+
+    @app.context_processor
+    def inject_translation_helper():
+        """Inject translation helper and language data into Jinja2 templates."""
+        # Get language from query parameter or default to English
+        language = request.args.get('lang', 'en')
+        if language not in ['en', 'ja']:
+            language = 'en'
+
+        # Load both translations for JavaScript embedding
+        translations_en = TranslationLoader.load('en')
+        translations_ja = TranslationLoader.load('ja')
+
+        return {
+            'current_language': language,
+            'translations_en': translations_en,
+            'translations_ja': translations_ja,
+        }
+
+    # Register t function as a global Jinja2 function (for use in macros)
+    def translation_function(key: str, fallback: str = '') -> str:
+        """Get translation for a key.
+
+        Args:
+            key: Translation key in dot notation (e.g., 'ui.hero_title')
+            fallback: Fallback text if key not found
+
+        Returns:
+            Translated text
+        """
+        # Get language from query parameter or default to English
+        language = request.args.get('lang', 'en')
+        if language not in ['en', 'ja']:
+            language = 'en'
+        return TranslationLoader.get(language, key, fallback)
+
+    app.jinja_env.globals['t'] = translation_function
 
     return app

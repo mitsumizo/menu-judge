@@ -79,7 +79,7 @@ class Dish:
 
     Attributes:
         original_name: 料理の原語名
-        japanese_name: 料理の日本語名
+        translated_name: 料理の翻訳名（選択言語に応じた翻訳）
         description: 料理の説明
         spiciness: 辛さレベル（1-5）
         sweetness: 甘さレベル（1-5）
@@ -92,7 +92,7 @@ class Dish:
     """
 
     original_name: str
-    japanese_name: str
+    translated_name: str
     description: str
     spiciness: int  # 1-5
     sweetness: int  # 1-5
@@ -125,7 +125,7 @@ class Dish:
         """
         return {
             "original_name": self.original_name,
-            "japanese_name": self.japanese_name,
+            "translated_name": self.translated_name,
             "description": self.description,
             "spiciness": self.spiciness,
             "sweetness": self.sweetness,
@@ -151,7 +151,7 @@ class Dish:
             ValueError: 必須フィールドが欠けている場合
         """
         # 必須フィールドのチェック
-        required_fields = ["original_name", "japanese_name", "description", "spiciness", "sweetness"]
+        required_fields = ["original_name", "translated_name", "description", "spiciness", "sweetness"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
@@ -181,7 +181,7 @@ class Dish:
 
         return cls(
             original_name=data["original_name"],
-            japanese_name=data["japanese_name"],
+            translated_name=data["translated_name"],
             description=data["description"],
             spiciness=data["spiciness"],
             sweetness=data["sweetness"],

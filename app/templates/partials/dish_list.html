@@ -1,29 +1,29 @@
 {#
-料理一覧パーシャル（HTMX用）
+Dish List Partial (for HTMX)
 
-使用方法:
-    HTMXリクエストで動的に読み込まれる料理一覧を表示
+Usage:
+    Display dish list dynamically loaded by HTMX requests
 
-引数:
-    dishes: 料理のリスト
-    provider: AIプロバイダー名
-    processing_time: 処理時間（秒）
+Arguments:
+    dishes: List of dishes
+    provider: AI provider name
+    processing_time: Processing time (seconds)
 #}
 {% from 'components/dish_card.html' import dish_card %}
 {% from 'components/image_with_boxes.html' import image_with_boxes %}
 
 <div id="dish-list" class="space-y-4" x-data="{ showImageModal: false }">
-    <!-- 結果サマリー -->
+    <!-- Results Summary -->
     <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
         <h2 class="text-xl font-bold">
-            解析結果
+            Analysis Results
             <span class="text-sm text-slate-400">
-                ({{ dishes | length }}品)
+                ({{ dishes | length }} dishes)
             </span>
         </h2>
         <div class="flex items-center gap-4">
             {% if dishes %}
-            <!-- メニュー画像表示ボタン -->
+            <!-- View Menu Image Button -->
             <button
                 @click="showImageModal = true"
                 class="px-4 py-2 bg-primary hover:bg-primary/80 text-white rounded-lg
@@ -33,16 +33,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                メニュー画像を見る
+                View Menu Image
             </button>
             {% endif %}
             <span class="text-sm text-slate-400">
-                {{ provider }} で解析 | {{ "%.2f"|format(processing_time) }}秒
+                Analyzed with {{ provider }} | {{ "%.2f"|format(processing_time) }}s
             </span>
         </div>
     </div>
 
-    <!-- 料理カードグリッド -->
+    <!-- Dish Card Grid -->
     {% if dishes %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for dish in dishes %}
@@ -50,7 +50,7 @@
         {% endfor %}
     </div>
 
-    <!-- 画像モーダル -->
+    <!-- Image Modal -->
     <div
         x-show="showImageModal"
         x-transition:enter="transition ease-out duration-200"
@@ -63,9 +63,9 @@
         @click.self="showImageModal = false"
         @keydown.escape.window="showImageModal = false"
     >
-        <!-- モーダルコンテンツ -->
+        <!-- Modal Content -->
         <div class="relative w-full max-w-4xl max-h-[90vh] overflow-auto bg-surface rounded-xl shadow-2xl">
-            <!-- 閉じるボタン -->
+            <!-- Close Button -->
             <button
                 @click="showImageModal = false"
                 class="absolute top-4 right-4 z-10 p-2 bg-slate-800/80 hover:bg-slate-700
@@ -76,23 +76,23 @@
                 </svg>
             </button>
 
-            <!-- 画像とバウンディングボックス -->
+            <!-- Image with Bounding Boxes -->
             <div class="p-4">
                 {{ image_with_boxes(dishes) }}
                 <p class="text-xs text-slate-500 mt-3 text-center">
-                    番号をホバーすると対応する料理がハイライトされます
+                    Hover over numbers to highlight corresponding dishes
                 </p>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- 料理がない場合 -->
+    <!-- No Dishes Found -->
     {% if not dishes %}
     <div class="text-center py-8">
-        <p class="text-slate-400">料理が検出されませんでした</p>
+        <p class="text-slate-400">No dishes detected</p>
         <p class="text-sm text-slate-500">
-            別の画像を試してください
+            Please try a different image
         </p>
     </div>
     {% endif %}

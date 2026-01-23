@@ -17,6 +17,7 @@ from app.services.ai.base import (
     APIKeyMissingError,
     InvalidMenuImageError,
 )
+from app.services.ai.prompt_builder import PromptBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -27,17 +28,19 @@ class ClaudeProvider(AIProvider):
     MODEL = "claude-3-7-sonnet-20250219"
     MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB (matches CLAUDE.md spec)
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, language: str = 'en') -> None:
         """
         Initialize Claude provider.
 
         Args:
             api_key: Anthropic API key
+            language: Language code for responses ('en' or 'ja')
         """
-        super().__init__(api_key)
+        super().__init__(api_key, language)
         if not self.api_key:
             raise APIKeyMissingError("API key is required")
         self.client = anthropic.Anthropic(api_key=self.api_key)
+        self.prompt_builder = PromptBuilder(language)
 
     @property
     def name(self) -> str:
@@ -122,62 +125,31 @@ class ClaudeProvider(AIProvider):
 
     def _build_prompt(self) -> str:
         """
-        Build menu analysis prompt.
+        Build menu analysis prompt using the multilingual prompt builder.
 
         Returns:
-            Prompt text
+            Prompt text in the selected language
         """
-        return """この画像はレストランのメニューです。画像内の各料理について、以下の情報をJSON形式で抽出してください。
+        # Get base prompt from multilingual prompt builder
+        base_prompt = self.prompt_builder.build_menu_analysis_prompt()
 
-各料理について以下の情報を含めてください:
-- original_name: 料理の原語名（メニューに記載されている通り）
-- japanese_name: 料理の日本語名（翻訳）
-- description: 料理の説明（日本語で50文字程度）
-- spiciness: 辛さレベル（1〜5の整数。1=辛くない、5=非常に辛い）
-- sweetness: 甘さレベル（1〜5の整数。1=甘くない、5=非常に甘い）
-- ingredients: 主な材料のリスト（日本語）
-- allergens: アレルゲンのリスト（日本語。卵、乳製品、小麦、そば、落花生、えび、かに、etc.）
-- category: 料理のカテゴリ（"appetizer", "main", "dessert", "beverage", "other"のいずれか）
-- price_range: 価格帯（"$", "$$", "$$$", "$$$$"のいずれか。判断できない場合はnull）
-- bounding_box: 料理がメニュー画像内で位置する領域（正規化座標）
-  - x: 左端のX座標（0〜1、0=画像の左端、1=画像の右端）
-  - y: 上端のY座標（0〜1、0=画像の上端、1=画像の下端）
-  - width: 幅（0〜1）
-  - height: 高さ（0〜1）
+        # Add bounding_box field instructions
+        bounding_box_instruction = """
+- bounding_box: The location of the dish in the menu image (normalized coordinates)
+  - x: X coordinate of the left edge (0-1, 0=left edge, 1=right edge)
+  - y: Y coordinate of the top edge (0-1, 0=top edge, 1=bottom edge)
+  - width: Width (0-1)
+  - height: Height (0-1)
 
-以下のJSON形式で出力してください:
-```json
-{
-  "dishes": [
-    {
-      "original_name": "Pad Thai",
-      "japanese_name": "パッタイ",
-      "description": "米麺を使ったタイ風焼きそば。エビ、卵、もやし、ピーナッツを使用",
-      "spiciness": 2,
-      "sweetness": 3,
-      "ingredients": ["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
-      "allergens": ["甲殻類", "卵", "ナッツ"],
-      "category": "main",
-      "price_range": "$$",
-      "bounding_box": {
-        "x": 0.05,
-        "y": 0.1,
-        "width": 0.4,
-        "height": 0.15
-      }
-    }
-  ]
-}
-```
+Additional notes for bounding_box:
+- bounding_box should enclose the area where the dish name and description are written
+- If bounding_box coordinates are unclear, set it to null"""
 
-重要な注意事項:
-- spiciness と sweetness は必ず1〜5の整数にしてください
-- 情報が不明な場合、ingredients や allergens は空のリストにしてください
-- price_range が判断できない場合は null にしてください
-- bounding_box は料理名やその説明文が記載されている領域を囲んでください
-- bounding_box の座標が不明確な場合は null にしてください
-- JSON以外のテキストは含めないでください
-- 必ず有効なJSON形式で出力してください"""
+        # Insert bounding_box instructions before the output format section
+        if "```json" in base_prompt:
+            parts = base_prompt.split("```json")
+            return parts[0] + bounding_box_instruction + "\n\n```json" + parts[1]
+        return base_prompt + bounding_box_instruction
 
     def _parse_response(self, response: str) -> list[Dish]:
         """
@@ -222,8 +194,8 @@ class ClaudeProvider(AIProvider):
 
             if not dishes:
                 raise InvalidMenuImageError(
-                    "画像からメニューを検出できませんでした。"
-                    "メニュー表の写真であることを確認してください。"
+                    "Could not detect menu from image. "
+                    "Please verify that the image is a photo of a menu."
                 )
 
             return dishes

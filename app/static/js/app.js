@@ -1,9 +1,9 @@
 /**
- * Menu Judge - カスタムJavaScript
- * Alpine.jsと連携してインタラクティブな機能を提供
+ * Menu Judge - Custom JavaScript
+ * Provides interactive features in conjunction with Alpine.js
  */
 
-// Alpine.js Store（HTMXスワップ後も画像URLを保持）
+// Alpine.js Store (preserves image URL after HTMX swap)
 document.addEventListener('alpine:init', () => {
     Alpine.store('menuAnalysis', {
         imageUrl: null,
@@ -16,16 +16,16 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
-// Toast通知の定数
-const TOAST_ANIMATION_DELAY = 10;  // アニメーション開始までの遅延（ミリ秒）
-const TOAST_FADE_DURATION = 300;   // フェードアウトのアニメーション時間（ミリ秒）
-const TOAST_DEFAULT_DURATION = 3000; // デフォルトの表示時間（ミリ秒）
+// Toast notification constants
+const TOAST_ANIMATION_DELAY = 10;  // Delay before animation starts (milliseconds)
+const TOAST_FADE_DURATION = 300;   // Fade out animation duration (milliseconds)
+const TOAST_DEFAULT_DURATION = 3000; // Default display duration (milliseconds)
 
 /**
- * Toast通知を表示する
- * @param {string} message - 表示するメッセージ
- * @param {string} type - メッセージタイプ (success, error, info, warning)
- * @param {number} duration - 表示時間（ミリ秒）
+ * Display toast notification
+ * @param {string} message - Message to display
+ * @param {string} type - Message type (success, error, info, warning)
+ * @param {number} duration - Display duration (milliseconds)
  */
 function showToast(message, type = 'info', duration = TOAST_DEFAULT_DURATION) {
     const container = document.getElementById('toast-container');
@@ -116,7 +116,7 @@ function uploadZone() {
 
             // 複数ファイルのドロップをチェック
             if (files.length > 1) {
-                showToast('一度に処理できる画像は1枚です', 'warning');
+                showToast(t('toast.multiple_files'), 'warning');
                 return;
             }
 
@@ -125,7 +125,7 @@ function uploadZone() {
 
                 // 早期にファイルサイズをチェック（パフォーマンス向上）
                 if (file.size > MAX_FILE_SIZE) {
-                    showToast('ファイルサイズが大きすぎます。10MB以下の画像を選択してください。', 'error');
+                    showToast(t('toast.file_too_large'), 'error');
                     return;
                 }
 
@@ -140,32 +140,26 @@ function uploadZone() {
         processFile(file) {
             // ファイルタイプのバリデーション
             if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-                showToast(
-                    '対応していない画像形式です。JPEG、PNG、WebPのいずれかを選択してください。',
-                    'error'
-                );
+                showToast(t('toast.unsupported_format'), 'error');
                 return;
             }
 
             // ファイルサイズのバリデーション
             if (file.size > MAX_FILE_SIZE) {
-                showToast(
-                    'ファイルサイズが大きすぎます。10MB以下の画像を選択してください。',
-                    'error'
-                );
+                showToast(t('toast.file_too_large'), 'error');
                 return;
             }
 
             // ファイルを保存
             this.file = file;
 
-            // プレビュー生成
+            // Generate preview
             this.generatePreview(file);
 
-            // Alpine storeに画像URLを保存（HTMXスワップ後も参照可能）
+            // Save image URL to Alpine store (accessible after HTMX swap)
             Alpine.store('menuAnalysis').setImageUrl(this.preview);
 
-            showToast('画像を読み込みました', 'success');
+            showToast(t('toast.image_loaded'), 'success');
         },
 
         /**
@@ -208,7 +202,7 @@ function uploadZone() {
          */
         uploadFile() {
             if (!this.file) {
-                showToast('ファイルが選択されていません', 'error');
+                showToast(t('toast.no_file'), 'error');
                 return;
             }
 
@@ -237,20 +231,20 @@ function uploadZone() {
             .then(data => {
                 this.isUploading = false;
                 if (data.success) {
-                    showToast('解析が完了しました', 'success');
+                    showToast(t('toast.analysis_complete'), 'success');
                     // 結果を表示（HTMXまたはAlpine.jsで処理）
                     // この部分は後で実装
                 } else {
-                    showToast(data.error || '解析に失敗しました', 'error');
+                    showToast(data.error || t('toast.analysis_failed'), 'error');
                 }
             })
             .catch(error => {
                 this.isUploading = false;
                 // ネットワークエラー（オフライン、タイムアウト、CORS等）とAPIエラーを区別
                 if (error instanceof TypeError) {
-                    showToast('ネットワークエラー: 接続を確認してください', 'error');
+                    showToast(t('toast.network_error'), 'error');
                 } else {
-                    showToast(error.message || 'エラーが発生しました', 'error');
+                    showToast(error.message || t('toast.server_error'), 'error');
                 }
             });
         }
@@ -317,15 +311,15 @@ function apiKeyManager() {
                 if (key && key.trim()) {
                     localStorage.setItem('menu_judge_api_key', key.trim());
                     this.apiKey = key.trim();
-                    showToast('APIキーを保存しました', 'success');
+                    showToast(t('toast.api_key_saved'), 'success');
                     this.closeModal();
                     this.setupHtmxHeaders();
                 } else {
-                    showToast('APIキーを入力してください', 'error');
+                    showToast(t('toast.api_key_required'), 'error');
                 }
             } catch (e) {
                 console.error('Failed to save API key:', e);
-                showToast('APIキーの保存に失敗しました', 'error');
+                showToast(t('toast.failed_to_save'), 'error');
             }
         },
 
@@ -333,16 +327,16 @@ function apiKeyManager() {
          * APIキーをlocalStorageから削除
          */
         deleteApiKey() {
-            if (confirm('APIキーを削除してもよろしいですか？')) {
+            if (confirm(t('api_key_modal.delete_confirm'))) {
                 try {
                     localStorage.removeItem('menu_judge_api_key');
                     this.apiKey = '';
                     this.apiKeyInput = '';
-                    showToast('APIキーを削除しました', 'success');
+                    showToast(t('toast.api_key_deleted'), 'success');
                     this.showModal = true;
                 } catch (e) {
                     console.error('Failed to delete API key:', e);
-                    showToast('APIキーの削除に失敗しました', 'error');
+                    showToast(t('toast.failed_to_delete'), 'error');
                 }
             }
         },
@@ -359,10 +353,9 @@ function apiKeyManager() {
          * モーダルを閉じる
          */
         closeModal() {
-            // APIキーが未設定の場合は閉じられない
+            // APIキーが未設定の場合は警告を表示
             if (!this.apiKey) {
-                showToast('APIキーを設定してください', 'warning');
-                return;
+                showToast(t('toast.api_key_setup'), 'warning', 5000);
             }
             this.showModal = false;
             this.apiKeyInput = '';
@@ -378,6 +371,9 @@ function apiKeyManager() {
                 if (this.apiKey) {
                     event.detail.headers['X-API-Key'] = this.apiKey;
                 }
+                // Add language header
+                const language = getCurrentLanguage();
+                event.detail.headers['X-Language'] = language;
             });
         },
 
@@ -392,7 +388,7 @@ function apiKeyManager() {
 
                 // 401エラー（認証エラー）またはAPIキーエラーの場合
                 if (status === 401 || errorCode === 'NO_API_KEY') {
-                    showToast('APIキーが無効または未設定です。設定画面からAPIキーを入力してください。', 'error', 5000);
+                    showToast(t('toast.api_key_invalid'), 'error', 5000);
                     this.showModal = true;
                 }
                 // その他のエラー
@@ -408,7 +404,7 @@ function apiKeyManager() {
 
             // ネットワークエラー（タイムアウト、オフライン等）の処理
             document.body.addEventListener('htmx:sendError', (event) => {
-                showToast('ネットワークエラー: サーバーに接続できません。', 'error');
+                showToast(t('toast.network_error_server'), 'error');
             });
         }
     };

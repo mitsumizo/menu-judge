@@ -1,6 +1,6 @@
-<!-- スピナー版ローディング -->
+<!-- Spinner Loading -->
 <div class="loading-container flex flex-col items-center" role="status" aria-live="polite">
-    <!-- スピナー -->
+    <!-- Spinner -->
     <div class="relative mb-6">
         <div class="absolute inset-0 bg-primary blur-xl opacity-30 animate-pulse"></div>
         <svg class="animate-spin h-16 w-16 text-primary" viewBox="0 0 24 24" aria-hidden="true" fill="none">
@@ -16,23 +16,23 @@
         </svg>
     </div>
 
-    <!-- メッセージ -->
-    <h3 class="text-xl font-bold text-white mb-2 animate-pulse">AIがメニューを解析中...</h3>
+    <!-- Message -->
+    <h3 class="text-xl font-bold text-white mb-2 animate-pulse">Analyzing menu with AI...</h3>
     <p class="text-slate-400 font-medium">
-        料理の詳細を抽出しています
+        Extracting dish details
     </p>
 
-    <!-- スクリーンリーダー用 -->
-    <span class="sr-only">メニューを解析中です。少々お待ちください。</span>
+    <!-- Screen reader text -->
+    <span class="sr-only">Analyzing menu. Please wait a moment.</span>
 
-    <!-- プログレスバー -->
+    <!-- Progress bar -->
     <div class="mt-8 w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
         <div class="h-full bg-gradient-to-r from-primary via-accent to-secondary animate-progress w-full origin-left">
         </div>
     </div>
 </div>
 
-<!-- スケルトンUI版 -->
+<!-- Skeleton UI version -->
 <div class="skeleton-container space-y-4 hidden">
     <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
     <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
