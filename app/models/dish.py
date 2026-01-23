@@ -5,6 +5,55 @@ from enum import Enum
 from typing import Any
 
 
+@dataclass
+class BoundingBox:
+    """バウンディングボックス（正規化座標0-1スケール）
+
+    Attributes:
+        x: 左端のX座標（0-1）
+        y: 上端のY座標（0-1）
+        width: 幅（0-1）
+        height: 高さ（0-1）
+    """
+
+    x: float
+    y: float
+    width: float
+    height: float
+
+    def __post_init__(self) -> None:
+        """バリデーション処理"""
+        for attr in ["x", "y", "width", "height"]:
+            val = getattr(self, attr)
+            if not isinstance(val, (int, float)):
+                raise ValueError(f"{attr} must be a number, got {type(val).__name__}")
+            if not (0 <= val <= 1):
+                raise ValueError(f"{attr} must be between 0 and 1, got {val}")
+
+    def to_dict(self) -> dict[str, float]:
+        """辞書に変換"""
+        return {
+            "x": self.x,
+            "y": self.y,
+            "width": self.width,
+            "height": self.height,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "BoundingBox":
+        """辞書から生成"""
+        required = ["x", "y", "width", "height"]
+        missing = [f for f in required if f not in data]
+        if missing:
+            raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            width=float(data["width"]),
+            height=float(data["height"]),
+        )
+
+
 class Category(Enum):
     """料理のカテゴリ"""
 
@@ -39,6 +88,7 @@ class Dish:
         category: 料理のカテゴリ
         price_range: 価格帯
         image_url: 画像URL
+        bounding_box: メニュー画像上の位置（正規化座標）
     """
 
     original_name: str
@@ -51,6 +101,7 @@ class Dish:
     category: Category = Category.OTHER
     price_range: PriceRange | None = None
     image_url: str | None = None
+    bounding_box: BoundingBox | None = None
 
     def __post_init__(self) -> None:
         """バリデーション処理"""
@@ -83,6 +134,7 @@ class Dish:
             "category": self.category.value,
             "price_range": self.price_range.value if self.price_range else None,
             "image_url": self.image_url,
+            "bounding_box": self.bounding_box.to_dict() if self.bounding_box else None,
         }
 
     @classmethod
@@ -119,6 +171,14 @@ class Dish:
         except (ValueError, KeyError):
             price_range = None
 
+        # BoundingBoxの変換（無効な値はNoneにフォールバック）
+        bounding_box = None
+        if data.get("bounding_box"):
+            try:
+                bounding_box = BoundingBox.from_dict(data["bounding_box"])
+            except (ValueError, KeyError):
+                bounding_box = None
+
         return cls(
             original_name=data["original_name"],
             japanese_name=data["japanese_name"],
@@ -130,4 +190,5 @@ class Dish:
             category=category,
             price_range=price_range,
             image_url=data.get("image_url"),
+            bounding_box=bounding_box,
         )

@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import BoundingBox, Category, Dish, PriceRange
 
 
 class TestDish:
@@ -184,6 +184,7 @@ class TestDish:
             "category": "main",
             "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
+            "bounding_box": None,
         }
 
     def test_to_dict_with_none_values(self):
@@ -200,6 +201,7 @@ class TestDish:
 
         assert result["price_range"] is None
         assert result["image_url"] is None
+        assert result["bounding_box"] is None
 
     def test_from_dict(self):
         """Test creating Dish from dictionary."""
@@ -260,6 +262,7 @@ class TestDish:
             category=Category.MAIN,
             price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
+            bounding_box=BoundingBox(x=0.1, y=0.2, width=0.3, height=0.1),
         )
 
         # to_dict -> from_dict
@@ -277,6 +280,10 @@ class TestDish:
         assert restored.category == original.category
         assert restored.price_range == original.price_range
         assert restored.image_url == original.image_url
+        assert restored.bounding_box.x == original.bounding_box.x
+        assert restored.bounding_box.y == original.bounding_box.y
+        assert restored.bounding_box.width == original.bounding_box.width
+        assert restored.bounding_box.height == original.bounding_box.height
 
     def test_from_dict_with_enum_objects(self):
         """Test from_dict can handle Enum objects in addition to strings."""
@@ -356,3 +363,64 @@ class TestPriceRange:
         assert PriceRange("$$") == PriceRange.MODERATE
         assert PriceRange("$$$") == PriceRange.EXPENSIVE
         assert PriceRange("$$$$") == PriceRange.LUXURY
+
+
+class TestBoundingBox:
+    """Test cases for BoundingBox dataclass."""
+
+    def test_bounding_box_creation_with_valid_data(self):
+        """Test creating a BoundingBox with valid data."""
+        bbox = BoundingBox(x=0.1, y=0.2, width=0.3, height=0.4)
+        assert bbox.x == 0.1
+        assert bbox.y == 0.2
+        assert bbox.width == 0.3
+        assert bbox.height == 0.4
+
+    def test_bounding_box_boundary_values(self):
+        """Test BoundingBox at boundary values (0 and 1)."""
+        bbox = BoundingBox(x=0.0, y=0.0, width=1.0, height=1.0)
+        assert bbox.x == 0.0
+        assert bbox.y == 0.0
+        assert bbox.width == 1.0
+        assert bbox.height == 1.0
+
+    def test_bounding_box_validation_negative(self):
+        """Test that negative values raise ValueError."""
+        with pytest.raises(ValueError, match="x must be between 0 and 1"):
+            BoundingBox(x=-0.1, y=0.2, width=0.3, height=0.4)
+
+    def test_bounding_box_validation_greater_than_one(self):
+        """Test that values greater than 1 raise ValueError."""
+        with pytest.raises(ValueError, match="width must be between 0 and 1"):
+            BoundingBox(x=0.1, y=0.2, width=1.5, height=0.4)
+
+    def test_bounding_box_to_dict(self):
+        """Test converting BoundingBox to dictionary."""
+        bbox = BoundingBox(x=0.1, y=0.2, width=0.3, height=0.4)
+        result = bbox.to_dict()
+        assert result == {"x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}
+
+    def test_bounding_box_from_dict(self):
+        """Test creating BoundingBox from dictionary."""
+        data = {"x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}
+        bbox = BoundingBox.from_dict(data)
+        assert bbox.x == 0.1
+        assert bbox.y == 0.2
+        assert bbox.width == 0.3
+        assert bbox.height == 0.4
+
+    def test_bounding_box_from_dict_missing_field(self):
+        """Test that from_dict raises ValueError when field is missing."""
+        data = {"x": 0.1, "y": 0.2, "width": 0.3}
+        with pytest.raises(ValueError, match="Missing required fields: height"):
+            BoundingBox.from_dict(data)
+
+    def test_bounding_box_roundtrip(self):
+        """Test roundtrip conversion: BoundingBox -> dict -> BoundingBox."""
+        original = BoundingBox(x=0.15, y=0.25, width=0.35, height=0.45)
+        data = original.to_dict()
+        restored = BoundingBox.from_dict(data)
+        assert restored.x == original.x
+        assert restored.y == original.y
+        assert restored.width == original.width
+        assert restored.height == original.height

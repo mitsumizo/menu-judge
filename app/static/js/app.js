@@ -3,6 +3,19 @@
  * Alpine.jsと連携してインタラクティブな機能を提供
  */
 
+// Alpine.js Store（HTMXスワップ後も画像URLを保持）
+document.addEventListener('alpine:init', () => {
+    Alpine.store('menuAnalysis', {
+        imageUrl: null,
+        setImageUrl(url) {
+            this.imageUrl = url;
+        },
+        clearImageUrl() {
+            this.imageUrl = null;
+        }
+    });
+});
+
 // Toast通知の定数
 const TOAST_ANIMATION_DELAY = 10;  // アニメーション開始までの遅延（ミリ秒）
 const TOAST_FADE_DURATION = 300;   // フェードアウトのアニメーション時間（ミリ秒）
@@ -149,6 +162,9 @@ function uploadZone() {
             // プレビュー生成
             this.generatePreview(file);
 
+            // Alpine storeに画像URLを保存（HTMXスワップ後も参照可能）
+            Alpine.store('menuAnalysis').setImageUrl(this.preview);
+
             showToast('画像を読み込みました', 'success');
         },
 
@@ -182,6 +198,9 @@ function uploadZone() {
             this.file = null;
             this.preview = null;
             this.isUploading = false;
+
+            // Alpine storeの画像URLもクリア
+            Alpine.store('menuAnalysis').clearImageUrl();
         },
 
         /**
@@ -397,3 +416,66 @@ function apiKeyManager() {
 
 // グローバルに公開
 window.apiKeyManager = apiKeyManager;
+
+/**
+ * 画像オーバーレイ（バウンディングボックス表示）のAlpine.jsコンポーネント
+ * @returns {Object} Alpine.jsコンポーネントオブジェクト
+ */
+function imageOverlay() {
+    return {
+        // ハイライト中の料理インデックス
+        highlightedDish: null,
+
+        /**
+         * 初期化
+         */
+        init() {
+            // 料理ハイライトイベントをリッスン
+            window.addEventListener('highlight-dish', (e) => {
+                this.highlightedDish = e.detail.index;
+            });
+            window.addEventListener('unhighlight-dish', () => {
+                this.highlightedDish = null;
+            });
+        },
+
+        /**
+         * 画像URLを取得（Alpine storeから）
+         * @returns {string|null} 画像URL
+         */
+        getImageUrl() {
+            return Alpine.store('menuAnalysis')?.imageUrl;
+        },
+
+        /**
+         * バウンディングボックスをハイライト
+         * @param {number} index - 料理インデックス
+         */
+        highlightBox(index) {
+            this.highlightedDish = index;
+            window.dispatchEvent(new CustomEvent('highlight-dish', {
+                detail: { index }
+            }));
+        },
+
+        /**
+         * ハイライトを解除
+         */
+        unhighlightBox() {
+            this.highlightedDish = null;
+            window.dispatchEvent(new CustomEvent('unhighlight-dish'));
+        },
+
+        /**
+         * ボックスがハイライト中かどうか
+         * @param {number} index - 料理インデックス
+         * @returns {boolean} ハイライト中ならtrue
+         */
+        isHighlighted(index) {
+            return this.highlightedDish === index;
+        }
+    };
+}
+
+// グローバルに公開
+window.imageOverlay = imageOverlay;

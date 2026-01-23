@@ -3,16 +3,30 @@
 
 使用方法:
     {% from 'components/dish_card.html' import dish_card %}
-    {{ dish_card(dish) }}
+    {{ dish_card(dish, index) }}
 
 引数:
     dish: Dishモデルのインスタンス
+    index: 料理の番号（1から始まる、オプション）
 #}
 
-{% macro dish_card(dish) %}
+{% macro dish_card(dish, index=none) %}
 <div class="dish-card bg-surface rounded-xl p-4 shadow-lg
             hover:shadow-xl transition-all duration-300
-            border border-slate-700 hover:border-primary">
+            border border-slate-700 hover:border-primary relative"
+    {% if index %}
+    @mouseenter="window.dispatchEvent(new CustomEvent('highlight-dish', { detail: { index: {{ index }} }}))"
+    @mouseleave="window.dispatchEvent(new CustomEvent('unhighlight-dish'))"
+    {% endif %}>
+
+    <!-- 番号バッジ -->
+    {% if index %}
+    <div class="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-primary
+                flex items-center justify-center text-white font-bold text-sm
+                shadow-lg z-10">
+        {{ index }}
+    </div>
+    {% endif %}
 
     <!-- ヘッダー -->
     <div class="flex justify-between items-start mb-3">

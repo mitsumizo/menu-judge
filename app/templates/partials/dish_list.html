@@ -10,6 +10,7 @@
     processing_time: 処理時間（秒）
 #}
 {% from 'components/dish_card.html' import dish_card %}
+{% from 'components/image_with_boxes.html' import image_with_boxes %}
 
 <div id="dish-list" class="space-y-4">
     <!-- 結果サマリー -->
@@ -25,12 +26,23 @@
         </span>
     </div>
 
-    <!-- 料理カードグリッド -->
+    <!-- 料理がある場合：2カラムレイアウト -->
     {% if dishes %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {% for dish in dishes %}
-            {{ dish_card(dish) }}
-        {% endfor %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 左カラム：メニュー画像とバウンディングボックス -->
+        <div class="lg:sticky lg:top-24 lg:self-start">
+            {{ image_with_boxes(dishes) }}
+            <p class="text-xs text-slate-500 mt-2 text-center">
+                番号をホバーすると対応する料理がハイライトされます
+            </p>
+        </div>
+
+        <!-- 右カラム：料理カードリスト -->
+        <div class="space-y-4">
+            {% for dish in dishes %}
+                {{ dish_card(dish, loop.index) }}
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
 

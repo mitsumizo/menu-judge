@@ -1,0 +1,84 @@
+{#
+画像とバウンディングボックスオーバーレイコンポーネント
+
+使用方法:
+    {% from 'components/image_with_boxes.html' import image_with_boxes %}
+    {{ image_with_boxes(dishes) }}
+
+引数:
+    dishes: 料理のリスト（bounding_boxを含む）
+#}
+
+{% macro image_with_boxes(dishes) %}
+<div x-data="imageOverlay()" class="relative w-full">
+    <!-- メニュー画像 -->
+    <template x-if="getImageUrl()">
+        <div class="relative rounded-xl overflow-hidden shadow-lg">
+            <img
+                :src="getImageUrl()"
+                alt="解析中のメニュー画像"
+                class="w-full h-auto"
+            >
+
+            <!-- SVGオーバーレイ -->
+            <svg
+                class="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                {% for dish in dishes %}
+                {% if dish.bounding_box %}
+                <g
+                    class="dish-box pointer-events-auto cursor-pointer"
+                    data-dish-index="{{ loop.index }}"
+                    @mouseenter="highlightBox({{ loop.index }})"
+                    @mouseleave="unhighlightBox()"
+                    @click="highlightBox({{ loop.index }})"
+                >
+                    <!-- バウンディングボックス矩形 -->
+                    <rect
+                        x="{{ dish.bounding_box.x * 100 }}"
+                        y="{{ dish.bounding_box.y * 100 }}"
+                        width="{{ dish.bounding_box.width * 100 }}"
+                        height="{{ dish.bounding_box.height * 100 }}"
+                        fill="rgba(99, 102, 241, 0.1)"
+                        stroke="#6366F1"
+                        stroke-width="0.4"
+                        class="transition-all duration-200"
+                        :class="isHighlighted({{ loop.index }}) ? 'fill-primary/30 stroke-[0.8]' : ''"
+                    />
+
+                    <!-- 番号ラベル（左上に配置） -->
+                    <circle
+                        cx="{{ dish.bounding_box.x * 100 + 2 }}"
+                        cy="{{ dish.bounding_box.y * 100 + 2 }}"
+                        r="2.5"
+                        fill="#6366F1"
+                        class="transition-all duration-200"
+                        :class="isHighlighted({{ loop.index }}) ? 'fill-secondary' : ''"
+                    />
+                    <text
+                        x="{{ dish.bounding_box.x * 100 + 2 }}"
+                        y="{{ dish.bounding_box.y * 100 + 2.8 }}"
+                        text-anchor="middle"
+                        font-size="2.5"
+                        fill="white"
+                        font-weight="bold"
+                        class="select-none"
+                    >{{ loop.index }}</text>
+                </g>
+                {% endif %}
+                {% endfor %}
+            </svg>
+        </div>
+    </template>
+
+    <!-- 画像がない場合のフォールバック -->
+    <template x-if="!getImageUrl()">
+        <div class="bg-surface rounded-xl p-8 text-center border border-slate-700">
+            <p class="text-slate-400">画像が読み込まれていません</p>
+        </div>
+    </template>
+</div>
+{% endmacro %}

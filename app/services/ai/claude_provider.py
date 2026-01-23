@@ -83,7 +83,7 @@ class ClaudeProvider(AIProvider):
             # Call Claude API
             response = self.client.messages.create(
                 model=self.MODEL,
-                max_tokens=4096,
+                max_tokens=8192,
                 messages=[
                     {
                         "role": "user",
@@ -139,6 +139,11 @@ class ClaudeProvider(AIProvider):
 - allergens: アレルゲンのリスト（日本語。卵、乳製品、小麦、そば、落花生、えび、かに、etc.）
 - category: 料理のカテゴリ（"appetizer", "main", "dessert", "beverage", "other"のいずれか）
 - price_range: 価格帯（"$", "$$", "$$$", "$$$$"のいずれか。判断できない場合はnull）
+- bounding_box: 料理がメニュー画像内で位置する領域（正規化座標）
+  - x: 左端のX座標（0〜1、0=画像の左端、1=画像の右端）
+  - y: 上端のY座標（0〜1、0=画像の上端、1=画像の下端）
+  - width: 幅（0〜1）
+  - height: 高さ（0〜1）
 
 以下のJSON形式で出力してください:
 ```json
@@ -153,7 +158,13 @@ class ClaudeProvider(AIProvider):
       "ingredients": ["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
       "allergens": ["甲殻類", "卵", "ナッツ"],
       "category": "main",
-      "price_range": "$$"
+      "price_range": "$$",
+      "bounding_box": {
+        "x": 0.05,
+        "y": 0.1,
+        "width": 0.4,
+        "height": 0.15
+      }
     }
   ]
 }
@@ -163,6 +174,8 @@ class ClaudeProvider(AIProvider):
 - spiciness と sweetness は必ず1〜5の整数にしてください
 - 情報が不明な場合、ingredients や allergens は空のリストにしてください
 - price_range が判断できない場合は null にしてください
+- bounding_box は料理名やその説明文が記載されている領域を囲んでください
+- bounding_box の座標が不明確な場合は null にしてください
 - JSON以外のテキストは含めないでください
 - 必ず有効なJSON形式で出力してください"""
 
