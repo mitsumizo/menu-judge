@@ -26,7 +26,7 @@ class BoundingBox:
         for attr in ["x", "y", "width", "height"]:
             val = getattr(self, attr)
             if not isinstance(val, (int, float)):
-                raise ValueError(f"{attr} must be a number, got {type(val).__name__}")
+                raise TypeError(f"{attr} must be a number, got {type(val).__name__}")
             if not (0 <= val <= 1):
                 raise ValueError(f"{attr} must be between 0 and 1, got {val}")
 
@@ -96,9 +96,9 @@ class Dish:
         """バリデーション処理"""
         # 型チェック
         if not isinstance(self.spiciness, int):
-            raise ValueError(f"spiciness must be an integer, got {type(self.spiciness).__name__}")
+            raise TypeError(f"spiciness must be an integer, got {type(self.spiciness).__name__}")
         if not isinstance(self.sweetness, int):
-            raise ValueError(f"sweetness must be an integer, got {type(self.sweetness).__name__}")
+            raise TypeError(f"sweetness must be an integer, got {type(self.sweetness).__name__}")
 
         # 範囲チェック
         if not 1 <= self.spiciness <= 5:
