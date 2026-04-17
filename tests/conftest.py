@@ -29,15 +29,30 @@ def app():
 
 @pytest.fixture
 def client(app):
-    """Create a test client for the application.
+    """Create a test client that auto-sends the X-API-Key header.
+
+    The /api/analyze endpoint requires `X-API-Key` — tests don't care
+    about auth plumbing, so inject a valid placeholder key by default.
 
     Args:
         app: Flask application fixture.
 
     Returns:
-        Flask test client.
+        Flask test client with X-API-Key set on every request.
     """
-    return app.test_client()
+    test_client = app.test_client()
+    original_open = test_client.open
+
+    def open_with_api_key(*args, **kwargs):
+        headers = kwargs.get("headers") or {}
+        if not isinstance(headers, dict):
+            headers = dict(headers)
+        headers.setdefault("X-API-Key", "sk-ant-test")
+        kwargs["headers"] = headers
+        return original_open(*args, **kwargs)
+
+    test_client.open = open_with_api_key
+    return test_client
 
 
 @pytest.fixture
