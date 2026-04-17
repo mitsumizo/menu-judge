@@ -1,21 +1,16 @@
 """dish_card.html コンポーネントのテスト"""
 
-from typing import Generator
-
 import pytest
 from flask import Flask, render_template_string
 
+from app import create_app
 from app.models.dish import Category, Dish
 
 
 @pytest.fixture
-def app() -> Generator[Flask, None, None]:
-    """テスト用のFlaskアプリケーション"""
-    app = Flask(
-        __name__,
-        template_folder="../app/templates",
-    )
-    return app  # type: ignore[return-value]
+def app() -> Flask:
+    """テスト用のFlaskアプリケーション（t関数などのJinja2グローバルを含む）"""
+    return create_app({"TESTING": True, "SECRET_KEY": "test-secret-key"})
 
 
 @pytest.fixture
