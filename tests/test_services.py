@@ -192,7 +192,7 @@ class TestClaudeProvider:
 
     def test_provider_name(self):
         """Test that provider name is correct."""
-        provider = ClaudeProvider()
+        provider = ClaudeProvider(api_key="sk-ant-test")
         assert provider.name == "claude"
 
     def test_is_available_without_api_key(self, monkeypatch):
@@ -208,7 +208,7 @@ class TestClaudeProvider:
     def test_api_key_missing(self, sample_image, monkeypatch):
         """Test that APIKeyMissingError is raised when API key is not set."""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        provider = ClaudeProvider()
+        provider = ClaudeProvider(api_key="sk-ant-test")
         image_data, mime_type = sample_image
 
         with pytest.raises(APIKeyMissingError, match="ANTHROPIC_API_KEY is not configured"):
@@ -228,7 +228,7 @@ class TestClaudeProvider:
         mock_client.messages.create.return_value = mock_message
 
         # Test
-        provider = ClaudeProvider()
+        provider = ClaudeProvider(api_key="sk-ant-test")
         image_data, mime_type = sample_image
         result = provider.analyze_menu(image_data, mime_type)
 
@@ -249,7 +249,7 @@ class TestClaudeProvider:
     @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}, clear=False)
     def test_image_size_exceeds_limit(self, sample_image):
         """Test that APICallError is raised when image size exceeds limit."""
-        provider = ClaudeProvider()
+        provider = ClaudeProvider(api_key="sk-ant-test")
         # Create image data larger than MAX_IMAGE_SIZE (10MB)
         large_image_data = b"x" * (ClaudeProvider.MAX_IMAGE_SIZE + 1)
         mime_type = "image/png"
@@ -271,7 +271,7 @@ class TestClaudeProvider:
         mock_client.messages.create.return_value = mock_message
 
         # Test with image exactly at MAX_IMAGE_SIZE
-        provider = ClaudeProvider()
+        provider = ClaudeProvider(api_key="sk-ant-test")
         boundary_image_data = b"x" * ClaudeProvider.MAX_IMAGE_SIZE
         mime_type = "image/png"
 
@@ -301,7 +301,7 @@ class TestClaudeProvider:
         mock_client.messages.create.side_effect = api_error
 
         # Test
-        provider = ClaudeProvider()
+        provider = ClaudeProvider(api_key="sk-ant-test")
         image_data, mime_type = sample_image
 
         with pytest.raises(APICallError, match="Claude API call failed"):
@@ -319,7 +319,7 @@ class TestClaudeProvider:
         mock_client.messages.create.return_value = mock_message
 
         # Test
-        provider = ClaudeProvider()
+        provider = ClaudeProvider(api_key="sk-ant-test")
         image_data, mime_type = sample_image
 
         with pytest.raises(APICallError, match="Failed to parse"):
@@ -337,7 +337,7 @@ class TestClaudeProvider:
         mock_client.messages.create.return_value = mock_message
 
         # Test
-        provider = ClaudeProvider()
+        provider = ClaudeProvider(api_key="sk-ant-test")
         image_data, mime_type = sample_image
 
         with pytest.raises(APICallError, match="Failed to parse response"):

@@ -208,7 +208,7 @@ class TestClaudeProvider:
     def test_initialization_with_api_key(self):
         """Test ClaudeProvider initialization with API key."""
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
             assert provider.api_key == "test-api-key"
             assert provider.client is not None
             assert provider.is_available() is True
@@ -216,7 +216,7 @@ class TestClaudeProvider:
     def test_initialization_without_api_key(self):
         """Test ClaudeProvider initialization without API key."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
             assert provider.api_key is None
             assert provider.client is None
             assert provider.is_available() is False
@@ -224,13 +224,13 @@ class TestClaudeProvider:
     def test_name_property(self):
         """Test that name property returns 'claude'."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
             assert provider.name == "claude"
 
     def test_build_prompt(self):
         """Test that _build_prompt returns appropriate prompt text."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
             prompt = provider._build_prompt()
 
             # Verify prompt contains key requirements
@@ -246,7 +246,7 @@ class TestClaudeProvider:
     def test_parse_response_valid_json(self):
         """Test parsing valid JSON response."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             response_json = {
                 "dishes": [
@@ -275,7 +275,7 @@ class TestClaudeProvider:
     def test_parse_response_with_markdown_code_block(self):
         """Test parsing JSON wrapped in markdown code block."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             response_json = {
                 "dishes": [
@@ -309,7 +309,7 @@ class TestClaudeProvider:
     def test_parse_response_invalid_json(self):
         """Test that invalid JSON raises APICallError."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             with pytest.raises(APICallError, match="Failed to parse JSON response"):
                 provider._parse_response("This is not JSON")
@@ -317,7 +317,7 @@ class TestClaudeProvider:
     def test_parse_response_missing_dishes_key(self):
         """Test that response without 'dishes' key raises APICallError."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             response_json = {"menu": []}
 
@@ -336,7 +336,7 @@ class TestClaudeProvider:
     def test_parse_response_skips_invalid_dishes(self):
         """Test that invalid dishes are skipped but valid ones are kept."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             response_json = {
                 "dishes": [
@@ -367,7 +367,7 @@ class TestClaudeProvider:
     def test_analyze_menu_without_api_key(self):
         """Test that analyze_menu raises APIKeyMissingError without API key."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             with pytest.raises(APIKeyMissingError, match="ANTHROPIC_API_KEY is not configured"):
                 provider.analyze_menu(b"fake image data", "image/jpeg")
@@ -375,7 +375,7 @@ class TestClaudeProvider:
     def test_analyze_menu_image_size_exceeds_limit(self):
         """Test that analyze_menu raises APICallError when image size exceeds limit."""
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             # Create image data larger than MAX_IMAGE_SIZE (10MB)
             large_image_data = b"x" * (provider.MAX_IMAGE_SIZE + 1)
@@ -412,7 +412,7 @@ class TestClaudeProvider:
             mock_response.content = [MagicMock(text=json.dumps(response_json))]
             mock_client.messages.create.return_value = mock_response
 
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
             result = provider.analyze_menu(b"fake image data", "image/jpeg")
 
             # Verify result
@@ -444,7 +444,7 @@ class TestClaudeProvider:
             )
             mock_client.messages.create.side_effect = api_error
 
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             with pytest.raises(APICallError, match="Claude API call failed"):
                 provider.analyze_menu(b"fake image data", "image/jpeg")
