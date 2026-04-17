@@ -23,7 +23,7 @@ def sample_dish() -> Dish:
     """テスト用のサンプル料理データ"""
     return Dish(
         original_name="Pad Thai",
-        japanese_name="パッタイ",
+        translated_name="パッタイ",
         description="米麺を使ったタイ風焼きそば",
         spiciness=2,
         sweetness=3,

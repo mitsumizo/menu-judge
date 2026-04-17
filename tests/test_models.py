@@ -12,7 +12,7 @@ class TestDish:
         """Test creating a Dish with all fields specified."""
         dish = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
@@ -23,7 +23,7 @@ class TestDish:
         )
 
         assert dish.original_name == "Pad Thai"
-        assert dish.japanese_name == "パッタイ"
+        assert dish.translated_name == "パッタイ"
         assert dish.description == "米麺を使ったタイ風焼きそば"
         assert dish.spiciness == 2
         assert dish.sweetness == 3
@@ -36,7 +36,7 @@ class TestDish:
         """Test creating a Dish with default values."""
         dish = Dish(
             original_name="Simple Dish",
-            japanese_name="シンプル料理",
+            translated_name="シンプル料理",
             description="説明",
             spiciness=1,
             sweetness=1,
@@ -52,7 +52,7 @@ class TestDish:
         with pytest.raises(ValueError, match="spiciness must be 1-5, got 0"):
             Dish(
                 original_name="Too Mild",
-                japanese_name="辛くない",
+                translated_name="辛くない",
                 description="辛さゼロ",
                 spiciness=0,
                 sweetness=3,
@@ -63,7 +63,7 @@ class TestDish:
         with pytest.raises(ValueError, match="spiciness must be 1-5, got 6"):
             Dish(
                 original_name="Too Spicy",
-                japanese_name="辛すぎ",
+                translated_name="辛すぎ",
                 description="辛さ6",
                 spiciness=6,
                 sweetness=3,
@@ -74,7 +74,7 @@ class TestDish:
         with pytest.raises(ValueError, match="sweetness must be 1-5, got 0"):
             Dish(
                 original_name="Not Sweet",
-                japanese_name="甘くない",
+                translated_name="甘くない",
                 description="甘さゼロ",
                 spiciness=3,
                 sweetness=0,
@@ -85,7 +85,7 @@ class TestDish:
         with pytest.raises(ValueError, match="sweetness must be 1-5, got 6"):
             Dish(
                 original_name="Too Sweet",
-                japanese_name="甘すぎ",
+                translated_name="甘すぎ",
                 description="甘さ6",
                 spiciness=3,
                 sweetness=6,
@@ -95,7 +95,7 @@ class TestDish:
         """Test that spiciness at boundaries (1 and 5) are valid."""
         dish_min = Dish(
             original_name="Mild",
-            japanese_name="マイルド",
+            translated_name="マイルド",
             description="辛さ1",
             spiciness=1,
             sweetness=3,
@@ -104,7 +104,7 @@ class TestDish:
 
         dish_max = Dish(
             original_name="Very Spicy",
-            japanese_name="激辛",
+            translated_name="激辛",
             description="辛さ5",
             spiciness=5,
             sweetness=3,
@@ -115,7 +115,7 @@ class TestDish:
         """Test that sweetness at boundaries (1 and 5) are valid."""
         dish_min = Dish(
             original_name="Not Sweet",
-            japanese_name="甘さ控えめ",
+            translated_name="甘さ控えめ",
             description="甘さ1",
             spiciness=3,
             sweetness=1,
@@ -124,7 +124,7 @@ class TestDish:
 
         dish_max = Dish(
             original_name="Very Sweet",
-            japanese_name="激甘",
+            translated_name="激甘",
             description="甘さ5",
             spiciness=3,
             sweetness=5,
@@ -136,7 +136,7 @@ class TestDish:
         with pytest.raises(ValueError, match="spiciness must be an integer"):
             Dish(
                 original_name="Invalid Type",
-                japanese_name="無効な型",
+                translated_name="無効な型",
                 description="辛さが文字列",
                 spiciness=3.5,  # type: ignore
                 sweetness=3,
@@ -147,7 +147,7 @@ class TestDish:
         with pytest.raises(ValueError, match="sweetness must be an integer"):
             Dish(
                 original_name="Invalid Type",
-                japanese_name="無効な型",
+                translated_name="無効な型",
                 description="甘さが文字列",
                 spiciness=3,
                 sweetness="3",  # type: ignore
@@ -157,7 +157,7 @@ class TestDish:
         """Test converting Dish to dictionary."""
         dish = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
@@ -171,7 +171,7 @@ class TestDish:
 
         assert result == {
             "original_name": "Pad Thai",
-            "japanese_name": "パッタイ",
+            "translated_name": "パッタイ",
             "description": "米麺を使ったタイ風焼きそば",
             "spiciness": 2,
             "sweetness": 3,
@@ -186,7 +186,7 @@ class TestDish:
         """Test to_dict with None values."""
         dish = Dish(
             original_name="Simple",
-            japanese_name="シンプル",
+            translated_name="シンプル",
             description="説明",
             spiciness=1,
             sweetness=1,
@@ -201,7 +201,7 @@ class TestDish:
         """Test creating Dish from dictionary."""
         data = {
             "original_name": "Pad Thai",
-            "japanese_name": "パッタイ",
+            "translated_name": "パッタイ",
             "description": "米麺を使ったタイ風焼きそば",
             "spiciness": 2,
             "sweetness": 3,
@@ -214,7 +214,7 @@ class TestDish:
         dish = Dish.from_dict(data)
 
         assert dish.original_name == "Pad Thai"
-        assert dish.japanese_name == "パッタイ"
+        assert dish.translated_name == "パッタイ"
         assert dish.description == "米麺を使ったタイ風焼きそば"
         assert dish.spiciness == 2
         assert dish.sweetness == 3
@@ -227,7 +227,7 @@ class TestDish:
         """Test from_dict with missing optional fields."""
         data = {
             "original_name": "Simple",
-            "japanese_name": "シンプル",
+            "translated_name": "シンプル",
             "description": "説明",
             "spiciness": 1,
             "sweetness": 1,
@@ -244,7 +244,7 @@ class TestDish:
         """Test roundtrip conversion: Dish -> dict -> Dish."""
         original = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
@@ -261,7 +261,7 @@ class TestDish:
 
         # Verify all fields match
         assert restored.original_name == original.original_name
-        assert restored.japanese_name == original.japanese_name
+        assert restored.translated_name == original.translated_name
         assert restored.description == original.description
         assert restored.spiciness == original.spiciness
         assert restored.sweetness == original.sweetness
@@ -278,7 +278,7 @@ class TestDish:
         """Test from_dict can handle Enum objects in addition to strings."""
         data = {
             "original_name": "Test",
-            "japanese_name": "テスト",
+            "translated_name": "テスト",
             "description": "説明",
             "spiciness": 1,
             "sweetness": 1,
@@ -293,7 +293,7 @@ class TestDish:
         """Test from_dict raises ValueError when required fields are missing."""
         # Missing original_name
         data = {
-            "japanese_name": "テスト",
+            "translated_name": "テスト",
             "description": "説明",
             "spiciness": 1,
             "sweetness": 1,
@@ -309,7 +309,7 @@ class TestDish:
         }
         with pytest.raises(
             ValueError,
-            match="Missing required fields: japanese_name, description, spiciness, sweetness",
+            match="Missing required fields: translated_name, description, spiciness, sweetness",
         ):
             Dish.from_dict(data)
 

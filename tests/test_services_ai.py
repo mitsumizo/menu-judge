@@ -26,7 +26,7 @@ class TestAnalysisResult:
         """Test creating an AnalysisResult with all fields."""
         dish1 = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
@@ -37,7 +37,7 @@ class TestAnalysisResult:
 
         dish2 = Dish(
             original_name="Tom Yum Soup",
-            japanese_name="トムヤムスープ",
+            translated_name="トムヤムスープ",
             description="辛酸っぱいタイ風スープ",
             spiciness=4,
             sweetness=1,
@@ -135,7 +135,7 @@ class TestAIProvider:
             def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
                 dish = Dish(
                     original_name="Test Dish",
-                    japanese_name="テスト料理",
+                    translated_name="テスト料理",
                     description="テスト用の料理",
                     spiciness=3,
                     sweetness=3,
@@ -236,7 +236,7 @@ class TestClaudeProvider:
             # Verify prompt contains key requirements
             assert "JSON" in prompt
             assert "original_name" in prompt
-            assert "japanese_name" in prompt
+            assert "translated_name" in prompt
             assert "spiciness" in prompt
             assert "sweetness" in prompt
             assert "ingredients" in prompt
@@ -252,7 +252,7 @@ class TestClaudeProvider:
                 "dishes": [
                     {
                         "original_name": "Pad Thai",
-                        "japanese_name": "パッタイ",
+                        "translated_name": "パッタイ",
                         "description": "米麺を使ったタイ風焼きそば",
                         "spiciness": 2,
                         "sweetness": 3,
@@ -267,7 +267,7 @@ class TestClaudeProvider:
 
             assert len(dishes) == 1
             assert dishes[0].original_name == "Pad Thai"
-            assert dishes[0].japanese_name == "パッタイ"
+            assert dishes[0].translated_name == "パッタイ"
             assert dishes[0].spiciness == 2
             assert dishes[0].sweetness == 3
             assert dishes[0].category == Category.MAIN
@@ -281,7 +281,7 @@ class TestClaudeProvider:
                 "dishes": [
                     {
                         "original_name": "Tom Yum",
-                        "japanese_name": "トムヤム",
+                        "translated_name": "トムヤム",
                         "description": "辛酸っぱいスープ",
                         "spiciness": 4,
                         "sweetness": 1,
@@ -347,7 +347,7 @@ class TestClaudeProvider:
                     {
                         # Valid dish
                         "original_name": "Valid Dish",
-                        "japanese_name": "有効な料理",
+                        "translated_name": "有効な料理",
                         "description": "これは有効な料理です",
                         "spiciness": 3,
                         "sweetness": 3,
@@ -397,7 +397,7 @@ class TestClaudeProvider:
                 "dishes": [
                     {
                         "original_name": "Green Curry",
-                        "japanese_name": "グリーンカレー",
+                        "translated_name": "グリーンカレー",
                         "description": "タイのグリーンカレー",
                         "spiciness": 4,
                         "sweetness": 2,
@@ -504,7 +504,7 @@ class TestAIProviderFactory:
             def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
                 dish = Dish(
                     original_name="Custom Dish",
-                    japanese_name="カスタム料理",
+                    translated_name="カスタム料理",
                     description="カスタムプロバイダーのテスト",
                     spiciness=3,
                     sweetness=3,

@@ -67,7 +67,7 @@ def mock_claude_response():
   "dishes": [
     {
       "original_name": "Pad Thai",
-      "japanese_name": "パッタイ",
+      "translated_name": "パッタイ",
       "description": "米麺を使ったタイ風焼きそば。エビ、卵、もやし、ピーナッツを使用",
       "spiciness": 2,
       "sweetness": 3,
@@ -77,7 +77,7 @@ def mock_claude_response():
     },
     {
       "original_name": "Tom Yum Goong",
-      "japanese_name": "トムヤムクン",
+      "translated_name": "トムヤムクン",
       "description": "辛酸っぱいタイ風エビスープ",
       "spiciness": 4,
       "sweetness": 1,
@@ -114,7 +114,7 @@ def mock_analysis_result():
     dishes = [
         Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="タイ風焼きそば",
             spiciness=2,
             sweetness=3,

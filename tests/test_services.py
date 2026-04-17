@@ -18,7 +18,7 @@ class TestDishModel:
         """Test creating a Dish object with valid data."""
         dish = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
@@ -28,7 +28,7 @@ class TestDishModel:
         )
 
         assert dish.original_name == "Pad Thai"
-        assert dish.japanese_name == "パッタイ"
+        assert dish.translated_name == "パッタイ"
         assert dish.description == "米麺を使ったタイ風焼きそば"
         assert dish.spiciness == 2
         assert dish.sweetness == 3
@@ -40,7 +40,7 @@ class TestDishModel:
         """Test converting Dish to dictionary."""
         dish = Dish(
             original_name="Tom Yum",
-            japanese_name="トムヤム",
+            translated_name="トムヤム",
             description="辛酸っぱいタイ風スープ",
             spiciness=4,
             sweetness=1,
@@ -53,7 +53,7 @@ class TestDishModel:
 
         assert isinstance(result, dict)
         assert result["original_name"] == "Tom Yum"
-        assert result["japanese_name"] == "トムヤム"
+        assert result["translated_name"] == "トムヤム"
         assert result["description"] == "辛酸っぱいタイ風スープ"
         assert result["spiciness"] == 4
         assert result["sweetness"] == 1
@@ -66,7 +66,7 @@ class TestDishModel:
         with pytest.raises(ValueError, match="spiciness must be 1-5"):
             Dish(
                 original_name="Test",
-                japanese_name="テスト",
+                translated_name="テスト",
                 description="テスト料理",
                 spiciness=6,  # Invalid: out of range
                 sweetness=3,
@@ -75,7 +75,7 @@ class TestDishModel:
         with pytest.raises(ValueError, match="spiciness must be 1-5"):
             Dish(
                 original_name="Test",
-                japanese_name="テスト",
+                translated_name="テスト",
                 description="テスト料理",
                 spiciness=0,  # Invalid: out of range
                 sweetness=3,
@@ -86,7 +86,7 @@ class TestDishModel:
         with pytest.raises(ValueError, match="sweetness must be 1-5"):
             Dish(
                 original_name="Test",
-                japanese_name="テスト",
+                translated_name="テスト",
                 description="テスト料理",
                 spiciness=3,
                 sweetness=6,  # Invalid: out of range
@@ -95,7 +95,7 @@ class TestDishModel:
         with pytest.raises(ValueError, match="sweetness must be 1-5"):
             Dish(
                 original_name="Test",
-                japanese_name="テスト",
+                translated_name="テスト",
                 description="テスト料理",
                 spiciness=3,
                 sweetness=-1,  # Invalid: out of range
@@ -106,7 +106,7 @@ class TestDishModel:
         with pytest.raises(ValueError, match="spiciness must be an integer"):
             Dish(
                 original_name="Test",
-                japanese_name="テスト",
+                translated_name="テスト",
                 description="テスト料理",
                 spiciness="3",  # Invalid: should be int
                 sweetness=3,
@@ -115,7 +115,7 @@ class TestDishModel:
         with pytest.raises(ValueError, match="sweetness must be an integer"):
             Dish(
                 original_name="Test",
-                japanese_name="テスト",
+                translated_name="テスト",
                 description="テスト料理",
                 spiciness=3,
                 sweetness=3.5,  # Invalid: should be int
@@ -125,7 +125,7 @@ class TestDishModel:
         """Test creating Dish from valid dictionary."""
         data = {
             "original_name": "Curry",
-            "japanese_name": "カレー",
+            "translated_name": "カレー",
             "description": "スパイシーなカレー",
             "spiciness": 3,
             "sweetness": 2,
@@ -137,7 +137,7 @@ class TestDishModel:
         dish = Dish.from_dict(data)
 
         assert dish.original_name == "Curry"
-        assert dish.japanese_name == "カレー"
+        assert dish.translated_name == "カレー"
         assert dish.description == "スパイシーなカレー"
         assert dish.spiciness == 3
         assert dish.sweetness == 2
@@ -149,7 +149,7 @@ class TestDishModel:
         """Test creating Dish from dictionary with missing required fields."""
         data = {
             "original_name": "Test",
-            # Missing: japanese_name, description, spiciness, sweetness
+            # Missing: translated_name, description, spiciness, sweetness
         }
 
         with pytest.raises(ValueError, match="Missing required fields"):
@@ -159,7 +159,7 @@ class TestDishModel:
         """Test creating Dish from dictionary with optional fields using defaults."""
         data = {
             "original_name": "Simple Dish",
-            "japanese_name": "シンプル料理",
+            "translated_name": "シンプル料理",
             "description": "シンプルな料理",
             "spiciness": 1,
             "sweetness": 1,
@@ -176,7 +176,7 @@ class TestDishModel:
         """Test that invalid category falls back to OTHER."""
         data = {
             "original_name": "Test",
-            "japanese_name": "テスト",
+            "translated_name": "テスト",
             "description": "テスト料理",
             "spiciness": 2,
             "sweetness": 2,

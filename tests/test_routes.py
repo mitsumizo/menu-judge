@@ -105,7 +105,7 @@ class TestAnalyzeRoute:
             dishes=[
                 Dish(
                     original_name="Pad Thai",
-                    japanese_name="パッタイ",
+                    translated_name="パッタイ",
                     description="米麺を使ったタイ風焼きそば",
                     spiciness=2,
                     sweetness=3,
@@ -136,7 +136,7 @@ class TestAnalyzeRoute:
             dishes=[
                 Dish(
                     original_name="Pad Thai",
-                    japanese_name="パッタイ",
+                    translated_name="パッタイ",
                     description="米麺を使ったタイ風焼きそば",
                     spiciness=2,
                     sweetness=3,
