@@ -101,8 +101,8 @@ def test_dish_card_renders_allergens(app: Flask, sample_dish: Dish) -> None:
         """
         html = render_template_string(template, dish=sample_dish)
 
-        # アレルギー警告が表示される
-        assert "⚠️ アレルギー:" in html
+        # アレルゲン警告が表示される（ja翻訳では"アレルゲン"が採用されている）
+        assert "⚠️ アレルゲン:" in html
         assert "甲殻類" in html
         assert "卵" in html
         assert "ナッツ" in html
