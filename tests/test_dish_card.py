@@ -93,8 +93,8 @@ def test_dish_card_renders_ingredients(app: Flask, sample_dish: Dish) -> None:
 
 
 def test_dish_card_renders_allergens(app: Flask, sample_dish: Dish) -> None:
-    """アレルギー情報が表示されることを確認"""
-    with app.test_request_context():
+    """アレルギー情報が表示されることを確認（日本語i18nコンテキストで）"""
+    with app.test_request_context("/?lang=ja"):
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}

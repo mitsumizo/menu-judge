@@ -74,12 +74,11 @@ class TestMenuAnalysisFlow:
 class TestMultipleProviders:
     """複数プロバイダーのテスト"""
 
-    @patch.dict("os.environ", {"AI_PROVIDER": "claude", "ANTHROPIC_API_KEY": "test-key"})
     def test_claude_provider_selection(self, client):
         """Claudeプロバイダーが選択される"""
         from app.services.ai.factory import AIProviderFactory
 
-        provider = AIProviderFactory.create()
+        provider = AIProviderFactory.create(api_key="sk-ant-test")
         assert provider.name == "claude"
 
     @patch.dict("os.environ", {"AI_PROVIDER": "invalid"})

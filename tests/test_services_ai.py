@@ -399,7 +399,7 @@ class TestClaudeProvider:
             mock_client.messages.create.assert_called_once()
             call_args = mock_client.messages.create.call_args
             assert call_args[1]["model"] == ClaudeProvider.MODEL
-            assert call_args[1]["max_tokens"] == 4096
+            assert call_args[1]["max_tokens"] == 8192
 
     @patch("anthropic.Anthropic")
     def test_analyze_menu_api_error(self, mock_anthropic_class):

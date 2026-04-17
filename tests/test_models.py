@@ -133,7 +133,7 @@ class TestDish:
 
     def test_spiciness_type_validation(self):
         """Test that spiciness must be an integer."""
-        with pytest.raises(ValueError, match="spiciness must be an integer"):
+        with pytest.raises(TypeError, match="spiciness must be an integer"):
             Dish(
                 original_name="Invalid Type",
                 translated_name="無効な型",
@@ -144,7 +144,7 @@ class TestDish:
 
     def test_sweetness_type_validation(self):
         """Test that sweetness must be an integer."""
-        with pytest.raises(ValueError, match="sweetness must be an integer"):
+        with pytest.raises(TypeError, match="sweetness must be an integer"):
             Dish(
                 original_name="Invalid Type",
                 translated_name="無効な型",
