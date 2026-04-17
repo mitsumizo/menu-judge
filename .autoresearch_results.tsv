@@ -1,0 +1,2 @@
+iteration	commit	metric	status	description
+0	baseline	10	baseline	ruff(S,B,BLE,TRY004,TRY400,TRY301,PLE)=8 + pip-audit=2
