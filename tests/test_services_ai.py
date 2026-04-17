@@ -455,43 +455,36 @@ class TestAIProviderFactory:
 
     def test_create_with_default_provider(self):
         """Test creating provider with default (claude)."""
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = AIProviderFactory.create()
-            assert isinstance(provider, ClaudeProvider)
-            assert provider.name == "claude"
+        provider = AIProviderFactory.create(api_key="sk-ant-test")
+        assert isinstance(provider, ClaudeProvider)
+        assert provider.name == "claude"
 
     def test_create_with_env_variable(self):
-        """Test creating provider from AI_PROVIDER environment variable."""
-        with patch.dict(
-            os.environ, {"AI_PROVIDER": "claude", "ANTHROPIC_API_KEY": "test-api-key"}
-        ):
-            provider = AIProviderFactory.create()
-            assert isinstance(provider, ClaudeProvider)
-            assert provider.name == "claude"
+        """Test creating provider with explicit provider_name."""
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="claude")
+        assert isinstance(provider, ClaudeProvider)
+        assert provider.name == "claude"
 
     def test_create_with_explicit_provider_name(self):
         """Test creating provider with explicit provider_name argument."""
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = AIProviderFactory.create(provider_name="claude")
-            assert isinstance(provider, ClaudeProvider)
-            assert provider.name == "claude"
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="claude")
+        assert isinstance(provider, ClaudeProvider)
+        assert provider.name == "claude"
 
     def test_create_with_unknown_provider_raises_error(self):
         """Test that unknown provider raises UnknownProviderError."""
         with pytest.raises(UnknownProviderError, match="Unknown provider: unknown"):
-            AIProviderFactory.create(provider_name="unknown")
+            AIProviderFactory.create(api_key="sk-ant-test", provider_name="unknown")
 
     def test_create_with_unknown_provider_from_env_raises_error(self):
-        """Test that unknown provider from env raises UnknownProviderError."""
-        with patch.dict(os.environ, {"AI_PROVIDER": "nonexistent"}):
-            with pytest.raises(UnknownProviderError, match="Unknown provider: nonexistent"):
-                AIProviderFactory.create()
+        """Test that unknown provider raises UnknownProviderError."""
+        with pytest.raises(UnknownProviderError, match="Unknown provider: nonexistent"):
+            AIProviderFactory.create(api_key="sk-ant-test", provider_name="nonexistent")
 
     def test_create_without_api_key_raises_error(self):
         """Test that missing API key raises APIKeyMissingError."""
-        with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(APIKeyMissingError, match="API key not configured for claude"):
-                AIProviderFactory.create()
+        with pytest.raises(APIKeyMissingError, match="API key is required"):
+            AIProviderFactory.create(api_key="")
 
     def test_register_new_provider(self):
         """Test registering a new provider."""
@@ -523,7 +516,7 @@ class TestAIProviderFactory:
         AIProviderFactory.register("custom", CustomProvider)
 
         # Verify it can be created
-        provider = AIProviderFactory.create(provider_name="custom")
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="custom")
         assert isinstance(provider, CustomProvider)
         assert provider.name == "custom"
 
@@ -537,13 +530,11 @@ class TestAIProviderFactory:
             assert isinstance(providers, list)
             assert "claude" in providers
 
-    def test_available_providers_excludes_unavailable(self):
-        """Test that available_providers excludes providers without API keys."""
-        with patch.dict(os.environ, {}, clear=True):
-            providers = AIProviderFactory.available_providers()
-            assert isinstance(providers, list)
-            # claude should not be in the list without API key
-            assert "claude" not in providers
+    def test_available_providers_returns_registered_names(self):
+        """available_providers returns all registered provider names (no env check)."""
+        providers = AIProviderFactory.available_providers()
+        assert isinstance(providers, list)
+        assert "claude" in providers
 
     def test_unknown_provider_error_is_ai_provider_error(self):
         """Test that UnknownProviderError is a subclass of AIProviderError."""

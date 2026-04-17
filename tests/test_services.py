@@ -347,42 +347,36 @@ class TestClaudeProvider:
 class TestAIProviderFactory:
     """Tests for AIProviderFactory."""
 
-    @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key", "AI_PROVIDER": "claude"}, clear=False)
     def test_create_claude_provider(self):
         """Test creating Claude provider from factory."""
-        provider = AIProviderFactory.create()
+        provider = AIProviderFactory.create(api_key="sk-ant-test")
         assert isinstance(provider, ClaudeProvider)
         assert provider.name == "claude"
 
-    @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}, clear=False)
     def test_create_with_explicit_provider_name(self):
         """Test creating provider with explicit provider name."""
-        provider = AIProviderFactory.create("claude")
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="claude")
         assert isinstance(provider, ClaudeProvider)
         assert provider.name == "claude"
 
-    @patch.dict(os.environ, {}, clear=True)
     def test_unknown_provider_error(self):
         """Test that UnknownProviderError is raised for unknown provider."""
         with pytest.raises(UnknownProviderError, match="Unknown provider: invalid"):
-            AIProviderFactory.create("invalid")
+            AIProviderFactory.create(api_key="sk-ant-test", provider_name="invalid")
 
-    def test_api_key_missing_error(self, monkeypatch):
-        """Test that APIKeyMissingError is raised when API key is not configured."""
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        with pytest.raises(APIKeyMissingError, match="API key not configured"):
-            AIProviderFactory.create("claude")
+    def test_api_key_missing_error(self):
+        """Test that APIKeyMissingError is raised when API key is empty."""
+        with pytest.raises(APIKeyMissingError, match="API key is required"):
+            AIProviderFactory.create(api_key="", provider_name="claude")
 
-    @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}, clear=False)
     def test_available_providers(self):
         """Test getting list of available providers."""
         available = AIProviderFactory.available_providers()
         assert isinstance(available, list)
         assert "claude" in available
 
-    def test_available_providers_empty_when_no_keys(self, monkeypatch):
-        """Test that available_providers returns empty list when no API keys are configured."""
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    def test_available_providers_returns_registered_names(self):
+        """available_providers returns all registered provider names (no env check)."""
         available = AIProviderFactory.available_providers()
         assert isinstance(available, list)
-        assert "claude" not in available
+        assert "claude" in available
