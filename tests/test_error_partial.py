@@ -1,24 +1,20 @@
 """error.html パーシャルテンプレートのテスト"""
 
-from collections.abc import Generator
-
 import pytest
 from flask import Flask, render_template_string
 
+from app import create_app
+
 
 @pytest.fixture
-def app() -> Generator[Flask, None, None]:
-    """テスト用のFlaskアプリケーション"""
-    app = Flask(
-        __name__,
-        template_folder="../app/templates",
-    )
-    return app  # type: ignore[return-value]
+def app() -> Flask:
+    """テスト用のFlaskアプリケーション（t()などのJinja2グローバルを含む）"""
+    return create_app({"TESTING": True, "SECRET_KEY": "test-secret-key"})
 
 
 def test_error_partial_renders_with_default_title(app: Flask) -> None:
     """デフォルトタイトルでレンダリングされることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% include 'partials/error.html' %}
         """
@@ -32,7 +28,7 @@ def test_error_partial_renders_with_default_title(app: Flask) -> None:
 
 def test_error_partial_renders_with_custom_title(app: Flask) -> None:
     """カスタムタイトルでレンダリングされることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% include 'partials/error.html' %}
         """
@@ -50,7 +46,7 @@ def test_error_partial_renders_with_custom_title(app: Flask) -> None:
 
 def test_error_partial_renders_error_code(app: Flask) -> None:
     """エラーコードが表示されることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% include 'partials/error.html' %}
         """
@@ -67,7 +63,7 @@ def test_error_partial_renders_error_code(app: Flask) -> None:
 
 def test_error_partial_without_error_code(app: Flask) -> None:
     """エラーコードがない場合は表示されないことを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% include 'partials/error.html' %}
         """
@@ -83,7 +79,7 @@ def test_error_partial_without_error_code(app: Flask) -> None:
 
 def test_error_partial_has_close_button(app: Flask) -> None:
     """閉じるボタンが存在することを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% include 'partials/error.html' %}
         """
@@ -97,7 +93,7 @@ def test_error_partial_has_close_button(app: Flask) -> None:
 
 def test_error_partial_has_error_icon(app: Flask) -> None:
     """エラーアイコンが表示されることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% include 'partials/error.html' %}
         """
@@ -109,7 +105,7 @@ def test_error_partial_has_error_icon(app: Flask) -> None:
 
 def test_error_partial_has_correct_css_classes(app: Flask) -> None:
     """正しいCSSクラスが適用されていることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% include 'partials/error.html' %}
         """
@@ -155,7 +151,7 @@ def test_error_partial_renders_all_error_types(app: Flask) -> None:
         },
     ]
 
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% include 'partials/error.html' %}
         """
