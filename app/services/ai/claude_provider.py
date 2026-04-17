@@ -193,7 +193,7 @@ class ClaudeProvider(AIProvider):
         for dish_data in data["dishes"]:
             try:
                 dishes.append(Dish.from_dict(dish_data))
-            except Exception as e:
+            except (ValueError, KeyError, TypeError) as e:
                 logger.warning("Failed to parse dish: %s", e, exc_info=True)
                 continue
 
