@@ -110,20 +110,6 @@ class TestAIProvider:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
             IncompleteProvider()  # type: ignore
 
-    def test_subclass_without_is_available_raises_error(self):
-        """Test that subclass without is_available cannot be instantiated."""
-
-        class IncompleteProvider(AIProvider):
-            @property
-            def name(self) -> str:
-                return "incomplete"
-
-            def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
-                pass
-
-        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            IncompleteProvider()  # type: ignore
-
     def test_complete_subclass_can_be_instantiated(self):
         """Test that a complete subclass can be instantiated."""
 
@@ -147,12 +133,8 @@ class TestAIProvider:
                     processing_time=1.0,
                 )
 
-            def is_available(self) -> bool:
-                return True
-
-        provider = CompleteProvider()
+        provider = CompleteProvider(api_key="sk-ant-test")
         assert provider.name == "test-provider"
-        assert provider.is_available() is True
 
         result = provider.analyze_menu(b"fake image data", "image/jpeg")
         assert len(result.dishes) == 1
@@ -207,19 +189,14 @@ class TestClaudeProvider:
 
     def test_initialization_with_api_key(self):
         """Test ClaudeProvider initialization with API key."""
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = ClaudeProvider(api_key="sk-ant-test")
-            assert provider.api_key == "test-api-key"
-            assert provider.client is not None
-            assert provider.is_available() is True
+        provider = ClaudeProvider(api_key="sk-ant-test")
+        assert provider.api_key == "sk-ant-test"
+        assert provider.client is not None
 
     def test_initialization_without_api_key(self):
-        """Test ClaudeProvider initialization without API key."""
-        with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider(api_key="sk-ant-test")
-            assert provider.api_key is None
-            assert provider.client is None
-            assert provider.is_available() is False
+        """Test that ClaudeProvider raises APIKeyMissingError when api_key is empty."""
+        with pytest.raises(APIKeyMissingError, match="API key is required"):
+            ClaudeProvider(api_key="")
 
     def test_name_property(self):
         """Test that name property returns 'claude'."""
@@ -330,7 +307,7 @@ class TestClaudeProvider:
 
         response_json = {"dishes": []}
 
-        with pytest.raises(InvalidMenuImageError, match="画像からメニューを検出できませんでした"):
+        with pytest.raises(InvalidMenuImageError, match="Could not detect menu from image"):
             provider._parse_response(json.dumps(response_json))
 
     def test_parse_response_skips_invalid_dishes(self):
@@ -364,13 +341,10 @@ class TestClaudeProvider:
             assert len(dishes) == 1
             assert dishes[0].original_name == "Valid Dish"
 
-    def test_analyze_menu_without_api_key(self):
-        """Test that analyze_menu raises APIKeyMissingError without API key."""
-        with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider(api_key="sk-ant-test")
-
-            with pytest.raises(APIKeyMissingError, match="ANTHROPIC_API_KEY is not configured"):
-                provider.analyze_menu(b"fake image data", "image/jpeg")
+    def test_construction_without_api_key_raises_error(self):
+        """ClaudeProvider now rejects empty api_key at construction time."""
+        with pytest.raises(APIKeyMissingError, match="API key is required"):
+            ClaudeProvider(api_key="")
 
     def test_analyze_menu_image_size_exceeds_limit(self):
         """Test that analyze_menu raises APICallError when image size exceeds limit."""
@@ -424,7 +398,7 @@ class TestClaudeProvider:
             # Verify API call
             mock_client.messages.create.assert_called_once()
             call_args = mock_client.messages.create.call_args
-            assert call_args[1]["model"] == "claude-3-5-sonnet-20241022"
+            assert call_args[1]["model"] == ClaudeProvider.MODEL
             assert call_args[1]["max_tokens"] == 4096
 
     @patch("anthropic.Anthropic")
