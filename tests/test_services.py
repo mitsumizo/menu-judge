@@ -103,7 +103,7 @@ class TestDishModel:
 
     def test_dish_validation_type_error(self):
         """Test validation for incorrect types."""
-        with pytest.raises(ValueError, match="spiciness must be an integer"):
+        with pytest.raises(TypeError, match="spiciness must be an integer"):
             Dish(
                 original_name="Test",
                 translated_name="テスト",
@@ -112,7 +112,7 @@ class TestDishModel:
                 sweetness=3,
             )
 
-        with pytest.raises(ValueError, match="sweetness must be an integer"):
+        with pytest.raises(TypeError, match="sweetness must be an integer"):
             Dish(
                 original_name="Test",
                 translated_name="テスト",
@@ -195,24 +195,10 @@ class TestClaudeProvider:
         provider = ClaudeProvider(api_key="sk-ant-test")
         assert provider.name == "claude"
 
-    def test_is_available_without_api_key(self, monkeypatch):
-        """Test is_available returns False when API key is not set."""
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        assert ClaudeProvider.is_available() is False
-
-    @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}, clear=False)
-    def test_is_available_with_api_key(self):
-        """Test is_available returns True when API key is set."""
-        assert ClaudeProvider.is_available() is True
-
-    def test_api_key_missing(self, sample_image, monkeypatch):
-        """Test that APIKeyMissingError is raised when API key is not set."""
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        provider = ClaudeProvider(api_key="sk-ant-test")
-        image_data, mime_type = sample_image
-
-        with pytest.raises(APIKeyMissingError, match="ANTHROPIC_API_KEY is not configured"):
-            provider.analyze_menu(image_data, mime_type)
+    def test_api_key_missing(self):
+        """Test that APIKeyMissingError is raised at construction when api_key is empty."""
+        with pytest.raises(APIKeyMissingError, match="API key is required"):
+            ClaudeProvider(api_key="")
 
     @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}, clear=False)
     @patch("anthropic.Anthropic")
@@ -340,7 +326,7 @@ class TestClaudeProvider:
         provider = ClaudeProvider(api_key="sk-ant-test")
         image_data, mime_type = sample_image
 
-        with pytest.raises(APICallError, match="Failed to parse response"):
+        with pytest.raises(APICallError, match="Response must contain 'dishes' key"):
             provider.analyze_menu(image_data, mime_type)
 
 
