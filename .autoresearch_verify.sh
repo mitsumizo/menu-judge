@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# Autoresearch verify: count security findings. Lower = better.
+# Autoresearch verify: count test failures + errors. Lower = better.
 set -e
 cd "$(dirname "$0")"
-RUFF_COUNT=$(venv/bin/ruff check app/ --select "S,B,BLE,TRY004,TRY400,TRY301,PLE" --output-format json 2>/dev/null | venv/bin/python -c "import sys,json; print(len(json.load(sys.stdin)))")
-PIP_AUDIT_COUNT=$(venv/bin/pip-audit -r requirements.txt --format json 2>/dev/null | venv/bin/python -c "import sys,json; d=json.load(sys.stdin); print(sum(len(x.get('vulns',[])) for x in d.get('dependencies',[])))")
-echo $((RUFF_COUNT + PIP_AUDIT_COUNT))
+OUT=$(venv/bin/python -m pytest tests/ --tb=no -q 2>&1 | tail -1)
+FAILED=$(echo "$OUT" | grep -oE '[0-9]+ failed' | grep -oE '[0-9]+' | head -1)
+ERRORS=$(echo "$OUT" | grep -oE '[0-9]+ error' | grep -oE '[0-9]+' | head -1)
+FAILED=${FAILED:-0}
+ERRORS=${ERRORS:-0}
+echo $((FAILED + ERRORS))

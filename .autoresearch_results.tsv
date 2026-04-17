@@ -5,4 +5,6 @@ iteration	commit	metric	status	description
 3	646b6f7	4	keep	restructure _parse_response to hoist raises out of broad try-except (TRY301 ×2)
 4	244eb75	3	keep	narrow blind except to specific types in dish parse loop (BLE001)
 5	1aa0207	0	keep	raise TypeError on type-check failures in Dish/BoundingBox (TRY004 ×3)
----GOAL-ACHIEVED---	-	0	done	baseline 10 → 0 in 5 iterations
+---GOAL-ACHIEVED (loop 1)---	-	0	done	baseline 10 → 0 in 5 iterations
+###LOOP2###	iteration	metric	status	description
+0	baseline	129	baseline	pytest: 118 failed + 11 errors
