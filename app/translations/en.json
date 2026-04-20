@@ -102,7 +102,14 @@
     "analyzed_with": "Analyzed with",
     "no_dishes_detected": "No dishes detected",
     "try_different_image": "Please try a different image",
-    "hover_hint": "Hover over numbers to highlight corresponding dishes"
+    "hover_hint": "Hover over numbers to highlight corresponding dishes",
+    "filter_aria_label": "Filter dishes by category",
+    "filter_all": "All",
+    "filter_category_appetizer": "Appetizer",
+    "filter_category_main": "Main",
+    "filter_category_dessert": "Dessert",
+    "filter_category_beverage": "Beverage",
+    "filter_category_other": "Other"
   },
   "error": {
     "title": "An Error Occurred",
