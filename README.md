@@ -49,6 +49,9 @@ cd menu-judge
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
+# Upgrade pip to the latest CVE-patched release
+pip install --upgrade pip
+
 # Install Python dependencies
 pip install -r requirements.txt
 
