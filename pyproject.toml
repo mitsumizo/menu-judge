@@ -20,6 +20,7 @@ dev = [
     "pytest>=7.0.0,<10.0.0",
     "pytest-cov>=4.0.0,<6.0.0",
     "ruff>=0.8.0,<1.0.0",
+    "mypy>=1.0.0,<2.0.0",
     "pre-commit>=3.0.0,<5.0.0",
 ]
 
@@ -60,4 +61,11 @@ indent-style = "space"
 exclude_dirs = ["tests", "venv", ".venv"]
 skips = [
     "B101",  # assert_used（テストでは使用するため）
+]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # GC timing issues in Python 3.14 stdlib / werkzeug — not our bug.
+    "ignore::ResourceWarning:re._parser",
+    "ignore::ResourceWarning:werkzeug.routing.rules",
 ]

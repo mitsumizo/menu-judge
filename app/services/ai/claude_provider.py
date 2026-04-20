@@ -7,6 +7,7 @@ import json
 import logging
 import time
 from dataclasses import replace
+from typing import Literal, cast
 
 import anthropic
 
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 class ClaudeProvider(AIProvider):
     """Claude APIを使用した画像解析プロバイダー"""
 
-    MODEL = "claude-3-7-sonnet-20250219"
+    MODEL = "claude-sonnet-4-6"
     MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB (matches CLAUDE.md spec)
 
     def __init__(self, api_key: str, language: str = 'en') -> None:
@@ -84,30 +85,40 @@ class ClaudeProvider(AIProvider):
             # Build prompt
             prompt = self._build_prompt()
 
-            # Call Claude API
+            # Call Claude API — mime_type validated against ALLOWED_MIME_TYPES at the route layer.
+            messages: list[anthropic.types.MessageParam] = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": cast(
+                                    Literal[
+                                        "image/jpeg",
+                                        "image/png",
+                                        "image/gif",
+                                        "image/webp",
+                                    ],
+                                    mime_type,
+                                ),
+                                "data": image_base64,
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ]
             response = self.client.messages.create(
                 model=self.MODEL,
                 max_tokens=8192,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": mime_type,
-                                    "data": image_base64,
-                                },
-                            },
-                            {"type": "text", "text": prompt},
-                        ],
-                    }
-                ],
+                messages=messages,
             )
 
-            # Parse response
-            raw_response = response.content[0].text
+            # Parse response — Claude returns TextBlock for our text-only prompt
+            text_block = cast(anthropic.types.TextBlock, response.content[0])
+            raw_response = text_block.text
             dishes = self._parse_response(raw_response)
 
             processing_time = time.time() - start_time

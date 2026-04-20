@@ -54,3 +54,4 @@ htmlcov/
 # Cache
 .cache/
 .turbo/
+autoresearch-results.tsv

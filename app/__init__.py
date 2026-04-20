@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from flask import Flask, request
+
 from app.translations.loader import TranslationLoader
 
 
