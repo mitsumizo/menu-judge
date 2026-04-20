@@ -14,6 +14,7 @@ from io import BytesIO
 from typing import Any
 
 from flask import Blueprint, Response, jsonify, render_template, request
+from flask.typing import ResponseReturnValue
 from PIL import Image
 from werkzeug.datastructures import FileStorage
 
@@ -46,7 +47,7 @@ def allowed_file(filename: str) -> bool:
 
 def _create_error_response(
     error_message: str, error_code: str, status_code: int, title: str = "Error"
-) -> tuple[Response, int]:
+) -> ResponseReturnValue:
     """
     Create error response (JSON or HTML depending on request type).
 
@@ -130,7 +131,7 @@ def validate_image_file(file: FileStorage) -> tuple[bool, str | None, bytes | No
 
 
 @menu_bp.route("/analyze", methods=["POST"])
-def analyze_menu() -> Response:
+def analyze_menu() -> ResponseReturnValue:
     """
     Analyze menu image.
 
