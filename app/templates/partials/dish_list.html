@@ -32,9 +32,9 @@ Arguments:
      }">
     <!-- Results Summary -->
     <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
-        <h2 class="text-xl font-bold">
+        <h2 class="text-xl font-bold text-slate-900">
             {{ t('results.title', 'Analysis Results') }}
-            <span class="text-sm text-slate-400">
+            <span class="text-sm text-slate-500 font-normal">
                 (<span data-testid="filtered-count" x-text="filteredCount">{{ dishes | length }}</span> {{ t('results.dish_count', 'dishes') }})
             </span>
         </h2>
@@ -43,7 +43,7 @@ Arguments:
             <!-- View Menu Image Button -->
             <button
                 @click="showImageModal = true"
-                class="px-4 py-2 bg-primary hover:bg-primary/80 text-white rounded-lg
+                class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg
                        transition-colors flex items-center gap-2 text-sm"
                 aria-label="{{ t('results.view_menu_image', 'View Menu Image') }}"
             >
@@ -54,7 +54,7 @@ Arguments:
                 {{ t('results.view_menu_image', 'View Menu Image') }}
             </button>
             {% endif %}
-            <span class="text-sm text-slate-400">
+            <span class="text-sm text-slate-500">
                 {{ t('results.analyzed_with', 'Analyzed with') }} {{ provider }} | {{ "%.2f"|format(processing_time) }}s
             </span>
         </div>
@@ -77,7 +77,7 @@ Arguments:
             :aria-selected="selectedCategory === 'all'"
             :class="selectedCategory === 'all'
                     ? 'bg-primary text-white border-primary'
-                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-primary'"
+                    : 'bg-white text-slate-700 border-slate-300 hover:border-primary'"
             class="px-3 py-1.5 rounded-lg text-sm border transition-colors"
         >
             {{ t('results.filter_all', 'All') }} ({{ dishes | length }})
@@ -92,7 +92,7 @@ Arguments:
             :aria-selected="selectedCategory === '{{ cat }}'"
             :class="selectedCategory === '{{ cat }}'
                     ? 'bg-primary text-white border-primary'
-                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-primary'"
+                    : 'bg-white text-slate-700 border-slate-300 hover:border-primary'"
             class="px-3 py-1.5 rounded-lg text-sm border transition-colors"
         >
             {{ t('results.filter_category_' ~ cat, cat) }} ({{ cnt }})
@@ -124,7 +124,7 @@ Arguments:
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
         @click.self="showImageModal = false"
         @keydown.escape.window="showImageModal = false"
         @keydown="FocusTrap.handleTab($event, $refs.imageModalContent)"
@@ -134,14 +134,14 @@ Arguments:
         x-ref="imageModalContainer"
     >
         <!-- Modal Content -->
-        <div class="relative w-full max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-auto bg-surface rounded-xl shadow-2xl"
+        <div class="relative w-full max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-auto bg-white rounded-xl shadow-xl border border-slate-200"
              x-ref="imageModalContent"
              x-init="$watch('showImageModal', value => { if (value) FocusTrap.setInitialFocus($refs.imageModalContent) })">
             <!-- Close Button -->
             <button
                 @click="showImageModal = false"
-                class="absolute top-4 right-4 z-10 p-2 bg-slate-800/80 hover:bg-slate-700
-                       rounded-full text-white transition-colors"
+                class="absolute top-4 right-4 z-10 p-2 bg-white hover:bg-slate-100 border border-slate-200
+                       rounded-full text-slate-700 transition-colors shadow-sm"
                 aria-label="{{ t('api_key_modal.close_modal', 'Close') }}"
             >
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +164,7 @@ Arguments:
     <!-- No Dishes Found -->
     {% if not dishes %}
     <div class="text-center py-8">
-        <p class="text-slate-400">{{ t('results.no_dishes_detected', 'No dishes detected') }}</p>
+        <p class="text-slate-600">{{ t('results.no_dishes_detected', 'No dishes detected') }}</p>
         <p class="text-sm text-slate-500">
             {{ t('results.try_different_image', 'Please try a different image') }}
         </p>

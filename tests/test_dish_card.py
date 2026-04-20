@@ -59,9 +59,9 @@ def test_dish_card_renders_spiciness_indicator(app: Flask, sample_dish: Dish) ->
         # 辛さの絵文字が表示される
         assert "🌶️" in html
 
-        # 辛さレベル2なので、bg-red-500が2つ、bg-slate-600が3つ
+        # 辛さレベル2なので、bg-red-500が2つ、bg-slate-200が3つ
         assert html.count("bg-red-500") >= 2
-        assert html.count("bg-slate-600") >= 3
+        assert html.count("bg-slate-200") >= 3
 
 
 def test_dish_card_renders_sweetness_indicator(app: Flask, sample_dish: Dish) -> None:
@@ -147,14 +147,14 @@ def test_dish_card_has_correct_css_classes(app: Flask, sample_dish: Dish) -> Non
         """
         html = render_template_string(template, dish=sample_dish)
 
-        # 主要なCSSクラスが含まれる
+        # 主要なCSSクラスが含まれる（ライトモード）
         assert "dish-card" in html
-        assert "bg-surface" in html
+        assert "bg-white" in html
         assert "rounded-xl" in html
-        assert "shadow-lg" in html
-        assert "hover:shadow-xl" in html
-        assert "transition-all" in html
-        assert "border-slate-700" in html
+        assert "shadow-sm" in html
+        assert "hover:shadow-md" in html
+        assert "transition-shadow" in html
+        assert "border-slate-200" in html
         assert "hover:border-primary" in html
 
 

@@ -54,8 +54,8 @@ def test_base_template_has_required_elements(app):
         assert "js/app.js" in rendered
 
 
-def test_base_template_has_dark_mode(app):
-    """Test that base template has dark mode class."""
+def test_base_template_is_light_mode(app):
+    """Test that base template does not have dark mode class."""
     with app.test_request_context():
         from flask import render_template_string
 
@@ -65,7 +65,7 @@ def test_base_template_has_dark_mode(app):
         """
         rendered = render_template_string(template)
 
-        assert 'class="dark"' in rendered
+        assert 'class="dark"' not in rendered
 
 
 def test_base_template_has_flexbox_layout(app):
@@ -142,7 +142,6 @@ def test_loading_component_renders(app):
 
         # Check for spinner container
         assert "loading-container" in rendered
-        assert "animate-pulse" in rendered
 
         # Check for spinner SVG
         assert "animate-spin" in rendered
@@ -166,7 +165,6 @@ def test_loading_component_has_required_animations(app):
         rendered = render_template("components/loading.html")
 
         # Check for Tailwind animations
-        assert "animate-pulse" in rendered
         assert "animate-spin" in rendered
 
         # Check for custom indeterminate animation

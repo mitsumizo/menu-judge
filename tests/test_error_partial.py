@@ -108,11 +108,11 @@ def test_error_partial_has_correct_css_classes(app: Flask) -> None:
         html = render_template_string(template, message="テストエラー")
 
         assert 'id="error-message"' in html
-        assert "bg-red-500/10" in html
-        assert "border-red-500/30" in html
+        assert "bg-red-50" in html
+        assert "border-red-200" in html
         assert "rounded-xl" in html
         assert "animate-shake" in html
-        assert "text-red-400" in html
+        assert "text-red-700" in html
 
 
 def test_error_partial_renders_all_error_types(app: Flask) -> None:
