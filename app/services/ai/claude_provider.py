@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import base64
-import json
 import logging
 import time
-from dataclasses import replace
 from typing import Literal, cast
 
 import anthropic
@@ -17,9 +15,9 @@ from app.services.ai.base import (
     AnalysisResult,
     APICallError,
     APIKeyMissingError,
-    InvalidMenuImageError,
 )
 from app.services.ai.prompt_builder import PromptBuilder
+from app.services.ai.response_parser import parse_dishes
 
 logger = logging.getLogger(__name__)
 
@@ -186,82 +184,5 @@ class ClaudeProvider(AIProvider):
         return base_prompt + extra_instructions
 
     def _parse_response(self, response: str) -> list[Dish]:
-        """
-        Parse Claude response to list of Dish objects.
-
-        Args:
-            response: Claude API response text
-
-        Returns:
-            List of Dish objects
-
-        Raises:
-            APICallError: Failed to parse response
-            InvalidMenuImageError: No dishes could be detected
-        """
-        cleaned = self._strip_markdown_fences(response)
-
-        try:
-            data = json.loads(cleaned)
-        except json.JSONDecodeError as e:
-            raise APICallError(f"Failed to parse JSON response: {e}") from e
-
-        if not isinstance(data, dict) or "dishes" not in data:
-            raise APICallError("Response must contain 'dishes' key")
-
-        dishes: list[Dish] = []
-        for dish_data in data["dishes"]:
-            try:
-                dishes.append(Dish.from_dict(dish_data))
-            except (ValueError, KeyError, TypeError) as e:
-                logger.warning("Failed to parse dish: %s", e, exc_info=True)
-                continue
-
-        if not dishes:
-            raise InvalidMenuImageError(
-                "Could not detect menu from image. "
-                "Please verify that the image is a photo of a menu."
-            )
-
-        dishes = self._normalize_dish_numbers(dishes)
-        return dishes
-
-    @staticmethod
-    def _normalize_dish_numbers(dishes: list[Dish]) -> list[Dish]:
-        """料理番号の欠損・重複・非連続を検出し、必要なら連番を振り直す。
-
-        AIが番号を省略・重複・スキップした場合や、無効dishのスキップで
-        番号が飛んだ場合（例: [1, 3, 4]）、インデックス順で連番を再割当て
-        する。完全な連番（順不同可）の場合はnumber順にソートしてから返す。
-
-        Args:
-            dishes: AIから返された料理リスト
-
-        Returns:
-            numberが正規化された料理リスト（イミュータブル: 新しいリストを返す）
-        """
-        numbers = [d.number for d in dishes]
-        expected = list(range(1, len(dishes) + 1))
-        has_missing = any(n is None for n in numbers)
-        is_sequential = not has_missing and sorted(numbers) == expected  # type: ignore[type-var]
-
-        if not is_sequential:
-            logger.warning(
-                "Dish numbers invalid (numbers=%s); reassigning sequential numbers",
-                numbers,
-            )
-            return [replace(d, number=i + 1) for i, d in enumerate(dishes)]
-
-        return sorted(dishes, key=lambda d: d.number)  # type: ignore[arg-type,return-value]
-
-    @staticmethod
-    def _strip_markdown_fences(response: str) -> str:
-        """Strip markdown code fences from Claude response text."""
-        cleaned = response.strip()
-        if cleaned.startswith("```json"):
-            cleaned = cleaned[7:]
-        if cleaned.startswith("```"):
-            cleaned = cleaned[3:]
-        if cleaned.endswith("```"):
-            cleaned = cleaned[:-3]
-        return cleaned.strip()
+        """Parse Claude response into a list of Dish objects."""
+        return parse_dishes(response)

@@ -1,4 +1,9 @@
-"""Tests for OpenAIProvider (GPT-4V menu analysis)."""
+"""Tests for OpenAIProvider (GPT-5.4 menu analysis).
+
+パース共通ロジックは ``test_response_parser.py`` で検証するため、
+ここでは OpenAI 固有の振る舞い（初期化・API 呼び出し形式・エラー変換）
+に絞ってテストする。
+"""
 
 from __future__ import annotations
 
@@ -8,219 +13,125 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.models.dish import Category
-from app.services.ai.base import (
-    APICallError,
-    APIKeyMissingError,
-    InvalidMenuImageError,
-)
+from app.services.ai.base import APICallError, APIKeyMissingError
+from app.services.ai.factory import AIProviderFactory
 from app.services.ai.openai_provider import OpenAIProvider
 
 
-def _build_dish_dict(name: str = "Pad Thai", number: int | None = 1) -> dict:
-    """Build a minimal valid dish dict for response fixtures."""
-    d = {
-        "original_name": name,
-        "translated_name": name,
-        "description": f"desc {name}",
-        "spiciness": 2,
-        "sweetness": 3,
-        "ingredients": ["x"],
-        "allergens": [],
-        "category": "main",
+def _dish_payload() -> dict:
+    return {
+        "dishes": [
+            {
+                "original_name": "Green Curry",
+                "translated_name": "グリーンカレー",
+                "description": "タイのグリーンカレー",
+                "spiciness": 4,
+                "sweetness": 2,
+                "ingredients": ["鶏肉", "ココナッツミルク"],
+                "allergens": [],
+                "category": "main",
+                "number": 1,
+            }
+        ]
     }
-    if number is not None:
-        d["number"] = number
-    return d
+
+
+def _mock_openai(mock_cls: MagicMock, response_text: str) -> MagicMock:
+    """Return a MagicMock OpenAI client wired to return ``response_text``."""
+    client = MagicMock()
+    mock_cls.return_value = client
+    message = MagicMock()
+    message.content = response_text
+    client.chat.completions.create.return_value = MagicMock(choices=[MagicMock(message=message)])
+    return client
 
 
 class TestOpenAIProviderInit:
-    """OpenAIProvider initialization."""
-
-    def test_initialization_with_api_key(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        assert provider.api_key == "sk-test-xyz"
+    def test_initialization_sets_fields(self):
+        provider = OpenAIProvider(api_key="sk-test", language="ja")
+        assert provider.api_key == "sk-test"
+        assert provider.language == "ja"
         assert provider.client is not None
 
-    def test_initialization_without_api_key_raises(self):
+    def test_default_language_is_en(self):
+        assert OpenAIProvider(api_key="sk-test").language == "en"
+
+    def test_empty_api_key_raises(self):
         with pytest.raises(APIKeyMissingError, match="API key is required"):
             OpenAIProvider(api_key="")
 
-    def test_name_property_returns_openai(self):
+    def test_name_is_openai(self):
         with patch.dict(os.environ, {}, clear=True):
-            provider = OpenAIProvider(api_key="sk-test-xyz")
-            assert provider.name == "openai"
-
-    def test_default_language(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        assert provider.language == "en"
-
-    def test_custom_language(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz", language="ja")
-        assert provider.language == "ja"
+            assert OpenAIProvider(api_key="sk-test").name == "openai"
 
 
 class TestOpenAIProviderPrompt:
-    """Prompt construction."""
-
-    def test_build_prompt_includes_required_fields(self):
-        with patch.dict(os.environ, {}, clear=True):
-            provider = OpenAIProvider(api_key="sk-test-xyz")
-            prompt = provider._build_prompt()
-
-            assert "JSON" in prompt
-            assert "original_name" in prompt
-            assert "translated_name" in prompt
-            assert "spiciness" in prompt
-            assert "sweetness" in prompt
-            assert "ingredients" in prompt
-            assert "allergens" in prompt
-            assert "category" in prompt
-
-
-class TestOpenAIProviderParseResponse:
-    """Response parsing."""
-
-    def test_parse_valid_json(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        payload = {"dishes": [_build_dish_dict("Pad Thai", 1)]}
-        dishes = provider._parse_response(json.dumps(payload))
-
-        assert len(dishes) == 1
-        assert dishes[0].original_name == "Pad Thai"
-        assert dishes[0].category == Category.MAIN
-
-    def test_parse_markdown_fenced_json(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        payload = {"dishes": [_build_dish_dict("Tom Yum", 1)]}
-        fenced = f"```json\n{json.dumps(payload)}\n```"
-        dishes = provider._parse_response(fenced)
-        assert len(dishes) == 1
-        assert dishes[0].original_name == "Tom Yum"
-
-        fenced2 = f"```\n{json.dumps(payload)}\n```"
-        dishes2 = provider._parse_response(fenced2)
-        assert len(dishes2) == 1
-
-    def test_parse_invalid_json_raises(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        with pytest.raises(APICallError, match="Failed to parse JSON"):
-            provider._parse_response("not json")
-
-    def test_parse_missing_dishes_key_raises(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        with pytest.raises(APICallError, match="'dishes' key"):
-            provider._parse_response(json.dumps({"menu": []}))
-
-    def test_parse_empty_dishes_raises_invalid_menu(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        with pytest.raises(InvalidMenuImageError, match="Could not detect menu"):
-            provider._parse_response(json.dumps({"dishes": []}))
-
-    def test_parse_skips_invalid_dishes(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        payload = {
-            "dishes": [
-                {"original_name": "Bad"},  # missing required fields
-                _build_dish_dict("Good", 1),
-            ]
-        }
-        dishes = provider._parse_response(json.dumps(payload))
-        assert len(dishes) == 1
-        assert dishes[0].original_name == "Good"
-
-    def test_parse_reassigns_non_sequential_numbers(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        payload = {
-            "dishes": [
-                _build_dish_dict("A", 1),
-                _build_dish_dict("C", 3),  # gap at 2
-                _build_dish_dict("D", 4),
-            ]
-        }
-        dishes = provider._parse_response(json.dumps(payload))
-        assert [d.number for d in dishes] == [1, 2, 3]
-        assert [d.original_name for d in dishes] == ["A", "C", "D"]
-
-    def test_parse_json_array_not_dict_raises(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
-        with pytest.raises(APICallError, match="'dishes' key"):
-            provider._parse_response(json.dumps(["not", "a", "dict"]))
+    def test_prompt_includes_required_fields(self):
+        prompt = OpenAIProvider(api_key="sk-test")._build_prompt()
+        for key in ("JSON", "original_name", "translated_name", "spiciness",
+                    "sweetness", "ingredients", "allergens", "category", "number"):
+            assert key in prompt
 
 
 class TestOpenAIProviderAnalyzeMenu:
-    """analyze_menu integration with mocked OpenAI client."""
-
-    def test_image_size_exceeds_limit_raises(self):
-        provider = OpenAIProvider(api_key="sk-test-xyz")
+    def test_rejects_oversized_image(self):
+        provider = OpenAIProvider(api_key="sk-test")
         big = b"x" * (provider.MAX_IMAGE_SIZE + 1)
-        with pytest.raises(APICallError, match="Image size .* exceeds maximum"):
+        with pytest.raises(APICallError, match="exceeds maximum"):
             provider.analyze_menu(big, "image/jpeg")
 
     @patch("app.services.ai.openai_provider.OpenAI")
-    def test_analyze_menu_success(self, mock_openai_class):
-        payload = {"dishes": [_build_dish_dict("Green Curry", 1)]}
-        mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
-        mock_response = MagicMock()
-        mock_response.choices = [MagicMock()]
-        mock_response.choices[0].message.content = json.dumps(payload)
-        mock_client.chat.completions.create.return_value = mock_response
+    def test_success_returns_analysis_result(self, mock_openai_class):
+        _mock_openai(mock_openai_class, json.dumps(_dish_payload()))
 
-        provider = OpenAIProvider(api_key="sk-test-xyz")
+        provider = OpenAIProvider(api_key="sk-test")
         result = provider.analyze_menu(b"fake image", "image/jpeg")
 
         assert result.provider == "openai"
-        assert len(result.dishes) == 1
-        assert result.dishes[0].original_name == "Green Curry"
         assert result.processing_time > 0
-
-        # Verify call signature
-        mock_client.chat.completions.create.assert_called_once()
-        call_kwargs = mock_client.chat.completions.create.call_args[1]
-        assert call_kwargs["model"] == OpenAIProvider.MODEL
-        # Verify image is embedded as data URL with correct mime type
-        messages = call_kwargs["messages"]
-        content_blocks = messages[0]["content"]
-        image_block = next(b for b in content_blocks if b["type"] == "image_url")
-        assert image_block["image_url"]["url"].startswith("data:image/jpeg;base64,")
+        assert [d.original_name for d in result.dishes] == ["Green Curry"]
 
     @patch("app.services.ai.openai_provider.OpenAI")
-    def test_analyze_menu_wraps_openai_api_error(self, mock_openai_class):
+    def test_sends_data_url_with_correct_mime_and_model(self, mock_openai_class):
+        client = _mock_openai(mock_openai_class, json.dumps(_dish_payload()))
+
+        OpenAIProvider(api_key="sk-test").analyze_menu(b"fake", "image/png")
+
+        kwargs = client.chat.completions.create.call_args.kwargs
+        assert kwargs["model"] == OpenAIProvider.MODEL
+        assert kwargs["max_tokens"] == OpenAIProvider.MAX_TOKENS
+        image_block = next(
+            b for b in kwargs["messages"][0]["content"] if b["type"] == "image_url"
+        )
+        assert image_block["image_url"]["url"].startswith("data:image/png;base64,")
+
+    @patch("app.services.ai.openai_provider.OpenAI")
+    def test_wraps_openai_api_error(self, mock_openai_class):
         from openai import APIError
 
-        mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
-        mock_client.chat.completions.create.side_effect = APIError(
+        client = MagicMock()
+        mock_openai_class.return_value = client
+        client.chat.completions.create.side_effect = APIError(
             message="boom", request=MagicMock(), body=None
         )
 
-        provider = OpenAIProvider(api_key="sk-test-xyz")
         with pytest.raises(APICallError, match="OpenAI API call failed"):
-            provider.analyze_menu(b"fake", "image/jpeg")
+            OpenAIProvider(api_key="sk-test").analyze_menu(b"fake", "image/jpeg")
 
     @patch("app.services.ai.openai_provider.OpenAI")
-    def test_analyze_menu_wraps_unexpected_error(self, mock_openai_class):
-        mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
-        mock_client.chat.completions.create.side_effect = RuntimeError("unexpected")
+    def test_wraps_unexpected_error(self, mock_openai_class):
+        client = MagicMock()
+        mock_openai_class.return_value = client
+        client.chat.completions.create.side_effect = RuntimeError("unexpected")
 
-        provider = OpenAIProvider(api_key="sk-test-xyz")
         with pytest.raises(APICallError, match="Unexpected error"):
-            provider.analyze_menu(b"fake", "image/jpeg")
+            OpenAIProvider(api_key="sk-test").analyze_menu(b"fake", "image/jpeg")
 
 
 class TestOpenAIProviderFactoryRegistration:
-    """Factory integration."""
-
-    def test_factory_creates_openai_provider(self):
-        from app.services.ai.factory import AIProviderFactory
-
-        provider = AIProviderFactory.create(api_key="sk-test-xyz", provider_name="openai")
+    def test_factory_creates_openai(self):
+        provider = AIProviderFactory.create(api_key="sk-test", provider_name="openai")
         assert isinstance(provider, OpenAIProvider)
-        assert provider.name == "openai"
 
     def test_openai_in_available_providers(self):
-        from app.services.ai.factory import AIProviderFactory
-
         assert "openai" in AIProviderFactory.available_providers()
