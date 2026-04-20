@@ -19,19 +19,37 @@
     "loading": "Loading..."
   },
   "api_key_modal": {
-    "title": "API Key Settings",
-    "description": "Menu analysis requires Claude API.",
+    "title": "API Settings",
+    "description": "Menu analysis requires an AI API.",
     "get_key_text": "You can get your API key from",
-    "get_key_link": "Anthropic Console",
+    "get_key_link": "the provider's console",
     "storage_notice": "※ API key is stored in browser's localStorage and never sent to server.",
-    "input_label": "Anthropic API Key",
-    "input_placeholder": "sk-ant-api03-...",
+    "provider_label": "AI Provider",
+    "provider_select_placeholder": "Select AI Provider",
+    "input_label": "API Key",
+    "input_placeholder": "Enter your API key",
     "save_button": "Save",
     "delete_button": "Delete",
     "delete_confirm": "Are you sure you want to delete the API key?",
     "close_modal": "Close",
     "show_api_key": "Show API key",
-    "hide_api_key": "Hide API key"
+    "hide_api_key": "Hide API key",
+    "provider_not_implemented": "This provider is not yet implemented. Please select Claude for now.",
+    "provider_console_links": {
+      "claude": "Anthropic Console",
+      "openai": "OpenAI Platform",
+      "gemini": "Google AI Studio"
+    },
+    "provider_console_urls": {
+      "claude": "https://console.anthropic.com/settings/keys",
+      "openai": "https://platform.openai.com/api-keys",
+      "gemini": "https://aistudio.google.com/app/apikey"
+    },
+    "provider_placeholder": {
+      "claude": "sk-ant-api03-...",
+      "openai": "sk-proj-...",
+      "gemini": "AIza..."
+    }
   },
   "toast": {
     "image_loaded": "Image loaded successfully",
@@ -94,6 +112,7 @@
     "invalid_request": "Invalid Request",
     "server_error": "Server Error",
     "analysis_error": "Analysis Error",
+    "provider_not_implemented": "Provider Not Implemented",
     "file_error": "File Error",
     "network_error": "Network Error",
     "unknown_error": "Unknown Error"

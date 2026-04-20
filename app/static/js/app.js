@@ -325,6 +325,16 @@ function uploadZone() {
 // グローバルに公開
 window.uploadZone = uploadZone;
 
+// 利用可能なAIプロバイダー定義
+const AI_PROVIDERS = [
+    { id: 'claude', name: 'Claude (Anthropic)', implemented: true },
+    { id: 'openai', name: 'OpenAI GPT-4V', implemented: false },
+    { id: 'gemini', name: 'Google Gemini', implemented: false }
+];
+
+// デフォルトのプロバイダー
+const DEFAULT_PROVIDER = 'claude';
+
 /**
  * APIキー設定管理のAlpine.jsコンポーネント
  * @returns {Object} Alpine.jsコンポーネントオブジェクト
@@ -334,7 +344,13 @@ function apiKeyManager() {
         // モーダル表示状態
         showModal: false,
 
-        // APIキー
+        // 選択中のプロバイダー
+        selectedProvider: DEFAULT_PROVIDER,
+
+        // プロバイダーごとのAPIキー
+        apiKeys: {},
+
+        // 現在のプロバイダーのAPIキー（後方互換性のため）
         apiKey: '',
 
         // APIキー入力フィールド（マスク用）
@@ -343,10 +359,13 @@ function apiKeyManager() {
         // APIキーの表示/非表示
         showApiKey: false,
 
+        // 利用可能なプロバイダー一覧
+        providers: AI_PROVIDERS,
+
         // 初期化
         init() {
-            // localStorageからAPIキーを読み込み
-            this.apiKey = this.getStoredApiKey();
+            // localStorageから設定を読み込み
+            this.loadSettings();
 
             // APIキーが未設定の場合、モーダルを表示
             if (!this.apiKey) {
@@ -361,16 +380,102 @@ function apiKeyManager() {
         },
 
         /**
-         * localStorageからAPIキーを取得
+         * localStorageから設定を読み込み
+         */
+        loadSettings() {
+            try {
+                // プロバイダーを読み込み
+                const storedProvider = localStorage.getItem('menu_judge_provider');
+                if (storedProvider && AI_PROVIDERS.some(p => p.id === storedProvider)) {
+                    this.selectedProvider = storedProvider;
+                }
+
+                // 各プロバイダーのAPIキーを読み込み
+                AI_PROVIDERS.forEach(provider => {
+                    const key = localStorage.getItem(`menu_judge_api_key_${provider.id}`) || '';
+                    this.apiKeys[provider.id] = key;
+                });
+
+                // 後方互換性: 古い形式のAPIキーがある場合はClaudeに移行
+                const legacyKey = localStorage.getItem('menu_judge_api_key');
+                if (legacyKey && !this.apiKeys.claude) {
+                    this.apiKeys.claude = legacyKey;
+                    localStorage.setItem('menu_judge_api_key_claude', legacyKey);
+                    localStorage.removeItem('menu_judge_api_key');
+                }
+
+                // 現在のプロバイダーのAPIキーを設定
+                this.apiKey = this.apiKeys[this.selectedProvider] || '';
+            } catch (e) {
+                console.error('Failed to load settings from localStorage:', e);
+                this.apiKey = '';
+            }
+        },
+
+        /**
+         * 現在選択中のプロバイダーのAPIキーを取得
          * @returns {string} APIキー（未設定の場合は空文字列）
          */
         getStoredApiKey() {
+            return this.apiKeys[this.selectedProvider] || '';
+        },
+
+        /**
+         * プロバイダーが実装済みかどうかを確認
+         * @param {string} providerId - プロバイダーID
+         * @returns {boolean} 実装済みならtrue
+         */
+        isProviderImplemented(providerId) {
+            const provider = AI_PROVIDERS.find(p => p.id === providerId);
+            return provider ? provider.implemented : false;
+        },
+
+        /**
+         * プロバイダーを変更
+         * @param {string} providerId - 新しいプロバイダーID
+         */
+        changeProvider(providerId) {
+            this.selectedProvider = providerId;
+            this.apiKey = this.apiKeys[providerId] || '';
+            this.apiKeyInput = this.apiKey;
+
+            // localStorageに保存
             try {
-                return localStorage.getItem('menu_judge_api_key') || '';
+                localStorage.setItem('menu_judge_provider', providerId);
             } catch (e) {
-                console.error('Failed to load API key from localStorage:', e);
-                return '';
+                console.error('Failed to save provider:', e);
             }
+
+            // HTMXヘッダーを更新
+            this.setupHtmxHeaders();
+        },
+
+        /**
+         * プロバイダーのコンソールURLを取得
+         * @param {string} providerId - プロバイダーID
+         * @returns {string} コンソールURL
+         */
+        getProviderConsoleUrl(providerId) {
+            const urls = {
+                claude: 'https://console.anthropic.com/settings/keys',
+                openai: 'https://platform.openai.com/api-keys',
+                gemini: 'https://aistudio.google.com/app/apikey'
+            };
+            return urls[providerId] || urls.claude;
+        },
+
+        /**
+         * プロバイダーのプレースホルダーを取得
+         * @param {string} providerId - プロバイダーID
+         * @returns {string} プレースホルダーテキスト
+         */
+        getProviderPlaceholder(providerId) {
+            const placeholders = {
+                claude: 'sk-ant-api03-...',
+                openai: 'sk-proj-...',
+                gemini: 'AIza...'
+            };
+            return placeholders[providerId] || '';
         },
 
         /**
@@ -380,8 +485,20 @@ function apiKeyManager() {
         saveApiKey(key) {
             try {
                 if (key && key.trim()) {
-                    localStorage.setItem('menu_judge_api_key', key.trim());
-                    this.apiKey = key.trim();
+                    const trimmedKey = key.trim();
+
+                    // 未実装プロバイダーの警告
+                    if (!this.isProviderImplemented(this.selectedProvider)) {
+                        showToast(t('api_key_modal.provider_not_implemented'), 'warning', 5000);
+                    }
+
+                    // プロバイダー固有のキーとして保存
+                    localStorage.setItem(`menu_judge_api_key_${this.selectedProvider}`, trimmedKey);
+                    localStorage.setItem('menu_judge_provider', this.selectedProvider);
+
+                    this.apiKeys[this.selectedProvider] = trimmedKey;
+                    this.apiKey = trimmedKey;
+
                     showToast(t('toast.api_key_saved'), 'success');
                     this.closeModal();
                     this.setupHtmxHeaders();
@@ -395,12 +512,13 @@ function apiKeyManager() {
         },
 
         /**
-         * APIキーをlocalStorageから削除
+         * 現在のプロバイダーのAPIキーをlocalStorageから削除
          */
         deleteApiKey() {
             if (confirm(t('api_key_modal.delete_confirm'))) {
                 try {
-                    localStorage.removeItem('menu_judge_api_key');
+                    localStorage.removeItem(`menu_judge_api_key_${this.selectedProvider}`);
+                    this.apiKeys[this.selectedProvider] = '';
                     this.apiKey = '';
                     this.apiKeyInput = '';
                     showToast(t('toast.api_key_deleted'), 'success');
@@ -434,7 +552,7 @@ function apiKeyManager() {
         },
 
         /**
-         * HTMXリクエストヘッダーにAPIキーを追加
+         * HTMXリクエストヘッダーにAPIキーとプロバイダーを追加
          */
         setupHtmxHeaders() {
             // Remove existing listener if present (prevents duplicates)
@@ -447,6 +565,8 @@ function apiKeyManager() {
                 if (this.apiKey) {
                     event.detail.headers['X-API-Key'] = this.apiKey;
                 }
+                // Add provider header
+                event.detail.headers['X-AI-Provider'] = this.selectedProvider;
                 // Add language header
                 const language = getCurrentLanguage();
                 event.detail.headers['X-Language'] = language;
@@ -468,6 +588,11 @@ function apiKeyManager() {
                 // 401エラー（認証エラー）またはAPIキーエラーの場合
                 if (status === 401 || errorCode === 'NO_API_KEY') {
                     showToast(t('toast.api_key_invalid'), 'error', 5000);
+                    this.showModal = true;
+                }
+                // プロバイダー未実装エラー
+                else if (errorCode === 'PROVIDER_NOT_IMPLEMENTED') {
+                    showToast(t('api_key_modal.provider_not_implemented'), 'warning', 5000);
                     this.showModal = true;
                 }
                 // Other errors
