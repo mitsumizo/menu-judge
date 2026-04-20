@@ -404,6 +404,25 @@ class TestClaudeProvider:
 
             assert [d.number for d in dishes] == [1, 2, 3]
 
+    def test_parse_response_reassigns_numbers_on_non_sequential(self):
+        """numberが非連続の場合（無効dishスキップ等で飛び番化）は振り直す"""
+        with patch.dict(os.environ, {}, clear=True):
+            provider = ClaudeProvider(api_key="sk-ant-test")
+
+            # AIが [1, 2, 3, 4] を返したが #2 が不正でスキップされ [1, 3, 4] になる想定
+            response_json = {
+                "dishes": [
+                    self._build_dish_dict("A", 1),
+                    self._build_dish_dict("C", 3),  # 非連続（2が抜け）
+                    self._build_dish_dict("D", 4),
+                ]
+            }
+
+            dishes = provider._parse_response(json.dumps(response_json))
+
+            assert [d.number for d in dishes] == [1, 2, 3]
+            assert [d.original_name for d in dishes] == ["A", "C", "D"]
+
     @staticmethod
     def _build_dish_dict(name: str, number: int | None) -> dict:
         """テスト用の最小dish dictを生成"""

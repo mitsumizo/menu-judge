@@ -6,6 +6,7 @@ import base64
 import json
 import logging
 import time
+from dataclasses import replace
 
 import anthropic
 
@@ -216,11 +217,11 @@ class ClaudeProvider(AIProvider):
 
     @staticmethod
     def _normalize_dish_numbers(dishes: list[Dish]) -> list[Dish]:
-        """料理番号の重複・欠損を検出し、必要なら連番を振り直す。
+        """料理番号の欠損・重複・非連続を検出し、必要なら連番を振り直す。
 
-        AIが番号を省略したり重複した番号を返した場合、インデックス順で
-        連番を再割当てする。正しい連番を返している場合はnumber順にソート
-        してから返す。
+        AIが番号を省略・重複・スキップした場合や、無効dishのスキップで
+        番号が飛んだ場合（例: [1, 3, 4]）、インデックス順で連番を再割当て
+        する。完全な連番（順不同可）の場合はnumber順にソートしてから返す。
 
         Args:
             dishes: AIから返された料理リスト
@@ -229,34 +230,18 @@ class ClaudeProvider(AIProvider):
             numberが正規化された料理リスト（イミュータブル: 新しいリストを返す）
         """
         numbers = [d.number for d in dishes]
+        expected = list(range(1, len(dishes) + 1))
         has_missing = any(n is None for n in numbers)
-        has_duplicates = len(set(numbers)) != len(numbers)
+        is_sequential = not has_missing and sorted(numbers) == expected  # type: ignore[type-var]
 
-        if has_missing or has_duplicates:
+        if not is_sequential:
             logger.warning(
-                "Dish numbers invalid (missing=%s, duplicates=%s); "
-                "reassigning sequential numbers",
-                has_missing,
-                has_duplicates,
+                "Dish numbers invalid (numbers=%s); reassigning sequential numbers",
+                numbers,
             )
-            return [
-                Dish(
-                    original_name=d.original_name,
-                    translated_name=d.translated_name,
-                    description=d.description,
-                    spiciness=d.spiciness,
-                    sweetness=d.sweetness,
-                    ingredients=d.ingredients,
-                    allergens=d.allergens,
-                    category=d.category,
-                    image_url=d.image_url,
-                    number=i + 1,
-                    bounding_box=d.bounding_box,
-                )
-                for i, d in enumerate(dishes)
-            ]
+            return [replace(d, number=i + 1) for i, d in enumerate(dishes)]
 
-        return sorted(dishes, key=lambda d: d.number or 0)
+        return sorted(dishes, key=lambda d: d.number)  # type: ignore[arg-type,return-value]
 
     @staticmethod
     def _strip_markdown_fences(response: str) -> str:

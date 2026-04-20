@@ -1,5 +1,7 @@
 """dish_card.html コンポーネントのテスト"""
 
+import re
+
 import pytest
 from flask import Flask, render_template, render_template_string
 
@@ -180,8 +182,9 @@ def test_dish_list_uses_dish_number_over_loop_index(app: Flask) -> None:
         )
 
         # loop.index なら 1, 2 になるところ、dish.number を使うので 5, 3 が現れる
-        assert ">\n        5\n    <" in html or ">5<" in html
-        assert ">\n        3\n    <" in html or ">3<" in html
+        # 番号バッジはタグ間に数字のみ（前後空白許容）で出現する
+        assert re.search(r">\s*5\s*<", html)
+        assert re.search(r">\s*3\s*<", html)
 
 
 def test_dish_list_falls_back_to_loop_index_when_number_missing(app: Flask) -> None:
@@ -206,5 +209,5 @@ def test_dish_list_falls_back_to_loop_index_when_number_missing(app: Flask) -> N
         )
 
         # loop.index で 1, 2 が振られる（番号バッジとして出現）
-        assert ">\n        1\n    <" in html or ">1<" in html
-        assert ">\n        2\n    <" in html or ">2<" in html
+        assert re.search(r">\s*1\s*<", html)
+        assert re.search(r">\s*2\s*<", html)
