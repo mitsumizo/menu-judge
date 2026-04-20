@@ -38,7 +38,7 @@ def create_mock_result():
     dishes = [
         Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
@@ -200,7 +200,7 @@ class TestAnalyzeMenuEndpoint:
         assert response.status_code == 500
         assert response.json["success"] is False
         assert response.json["code"] == "AI_ERROR"
-        assert "AI analysis failed" in response.json["error"]
+        assert "Analysis failed" in response.json["error"]
 
     @patch("app.routes.menu.AIProviderFactory.create")
     def test_unexpected_error(self, mock_factory, client):
@@ -222,7 +222,7 @@ class TestAnalyzeMenuEndpoint:
         assert response.status_code == 500
         assert response.json["success"] is False
         assert response.json["code"] == "INTERNAL_ERROR"
-        assert "Internal server error" in response.json["error"]
+        assert "Server error occurred" in response.json["error"]
 
     def test_invalid_mime_type_with_valid_extension(self, client):
         """有効な拡張子でも無効なMIMEタイプの場合、エラーを返す."""

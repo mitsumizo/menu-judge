@@ -150,16 +150,12 @@ def test_loading_component_renders(app):
         assert '<circle' in rendered
         assert '<path' in rendered
 
-        # Check for loading messages
-        assert 'メニューを解析中...' in rendered
-        assert '少々お待ちください' in rendered
+        # Loading messages are rendered client-side via Alpine.js (t() calls in x-text)
+        assert 'loading.step1_title' in rendered
+        assert 'x-text' in rendered
 
-        # Check for progress bar
-        assert 'animate-progress' in rendered
-
-        # Check for skeleton UI
-        assert 'skeleton-container' in rendered
-        assert 'skeleton-card' in rendered
+        # Check for indeterminate progress bar
+        assert 'animate-indeterminate' in rendered
 
 
 def test_loading_component_has_required_animations(app):
@@ -173,8 +169,8 @@ def test_loading_component_has_required_animations(app):
         assert 'animate-pulse' in rendered
         assert 'animate-spin' in rendered
 
-        # Check for custom animation
-        assert 'animate-progress' in rendered
+        # Check for custom indeterminate animation
+        assert 'animate-indeterminate' in rendered
 
 
 def test_loading_component_has_accessibility(app):

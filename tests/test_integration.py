@@ -78,7 +78,7 @@ class TestMultipleProviders:
         """Claudeプロバイダーが選択される"""
         from app.services.ai.factory import AIProviderFactory
 
-        provider = AIProviderFactory.create(api_key="test-key", provider_name="claude")
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="claude")
         assert provider.name == "claude"
 
     def test_invalid_provider_error(self, client, real_menu_image):

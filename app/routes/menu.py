@@ -123,7 +123,7 @@ def validate_image_file(file: FileStorage) -> tuple[bool, str | None, bytes | No
     try:
         Image.open(BytesIO(image_data))
     except (OSError, Image.UnidentifiedImageError) as e:
-        logger.error(f"Failed to open image: {e}")
+        logger.exception(f"Failed to open image: {e}")
         return False, "Invalid image file", None
 
     return True, None, image_data
@@ -257,7 +257,7 @@ def analyze_menu() -> Response:
             title=title_msg,
         )
     except AIProviderError as e:
-        logger.error(f"AI provider error: {e}")
+        logger.exception(f"AI provider error: {e}")
         error_msg = TranslationLoader.get(language, 'toast.analysis_failed', f'AI analysis failed: {str(e)}')
         title_msg = TranslationLoader.get(language, 'error.analysis_error', 'AI Analysis Error')
         return _create_error_response(

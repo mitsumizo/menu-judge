@@ -1,0 +1,22 @@
+iteration	commit	metric	status	description
+0	baseline	10	baseline	ruff(S,B,BLE,TRY004,TRY400,TRY301,PLE)=8 + pip-audit=2
+1	6df0bbe	8	keep	upgrade Pillow floor to 12.2.0 (pip-audit 2→0)
+2	b1c3fae	6	keep	use logger.exception in error handlers (TRY400 ×2)
+3	646b6f7	4	keep	restructure _parse_response to hoist raises out of broad try-except (TRY301 ×2)
+4	244eb75	3	keep	narrow blind except to specific types in dish parse loop (BLE001)
+5	1aa0207	0	keep	raise TypeError on type-check failures in Dish/BoundingBox (TRY004 ×3)
+---GOAL-ACHIEVED (loop 1)---	-	0	done	baseline 10 → 0 in 5 iterations
+###LOOP2###	iteration	metric	status	description
+0	baseline	129	baseline	pytest: 118 failed + 11 errors
+1	0454a04	86	keep	bulk rename japanese_name to translated_name (72 occurrences)
+2	37882ba	87	discard	use create_app() alone (broke: t() needs request context, not just app context)
+3	f883c8c	78	keep (reworked)	create_app() + test_request_context() for t() support in template tests
+4	8557601	63	keep	pass api_key to ClaudeProvider() ×21
+5	0a36e43	51	keep	align AIProviderFactory tests with api_key-first signature
+6	3868d7e	27	keep	auto-inject X-API-Key in shared client fixture
+7	7b07708	21	keep	align error_partial tests with current template (i18n + SVG + rounded-xl)
+8	00f7ff6	16	keep	align test_services.py with current ClaudeProvider/Dish API
+9	ef4158e	10	keep	align test_services_ai.py with current ClaudeProvider/AIProvider API
+10	2dc5fef	1	keep	align remaining test assertions with refactored output (7 files)
+11	dd6ce46	0	keep	match ja translation 'アレルゲン' (was 'アレルギー')
+---GOAL-ACHIEVED (loop 2)---	-	0	done	baseline 129 → 0 in 11 iterations (1 discard, 1 rework)

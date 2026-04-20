@@ -177,47 +177,42 @@ class ClaudeProvider(AIProvider):
 
         Raises:
             APICallError: Failed to parse response
+            InvalidMenuImageError: No dishes could be detected
         """
+        cleaned = self._strip_markdown_fences(response)
+
         try:
-            # Extract JSON from response (handle markdown code blocks)
-            response = response.strip()
-            if response.startswith("```json"):
-                response = response[7:]  # Remove ```json
-            if response.startswith("```"):
-                response = response[3:]  # Remove ```
-            if response.endswith("```"):
-                response = response[:-3]  # Remove ```
-            response = response.strip()
-
-            # Parse JSON
-            data = json.loads(response)
-
-            # Validate structure
-            if not isinstance(data, dict) or "dishes" not in data:
-                raise ValueError("Response must contain 'dishes' key")
-
-            dishes = []
-            for dish_data in data["dishes"]:
-                try:
-                    dish = Dish.from_dict(dish_data)
-                    dishes.append(dish)
-                except Exception as e:
-                    # Log error but continue with other dishes
-                    logger.warning("Failed to parse dish: %s", e, exc_info=True)
-                    continue
-
-            if not dishes:
-                raise InvalidMenuImageError(
-                    "Could not detect menu from image. "
-                    "Please verify that the image is a photo of a menu."
-                )
-
-            return dishes
-
-        except InvalidMenuImageError:
-            # Re-raise InvalidMenuImageError as-is
-            raise
+            data = json.loads(cleaned)
         except json.JSONDecodeError as e:
             raise APICallError(f"Failed to parse JSON response: {e}") from e
-        except Exception as e:
-            raise APICallError(f"Failed to parse response: {e}") from e
+
+        if not isinstance(data, dict) or "dishes" not in data:
+            raise APICallError("Response must contain 'dishes' key")
+
+        dishes: list[Dish] = []
+        for dish_data in data["dishes"]:
+            try:
+                dishes.append(Dish.from_dict(dish_data))
+            except (ValueError, KeyError, TypeError) as e:
+                logger.warning("Failed to parse dish: %s", e, exc_info=True)
+                continue
+
+        if not dishes:
+            raise InvalidMenuImageError(
+                "Could not detect menu from image. "
+                "Please verify that the image is a photo of a menu."
+            )
+
+        return dishes
+
+    @staticmethod
+    def _strip_markdown_fences(response: str) -> str:
+        """Strip markdown code fences from Claude response text."""
+        cleaned = response.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        if cleaned.startswith("```"):
+            cleaned = cleaned[3:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        return cleaned.strip()
