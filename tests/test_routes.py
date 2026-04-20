@@ -152,7 +152,9 @@ class TestAnalyzeRoute:
         mock_factory.return_value = mock_provider
 
         response = client.post(
-            "/api/analyze", data={"image": (BytesIO(sample_image), "menu.jpg")}, headers={"HX-Request": "true"}
+            "/api/analyze",
+            data={"image": (BytesIO(sample_image), "menu.jpg")},
+            headers={"HX-Request": "true"},
         )
 
         assert response.status_code == 200

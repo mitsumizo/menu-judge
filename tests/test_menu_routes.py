@@ -47,7 +47,9 @@ def create_mock_result():
             category=Category.MAIN,
         )
     ]
-    return AnalysisResult(dishes=dishes, raw_response="mock response", provider="mock", processing_time=1.0)
+    return AnalysisResult(
+        dishes=dishes, raw_response="mock response", provider="mock", processing_time=1.0
+    )
 
 
 class TestAnalyzeMenuEndpoint:

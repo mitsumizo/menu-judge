@@ -35,23 +35,23 @@ def test_base_template_has_required_elements(app):
         assert '<meta name="viewport"' in rendered
 
         # Check for required CSS
-        assert 'css/app.css' in rendered
+        assert "css/app.css" in rendered
 
         # Check for required JS libraries (local files, not CDN)
-        assert 'js/vendor/htmx.min.js' in rendered
-        assert 'js/vendor/alpinejs.min.js' in rendered
-        assert 'unpkg.com' not in rendered  # Ensure no CDN usage
+        assert "js/vendor/htmx.min.js" in rendered
+        assert "js/vendor/alpinejs.min.js" in rendered
+        assert "unpkg.com" not in rendered  # Ensure no CDN usage
 
         # Check for required structural elements
-        assert '<header' in rendered
-        assert '<main' in rendered
-        assert '<footer' in rendered
+        assert "<header" in rendered
+        assert "<main" in rendered
+        assert "<footer" in rendered
 
         # Check for toast container
         assert 'id="toast-container"' in rendered
 
         # Check for custom app.js
-        assert 'js/app.js' in rendered
+        assert "js/app.js" in rendered
 
 
 def test_base_template_has_dark_mode(app):
@@ -80,8 +80,8 @@ def test_base_template_has_flexbox_layout(app):
         rendered = render_template_string(template)
 
         # Check for flexbox classes
-        assert 'flex flex-col' in rendered
-        assert 'flex-grow' in rendered
+        assert "flex flex-col" in rendered
+        assert "flex-grow" in rendered
 
 
 def test_base_template_footer_year_is_dynamic(app):
@@ -141,21 +141,21 @@ def test_loading_component_renders(app):
         rendered = render_template("components/loading.html")
 
         # Check for spinner container
-        assert 'loading-container' in rendered
-        assert 'animate-pulse' in rendered
+        assert "loading-container" in rendered
+        assert "animate-pulse" in rendered
 
         # Check for spinner SVG
-        assert 'animate-spin' in rendered
-        assert '<svg' in rendered
-        assert '<circle' in rendered
-        assert '<path' in rendered
+        assert "animate-spin" in rendered
+        assert "<svg" in rendered
+        assert "<circle" in rendered
+        assert "<path" in rendered
 
         # Loading messages are rendered client-side via Alpine.js (t() calls in x-text)
-        assert 'loading.step1_title' in rendered
-        assert 'x-text' in rendered
+        assert "loading.step1_title" in rendered
+        assert "x-text" in rendered
 
         # Check for indeterminate progress bar
-        assert 'animate-indeterminate' in rendered
+        assert "animate-indeterminate" in rendered
 
 
 def test_loading_component_has_required_animations(app):
@@ -166,11 +166,11 @@ def test_loading_component_has_required_animations(app):
         rendered = render_template("components/loading.html")
 
         # Check for Tailwind animations
-        assert 'animate-pulse' in rendered
-        assert 'animate-spin' in rendered
+        assert "animate-pulse" in rendered
+        assert "animate-spin" in rendered
 
         # Check for custom indeterminate animation
-        assert 'animate-indeterminate' in rendered
+        assert "animate-indeterminate" in rendered
 
 
 def test_loading_component_has_accessibility(app):
@@ -181,4 +181,4 @@ def test_loading_component_has_accessibility(app):
         rendered = render_template("components/loading.html")
 
         # Check for user-friendly messages
-        assert 'メニューを解析中' in rendered or 'Loading' in rendered
+        assert "メニューを解析中" in rendered or "Loading" in rendered
