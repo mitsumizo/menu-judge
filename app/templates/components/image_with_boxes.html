@@ -23,20 +23,21 @@
             <!-- CSSベースのバウンディングボックスオーバーレイ -->
             {% for dish in dishes %}
             {% if dish.bounding_box %}
+            {% set dish_no = dish.number or loop.index %}
             <div
                 class="absolute cursor-pointer transition-all duration-200 border-2 border-primary/60 bg-primary/10 hover:border-primary hover:bg-primary/20"
                 style="left: {{ dish.bounding_box.x * 100 }}%; top: {{ dish.bounding_box.y * 100 }}%; width: {{ dish.bounding_box.width * 100 }}%; height: {{ dish.bounding_box.height * 100 }}%;"
-                data-dish-index="{{ loop.index }}"
-                @mouseenter="highlightBox({{ loop.index }})"
+                data-dish-index="{{ dish_no }}"
+                @mouseenter="highlightBox({{ dish_no }})"
                 @mouseleave="unhighlightBox()"
-                @click="highlightBox({{ loop.index }})"
-                :class="isHighlighted({{ loop.index }}) ? 'border-secondary bg-secondary/30 z-10' : ''"
+                @click="highlightBox({{ dish_no }})"
+                :class="isHighlighted({{ dish_no }}) ? 'border-secondary bg-secondary/30 z-10' : ''"
             >
                 <!-- 番号ラベル（左上に配置） -->
                 <div
                     class="absolute -top-3 -left-3 w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md transition-all duration-200"
-                    :class="isHighlighted({{ loop.index }}) ? 'bg-secondary' : 'bg-primary'"
-                >{{ loop.index }}</div>
+                    :class="isHighlighted({{ dish_no }}) ? 'bg-secondary' : 'bg-primary'"
+                >{{ dish_no }}</div>
             </div>
             {% endif %}
             {% endfor %}

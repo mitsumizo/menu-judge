@@ -108,6 +108,15 @@ class Dish:
         if not 1 <= self.sweetness <= 5:
             raise ValueError(f"sweetness must be 1-5, got {self.sweetness}")
 
+        # numberの検証（Noneは許容、指定時は1以上の整数）
+        if self.number is not None:
+            if not isinstance(self.number, int) or isinstance(self.number, bool):
+                raise TypeError(
+                    f"number must be an integer, got {type(self.number).__name__}"
+                )
+            if self.number < 1:
+                raise ValueError(f"number must be >= 1, got {self.number}")
+
     def to_dict(self) -> dict[str, Any]:
         """辞書に変換
 

@@ -56,7 +56,7 @@
         {% if dishes %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for dish in dishes %}
-                {{ dish_card(dish, loop.index) }}
+                {{ dish_card(dish, dish.number or loop.index) }}
             {% endfor %}
         </div>
 

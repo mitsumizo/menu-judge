@@ -1,7 +1,7 @@
 """dish_card.html コンポーネントのテスト"""
 
 import pytest
-from flask import Flask, render_template_string
+from flask import Flask, render_template, render_template_string
 
 from app import create_app
 from app.models.dish import Category, Dish
@@ -154,3 +154,57 @@ def test_dish_card_has_correct_css_classes(app: Flask, sample_dish: Dish) -> Non
         assert "transition-all" in html
         assert "border-slate-700" in html
         assert "hover:border-primary" in html
+
+
+def test_dish_list_uses_dish_number_over_loop_index(app: Flask) -> None:
+    """dishes に number が設定されていれば、カードの番号バッジは dish.number を使う"""
+    dishes = [
+        Dish(
+            original_name=f"Dish{n}",
+            translated_name=f"料理{n}",
+            description="desc",
+            spiciness=1,
+            sweetness=1,
+            number=n,
+        )
+        # ループ順と number がズレる並び（dish.number が優先されることを確認）
+        for n in [5, 3]
+    ]
+
+    with app.test_request_context():
+        html = render_template(
+            "partials/dish_list.html",
+            dishes=dishes,
+            provider="claude",
+            processing_time=0.1,
+        )
+
+        # loop.index なら 1, 2 になるところ、dish.number を使うので 5, 3 が現れる
+        assert ">\n        5\n    <" in html or ">5<" in html
+        assert ">\n        3\n    <" in html or ">3<" in html
+
+
+def test_dish_list_falls_back_to_loop_index_when_number_missing(app: Flask) -> None:
+    """dish.number が None の場合は loop.index にフォールバックする"""
+    dishes = [
+        Dish(
+            original_name=f"Dish{i}",
+            translated_name=f"料理{i}",
+            description="desc",
+            spiciness=1,
+            sweetness=1,
+        )
+        for i in range(1, 3)
+    ]
+
+    with app.test_request_context():
+        html = render_template(
+            "partials/dish_list.html",
+            dishes=dishes,
+            provider="claude",
+            processing_time=0.1,
+        )
+
+        # loop.index で 1, 2 が振られる（番号バッジとして出現）
+        assert ">\n        1\n    <" in html or ">1<" in html
+        assert ">\n        2\n    <" in html or ">2<" in html

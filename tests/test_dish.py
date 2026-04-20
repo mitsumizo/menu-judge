@@ -224,3 +224,40 @@ class TestDish:
         assert restored_dish.category == original_dish.category
         assert restored_dish.image_url == original_dish.image_url
         assert restored_dish.number == original_dish.number
+
+    @pytest.mark.parametrize("number", [0, -1, -100])
+    def test_number_validation_fails_on_non_positive(self, number: int) -> None:
+        """numberが0以下の場合にValueErrorが発生"""
+        with pytest.raises(ValueError, match=f"number must be >= 1, got {number}"):
+            Dish(
+                original_name="Test",
+                translated_name="テスト",
+                description="テスト料理",
+                spiciness=3,
+                sweetness=3,
+                number=number,
+            )
+
+    @pytest.mark.parametrize("number", ["1", 1.5, True, False])
+    def test_number_validation_fails_on_invalid_type(self, number: object) -> None:
+        """numberが非int型の場合にTypeErrorが発生（boolも除外）"""
+        with pytest.raises(TypeError, match="number must be an integer"):
+            Dish(
+                original_name="Test",
+                translated_name="テスト",
+                description="テスト料理",
+                spiciness=3,
+                sweetness=3,
+                number=number,  # type: ignore[arg-type]
+            )
+
+    def test_number_none_is_allowed(self) -> None:
+        """numberがNone（デフォルト）の場合は有効"""
+        dish = Dish(
+            original_name="Test",
+            translated_name="テスト",
+            description="テスト料理",
+            spiciness=3,
+            sweetness=3,
+        )
+        assert dish.number is None

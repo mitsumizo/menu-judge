@@ -67,6 +67,7 @@ For each dish, include the following information:
         example = {
             "dishes": [
                 {
+                    "number": 1,
                     "original_name": "Pad Thai",
                     "translated_name": t['example_dish_name'],
                     "description": t['example_description'],

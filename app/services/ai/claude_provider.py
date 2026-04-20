@@ -211,7 +211,52 @@ class ClaudeProvider(AIProvider):
                 "Please verify that the image is a photo of a menu."
             )
 
+        dishes = self._normalize_dish_numbers(dishes)
         return dishes
+
+    @staticmethod
+    def _normalize_dish_numbers(dishes: list[Dish]) -> list[Dish]:
+        """料理番号の重複・欠損を検出し、必要なら連番を振り直す。
+
+        AIが番号を省略したり重複した番号を返した場合、インデックス順で
+        連番を再割当てする。正しい連番を返している場合はnumber順にソート
+        してから返す。
+
+        Args:
+            dishes: AIから返された料理リスト
+
+        Returns:
+            numberが正規化された料理リスト（イミュータブル: 新しいリストを返す）
+        """
+        numbers = [d.number for d in dishes]
+        has_missing = any(n is None for n in numbers)
+        has_duplicates = len(set(numbers)) != len(numbers)
+
+        if has_missing or has_duplicates:
+            logger.warning(
+                "Dish numbers invalid (missing=%s, duplicates=%s); "
+                "reassigning sequential numbers",
+                has_missing,
+                has_duplicates,
+            )
+            return [
+                Dish(
+                    original_name=d.original_name,
+                    translated_name=d.translated_name,
+                    description=d.description,
+                    spiciness=d.spiciness,
+                    sweetness=d.sweetness,
+                    ingredients=d.ingredients,
+                    allergens=d.allergens,
+                    category=d.category,
+                    image_url=d.image_url,
+                    number=i + 1,
+                    bounding_box=d.bounding_box,
+                )
+                for i, d in enumerate(dishes)
+            ]
+
+        return sorted(dishes, key=lambda d: d.number or 0)
 
     @staticmethod
     def _strip_markdown_fences(response: str) -> str:
