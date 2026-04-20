@@ -25,7 +25,7 @@ class BoundingBox:
         """バリデーション処理"""
         for attr in ["x", "y", "width", "height"]:
             val = getattr(self, attr)
-            if not isinstance(val, (int, float)):
+            if not isinstance(val, int | float):
                 raise TypeError(f"{attr} must be a number, got {type(val).__name__}")
             if not (0 <= val <= 1):
                 raise ValueError(f"{attr} must be between 0 and 1, got {val}")
