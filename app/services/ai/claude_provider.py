@@ -6,7 +6,7 @@ import base64
 import json
 import logging
 import time
-from typing import cast
+from typing import Literal, cast
 
 import anthropic
 
@@ -84,26 +84,35 @@ class ClaudeProvider(AIProvider):
             # Build prompt
             prompt = self._build_prompt()
 
-            # Call Claude API
+            # Call Claude API — mime_type validated against ALLOWED_MIME_TYPES at the route layer.
+            messages: list[anthropic.types.MessageParam] = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": cast(
+                                    Literal[
+                                        "image/jpeg",
+                                        "image/png",
+                                        "image/gif",
+                                        "image/webp",
+                                    ],
+                                    mime_type,
+                                ),
+                                "data": image_base64,
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ]
             response = self.client.messages.create(
                 model=self.MODEL,
                 max_tokens=8192,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": mime_type,
-                                    "data": image_base64,
-                                },
-                            },
-                            {"type": "text", "text": prompt},
-                        ],
-                    }
-                ],
+                messages=messages,
             )
 
             # Parse response — Claude returns TextBlock for our text-only prompt
