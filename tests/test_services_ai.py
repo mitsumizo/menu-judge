@@ -341,6 +341,105 @@ class TestClaudeProvider:
             assert len(dishes) == 1
             assert dishes[0].original_name == "Valid Dish"
 
+    def test_build_prompt_includes_number_field(self):
+        """プロンプトに number フィールドの指示と出力例が含まれる"""
+        with patch.dict(os.environ, {}, clear=True):
+            provider = ClaudeProvider(api_key="sk-ant-test")
+            prompt = provider._build_prompt()
+
+            # 指示文と出力例の両方に含まれることを確認
+            assert "number" in prompt
+            assert '"number": 1' in prompt
+
+    def test_parse_response_sorts_by_number(self):
+        """numberが全dishに付いている場合、numberの昇順にソートされる"""
+        with patch.dict(os.environ, {}, clear=True):
+            provider = ClaudeProvider(api_key="sk-ant-test")
+
+            response_json = {
+                "dishes": [
+                    self._build_dish_dict("Third", 3),
+                    self._build_dish_dict("First", 1),
+                    self._build_dish_dict("Second", 2),
+                ]
+            }
+
+            dishes = provider._parse_response(json.dumps(response_json))
+
+            assert [d.number for d in dishes] == [1, 2, 3]
+            assert [d.original_name for d in dishes] == ["First", "Second", "Third"]
+
+    def test_parse_response_reassigns_numbers_on_missing(self):
+        """numberが欠損しているdishがあれば、全体を1から振り直す"""
+        with patch.dict(os.environ, {}, clear=True):
+            provider = ClaudeProvider(api_key="sk-ant-test")
+
+            response_json = {
+                "dishes": [
+                    self._build_dish_dict("A", 1),
+                    self._build_dish_dict("B", None),  # 欠損
+                    self._build_dish_dict("C", 3),
+                ]
+            }
+
+            dishes = provider._parse_response(json.dumps(response_json))
+
+            assert [d.number for d in dishes] == [1, 2, 3]
+            assert [d.original_name for d in dishes] == ["A", "B", "C"]
+
+    def test_parse_response_reassigns_numbers_on_duplicate(self):
+        """numberが重複しているdishがあれば、全体を1から振り直す"""
+        with patch.dict(os.environ, {}, clear=True):
+            provider = ClaudeProvider(api_key="sk-ant-test")
+
+            response_json = {
+                "dishes": [
+                    self._build_dish_dict("A", 1),
+                    self._build_dish_dict("B", 1),  # 重複
+                    self._build_dish_dict("C", 2),
+                ]
+            }
+
+            dishes = provider._parse_response(json.dumps(response_json))
+
+            assert [d.number for d in dishes] == [1, 2, 3]
+
+    def test_parse_response_reassigns_numbers_on_non_sequential(self):
+        """numberが非連続の場合（無効dishスキップ等で飛び番化）は振り直す"""
+        with patch.dict(os.environ, {}, clear=True):
+            provider = ClaudeProvider(api_key="sk-ant-test")
+
+            # AIが [1, 2, 3, 4] を返したが #2 が不正でスキップされ [1, 3, 4] になる想定
+            response_json = {
+                "dishes": [
+                    self._build_dish_dict("A", 1),
+                    self._build_dish_dict("C", 3),  # 非連続（2が抜け）
+                    self._build_dish_dict("D", 4),
+                ]
+            }
+
+            dishes = provider._parse_response(json.dumps(response_json))
+
+            assert [d.number for d in dishes] == [1, 2, 3]
+            assert [d.original_name for d in dishes] == ["A", "C", "D"]
+
+    @staticmethod
+    def _build_dish_dict(name: str, number: int | None) -> dict:
+        """テスト用の最小dish dictを生成"""
+        d = {
+            "original_name": name,
+            "translated_name": name,
+            "description": f"desc {name}",
+            "spiciness": 1,
+            "sweetness": 1,
+            "ingredients": [],
+            "allergens": [],
+            "category": "main",
+        }
+        if number is not None:
+            d["number"] = number
+        return d
+
     def test_construction_without_api_key_raises_error(self):
         """ClaudeProvider now rejects empty api_key at construction time."""
         with pytest.raises(APIKeyMissingError, match="API key is required"):

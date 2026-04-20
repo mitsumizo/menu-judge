@@ -6,6 +6,7 @@ import base64
 import json
 import logging
 import time
+from dataclasses import replace
 from typing import Literal, cast
 
 import anthropic
@@ -144,6 +145,12 @@ class ClaudeProvider(AIProvider):
         # Get base prompt from multilingual prompt builder
         base_prompt = self.prompt_builder.build_menu_analysis_prompt()
 
+        # Add number field instructions
+        number_instruction = """
+- number: Dish order number in the menu image (integer, starting from 1)
+  Assign numbers in reading order: top-to-bottom, then left-to-right for multi-column menus.
+  Every dish MUST have a unique sequential number."""
+
         # Add bounding_box field instructions with improved guidance
         bounding_box_instruction = """
 - bounding_box: The location of the dish entry in the menu image (REQUIRED for each dish)
@@ -170,11 +177,13 @@ class ClaudeProvider(AIProvider):
   5. Height should match the actual text height of that dish entry (usually 0.03-0.1)
   6. ALWAYS provide bounding_box coordinates - do not set to null unless truly impossible"""
 
-        # Insert bounding_box instructions before the output format section
+        extra_instructions = number_instruction + bounding_box_instruction
+
+        # Insert instructions before the output format section
         if "```json" in base_prompt:
             parts = base_prompt.split("```json")
-            return parts[0] + bounding_box_instruction + "\n\n```json" + parts[1]
-        return base_prompt + bounding_box_instruction
+            return parts[0] + extra_instructions + "\n\n```json" + parts[1]
+        return base_prompt + extra_instructions
 
     def _parse_response(self, response: str) -> list[Dish]:
         """
@@ -214,7 +223,36 @@ class ClaudeProvider(AIProvider):
                 "Please verify that the image is a photo of a menu."
             )
 
+        dishes = self._normalize_dish_numbers(dishes)
         return dishes
+
+    @staticmethod
+    def _normalize_dish_numbers(dishes: list[Dish]) -> list[Dish]:
+        """料理番号の欠損・重複・非連続を検出し、必要なら連番を振り直す。
+
+        AIが番号を省略・重複・スキップした場合や、無効dishのスキップで
+        番号が飛んだ場合（例: [1, 3, 4]）、インデックス順で連番を再割当て
+        する。完全な連番（順不同可）の場合はnumber順にソートしてから返す。
+
+        Args:
+            dishes: AIから返された料理リスト
+
+        Returns:
+            numberが正規化された料理リスト（イミュータブル: 新しいリストを返す）
+        """
+        numbers = [d.number for d in dishes]
+        expected = list(range(1, len(dishes) + 1))
+        has_missing = any(n is None for n in numbers)
+        is_sequential = not has_missing and sorted(numbers) == expected  # type: ignore[type-var]
+
+        if not is_sequential:
+            logger.warning(
+                "Dish numbers invalid (numbers=%s); reassigning sequential numbers",
+                numbers,
+            )
+            return [replace(d, number=i + 1) for i, d in enumerate(dishes)]
+
+        return sorted(dishes, key=lambda d: d.number)  # type: ignore[arg-type,return-value]
 
     @staticmethod
     def _strip_markdown_fences(response: str) -> str:

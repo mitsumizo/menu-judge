@@ -165,6 +165,7 @@ class TestDish:
             allergens=["甲殻類"],
             category=Category.MAIN,
             image_url="https://example.com/pad-thai.jpg",
+            number=1,
         )
 
         result = dish.to_dict()
@@ -179,6 +180,7 @@ class TestDish:
             "allergens": ["甲殻類"],
             "category": "main",
             "image_url": "https://example.com/pad-thai.jpg",
+            "number": 1,
             "bounding_box": None,
         }
 
@@ -195,6 +197,7 @@ class TestDish:
         result = dish.to_dict()
 
         assert result["image_url"] is None
+        assert result["number"] is None
         assert result["bounding_box"] is None
 
     def test_from_dict(self):
@@ -209,6 +212,7 @@ class TestDish:
             "allergens": ["甲殻類"],
             "category": "main",
             "image_url": "https://example.com/pad-thai.jpg",
+            "number": 1,
         }
 
         dish = Dish.from_dict(data)
@@ -222,6 +226,7 @@ class TestDish:
         assert dish.allergens == ["甲殻類"]
         assert dish.category == Category.MAIN
         assert dish.image_url == "https://example.com/pad-thai.jpg"
+        assert dish.number == 1
 
     def test_from_dict_with_missing_optional_fields(self):
         """Test from_dict with missing optional fields."""
@@ -239,6 +244,7 @@ class TestDish:
         assert dish.allergens == []
         assert dish.category == Category.OTHER
         assert dish.image_url is None
+        assert dish.number is None
 
     def test_to_dict_from_dict_roundtrip(self):
         """Test roundtrip conversion: Dish -> dict -> Dish."""
@@ -252,6 +258,7 @@ class TestDish:
             allergens=["甲殻類", "卵"],
             category=Category.MAIN,
             image_url="https://example.com/pad-thai.jpg",
+            number=1,
             bounding_box=BoundingBox(x=0.1, y=0.2, width=0.3, height=0.1),
         )
 
@@ -269,6 +276,7 @@ class TestDish:
         assert restored.allergens == original.allergens
         assert restored.category == original.category
         assert restored.image_url == original.image_url
+        assert restored.number == original.number
         assert restored.bounding_box.x == original.bounding_box.x
         assert restored.bounding_box.y == original.bounding_box.y
         assert restored.bounding_box.width == original.bounding_box.width

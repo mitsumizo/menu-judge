@@ -78,6 +78,7 @@ class Dish:
         allergens: アレルゲンのリスト
         category: 料理のカテゴリ
         image_url: 画像URL
+        number: 料理の番号（メニュー画像での順序）
         bounding_box: メニュー画像上の位置（正規化座標）
     """
 
@@ -90,6 +91,7 @@ class Dish:
     allergens: list[str] = field(default_factory=list)
     category: Category = Category.OTHER
     image_url: str | None = None
+    number: int | None = None
     bounding_box: BoundingBox | None = None
 
     def __post_init__(self) -> None:
@@ -105,6 +107,15 @@ class Dish:
             raise ValueError(f"spiciness must be 1-5, got {self.spiciness}")
         if not 1 <= self.sweetness <= 5:
             raise ValueError(f"sweetness must be 1-5, got {self.sweetness}")
+
+        # numberの検証（Noneは許容、指定時は1以上の整数）
+        if self.number is not None:
+            if not isinstance(self.number, int) or isinstance(self.number, bool):
+                raise TypeError(
+                    f"number must be an integer, got {type(self.number).__name__}"
+                )
+            if self.number < 1:
+                raise ValueError(f"number must be >= 1, got {self.number}")
 
     def to_dict(self) -> dict[str, Any]:
         """辞書に変換
@@ -122,6 +133,7 @@ class Dish:
             "allergens": self.allergens,
             "category": self.category.value,
             "image_url": self.image_url,
+            "number": self.number,
             "bounding_box": self.bounding_box.to_dict() if self.bounding_box else None,
         }
 
@@ -172,5 +184,6 @@ class Dish:
             allergens=data.get("allergens", []),
             category=category,
             image_url=data.get("image_url"),
+            number=data.get("number"),
             bounding_box=bounding_box,
         )
