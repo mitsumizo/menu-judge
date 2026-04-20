@@ -1,6 +1,7 @@
 """AI prompt builder for multilingual support."""
 
 import json
+
 from app.translations.loader import TranslationLoader
 
 

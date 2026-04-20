@@ -1,6 +1,5 @@
 """Edge-case coverage for app.routes.menu — uncovered branches."""
 
-from io import BytesIO
 from unittest.mock import MagicMock
 
 from app.routes.menu import MAX_FILE_SIZE, validate_image_file
