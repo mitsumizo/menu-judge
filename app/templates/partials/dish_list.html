@@ -12,13 +12,30 @@ Arguments:
 {% from 'components/dish_card.html' import dish_card %}
 {% from 'components/image_with_boxes.html' import image_with_boxes %}
 
-<div id="dish-list" class="space-y-4" x-data="{ showImageModal: false }">
+{# dishes に登場するカテゴリと件数を集計（表示順は登場順） #}
+{% set category_counts = {} %}
+{% for d in dishes %}
+    {% set _ = category_counts.update({d.category.value: category_counts.get(d.category.value, 0) + 1}) %}
+{% endfor %}
+{# all を先頭に据えた件数マップを JSON へ #}
+{% set all_counts = {'all': dishes | length} %}
+{% for k, v in category_counts.items() %}
+    {% set _ = all_counts.update({k: v}) %}
+{% endfor %}
+
+<div id="dish-list" class="space-y-4"
+     x-data="{
+        showImageModal: false,
+        selectedCategory: 'all',
+        counts: {{ all_counts | tojson }},
+        get filteredCount() { return this.counts[this.selectedCategory] ?? 0; }
+     }">
     <!-- Results Summary -->
     <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
         <h2 class="text-xl font-bold">
             {{ t('results.title', 'Analysis Results') }}
             <span class="text-sm text-slate-400">
-                ({{ dishes | length }} {{ t('results.dish_count', 'dishes') }})
+                (<span data-testid="filtered-count" x-text="filteredCount">{{ dishes | length }}</span> {{ t('results.dish_count', 'dishes') }})
             </span>
         </h2>
         <div class="flex items-center gap-4">
@@ -43,11 +60,58 @@ Arguments:
         </div>
     </div>
 
+    <!-- Category Filter Bar (2カテゴリ以上あるときのみ表示) -->
+    {% if dishes and category_counts | length > 1 %}
+    <div
+        data-testid="category-filter"
+        role="tablist"
+        aria-label="{{ t('results.filter_aria_label', 'Filter dishes by category') }}"
+        class="flex flex-wrap gap-2 mb-4"
+    >
+        <button
+            type="button"
+            role="tab"
+            data-category="all"
+            data-count="{{ dishes | length }}"
+            @click="selectedCategory = 'all'"
+            :aria-selected="selectedCategory === 'all'"
+            :class="selectedCategory === 'all'
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-primary'"
+            class="px-3 py-1.5 rounded-lg text-sm border transition-colors"
+        >
+            {{ t('results.filter_all', 'All') }} ({{ dishes | length }})
+        </button>
+        {% for cat, cnt in category_counts.items() %}
+        <button
+            type="button"
+            role="tab"
+            data-category="{{ cat }}"
+            data-count="{{ cnt }}"
+            @click="selectedCategory = '{{ cat }}'"
+            :aria-selected="selectedCategory === '{{ cat }}'"
+            :class="selectedCategory === '{{ cat }}'
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-primary'"
+            class="px-3 py-1.5 rounded-lg text-sm border transition-colors"
+        >
+            {{ t('results.filter_category_' ~ cat, cat) }} ({{ cnt }})
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Dish Card Grid -->
     {% if dishes %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for dish in dishes %}
-            {{ dish_card(dish, dish.number or loop.index) }}
+            <div
+                class="dish-card-wrapper"
+                data-category="{{ dish.category.value }}"
+                x-show="selectedCategory === 'all' || selectedCategory === '{{ dish.category.value }}'"
+            >
+                {{ dish_card(dish, dish.number or loop.index) }}
+            </div>
         {% endfor %}
     </div>
 

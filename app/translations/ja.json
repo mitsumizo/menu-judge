@@ -102,7 +102,14 @@
     "analyzed_with": "解析エンジン:",
     "no_dishes_detected": "料理が検出されませんでした",
     "try_different_image": "別の画像をお試しください",
-    "hover_hint": "番号にホバーすると対応する料理がハイライトされます"
+    "hover_hint": "番号にホバーすると対応する料理がハイライトされます",
+    "filter_aria_label": "カテゴリで料理を絞り込み",
+    "filter_all": "すべて",
+    "filter_category_appetizer": "前菜",
+    "filter_category_main": "メイン",
+    "filter_category_dessert": "デザート",
+    "filter_category_beverage": "ドリンク",
+    "filter_category_other": "その他"
   },
   "error": {
     "title": "エラーが発生しました",
