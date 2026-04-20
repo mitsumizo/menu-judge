@@ -8,26 +8,20 @@
     <!-- Hero Section -->
     <section class="max-w-4xl mx-auto text-center mb-12">
         <h1 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight">
-            <span class="block text-white drop-shadow-sm">{{ t('ui.hero_title') }}</span>
-            <span
-                class="pb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary-light via-accent to-secondary animate-gradient-text">
+            <span class="block text-slate-900">{{ t('ui.hero_title') }}</span>
+            <span class="pb-2 text-primary">
                 {{ t('ui.hero_subtitle') }}
             </span>
         </h1>
-        <p class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+        <p class="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
             {{ t('ui.hero_description') }}<br class="hidden md:inline">
             {{ t('ui.hero_description_line2') }}
         </p>
     </section>
 
     <!-- Upload Section -->
-    <section class="max-w-xl mx-auto w-full relative group">
-        <!-- Glow Effect -->
-        <div
-            class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 pointer-events-none">
-        </div>
-
-        <div class="relative bg-surface/50 backdrop-blur-xl ring-1 ring-white/10 rounded-xl p-8 shadow-2xl">
+    <section class="max-w-xl mx-auto w-full relative">
+        <div class="relative bg-surface border border-slate-200 rounded-xl p-8 shadow-md">
             <form hx-post="{{ url_for('menu.analyze_menu') }}" hx-target="#result-area" hx-swap="innerHTML"
                 hx-indicator="#loading" hx-encoding="multipart/form-data" @htmx:before-request="analyzing = true"
                 @htmx:after-request="analyzing = false">
@@ -38,12 +32,7 @@
                 <!-- Analyze Button -->
                 <div class="mt-8 text-center">
                     <button type="submit" :disabled="analyzing"
-                        class="group relative w-full flex items-center justify-center py-4 px-8 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
-
-                        <!-- Shine effect -->
-                        <div
-                            class="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 group-hover:animate-shine pointer-events-none">
-                        </div>
+                        class="relative w-full flex items-center justify-center py-4 px-8 border border-transparent text-lg font-bold rounded-xl text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors duration-200">
 
                         <span x-show="!analyzing" class="flex items-center gap-2 relative z-10">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +62,7 @@
 
     <!-- Loading Overlay -->
     <div id="loading"
-        class="htmx-indicator fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        class="htmx-indicator fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
         {% include 'components/loading.html' %}
     </div>
 

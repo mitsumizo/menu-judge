@@ -11,9 +11,9 @@ Arguments:
 #}
 
 {% macro dish_card(dish, index=none) %}
-<div class="dish-card bg-surface rounded-xl p-4 shadow-lg
-            hover:shadow-xl transition-all duration-300
-            border border-slate-700 hover:border-primary relative
+<div class="dish-card bg-white rounded-xl p-4 shadow-sm
+            hover:shadow-md transition-shadow duration-200
+            border border-slate-200 hover:border-primary relative
             {% if index %}pt-6{% endif %}"
     {% if index %}
     @mouseenter="window.dispatchEvent(new CustomEvent('highlight-dish', { detail: { index: {{ index }} }}))"
@@ -24,7 +24,7 @@ Arguments:
     {% if index %}
     <div class="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-primary
                 flex items-center justify-center text-white font-bold text-sm
-                shadow-lg z-10">
+                shadow-sm z-10">
         {{ index }}
     </div>
     {% endif %}
@@ -34,14 +34,14 @@ Arguments:
         <div class="flex-1 min-w-0">
             <!-- カテゴリバッジをタイトル上に移動 -->
             {% if dish.category %}
-            <span class="inline-block px-2 py-0.5 bg-primary/20 text-primary rounded text-xs mb-1">
+            <span class="inline-block px-2 py-0.5 bg-primary/10 text-primary rounded text-xs mb-1">
                 {{ dish.category.value }}
             </span>
             {% endif %}
-            <h3 class="text-lg font-bold text-slate-50 leading-tight">
+            <h3 class="text-lg font-bold text-slate-900 leading-tight">
                 {{ dish.translated_name }}
             </h3>
-            <p class="text-sm text-slate-400">
+            <p class="text-sm text-slate-500">
                 {{ dish.original_name }}
             </p>
         </div>
@@ -49,7 +49,7 @@ Arguments:
 
     <!-- Description -->
     {% if dish.description %}
-    <p class="text-slate-300 text-sm mb-3 line-clamp-3">
+    <p class="text-slate-700 text-sm mb-3 line-clamp-3">
         {{ dish.description }}
     </p>
     {% endif %}
@@ -62,7 +62,7 @@ Arguments:
             <span class="text-sm">🌶️</span>
             {% for i in range(5) %}
                 <span class="w-2 h-2 rounded-full
-                    {% if i < dish.spiciness %}bg-red-500{% else %}bg-slate-600{% endif %}">
+                    {% if i < dish.spiciness %}bg-red-500{% else %}bg-slate-200{% endif %}">
                 </span>
             {% endfor %}
         </div>
@@ -72,7 +72,7 @@ Arguments:
             <span class="text-sm">🍯</span>
             {% for i in range(5) %}
                 <span class="w-2 h-2 rounded-full
-                    {% if i < dish.sweetness %}bg-amber-500{% else %}bg-slate-600{% endif %}">
+                    {% if i < dish.sweetness %}bg-amber-500{% else %}bg-slate-200{% endif %}">
                 </span>
             {% endfor %}
         </div>
@@ -84,7 +84,7 @@ Arguments:
     {% if dish.ingredients %}
     <div class="flex flex-wrap gap-1 mb-3">
         {% for ingredient in dish.ingredients %}
-        <span class="px-2 py-0.5 bg-slate-700 rounded-full text-xs text-slate-300">
+        <span class="px-2 py-0.5 bg-slate-100 rounded-full text-xs text-slate-700">
             {{ ingredient }}
         </span>
         {% endfor %}
@@ -93,8 +93,8 @@ Arguments:
 
     <!-- Allergy Warning -->
     {% if dish.allergens %}
-    <div class="p-2 bg-red-500/10 border border-red-500/30 rounded">
-        <p class="text-xs text-red-400">
+    <div class="p-2 bg-red-50 border border-red-200 rounded">
+        <p class="text-xs text-red-600">
             ⚠️ {{ t('dish_card.allergens_label', 'Allergens:') }} {{ dish.allergens | join(', ') }}
         </p>
     </div>
