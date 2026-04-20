@@ -190,11 +190,8 @@ def analyze_menu() -> ResponseReturnValue:
         logger.warning(f"Validation failed: {error_message}")
         return jsonify({"success": False, "error": error_message, "code": "INVALID_FILE"}), 400
 
-    # After successful validation, image_data is bytes and content_type is set.
-    assert image_data is not None
-    assert file.content_type is not None
-
     try:
+        # Use validated image data
         # Validation confirmed that content_type is in ALLOWED_MIME_TYPES
         mime_type = file.content_type
 
