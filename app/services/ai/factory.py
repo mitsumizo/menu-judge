@@ -20,9 +20,7 @@ class AIProviderFactory:
     }
 
     @classmethod
-    def create(
-        cls, api_key: str, provider_name: str = "claude", language: str = "en"
-    ) -> AIProvider:
+    def create(cls, api_key: str, provider_name: str = "claude", language: str = 'en') -> AIProvider:
         """
         AIプロバイダーを生成.
 

@@ -63,7 +63,9 @@ def sample_image():
         Tuple of (image_data: bytes, mime_type: str)
     """
     # 1x1 pixel PNG image (base64 encoded)
-    png_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    png_base64 = (
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    )
     image_data = base64.b64decode(png_base64)
     return (image_data, "image/png")
 
@@ -136,4 +138,6 @@ def mock_analysis_result():
             category=Category.MAIN,
         )
     ]
-    return AnalysisResult(dishes=dishes, raw_response="...", provider="claude", processing_time=1.5)
+    return AnalysisResult(
+        dishes=dishes, raw_response="...", provider="claude", processing_time=1.5
+    )

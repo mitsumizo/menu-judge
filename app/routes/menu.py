@@ -162,12 +162,9 @@ def analyze_menu() -> ResponseReturnValue:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
         logger.warning("No API key provided")
-        error_msg = TranslationLoader.get(
-            language,
-            "toast.api_key_invalid",
-            "API key not provided. Please enter your API key in the settings.",
-        )
-        title_msg = TranslationLoader.get(language, "error.api_key_not_set", "API Key Not Set")
+        error_msg = TranslationLoader.get(language, 'toast.api_key_invalid',
+                                          'API key not provided. Please enter your API key in the settings.')
+        title_msg = TranslationLoader.get(language, 'error.api_key_not_set', 'API Key Not Set')
         return _create_error_response(
             error_message=error_msg,
             error_code="NO_API_KEY",
@@ -178,9 +175,7 @@ def analyze_menu() -> ResponseReturnValue:
     # Check file existence
     if "image" not in request.files:
         logger.warning("No image file in request")
-        return jsonify(
-            {"success": False, "error": "No image file provided", "code": "NO_FILE"}
-        ), 400
+        return jsonify({"success": False, "error": "No image file provided", "code": "NO_FILE"}), 400
 
     file = request.files["image"]
 
@@ -227,9 +222,7 @@ def analyze_menu() -> ResponseReturnValue:
             "processing_time": result.processing_time,
         }
 
-        logger.info(
-            f"Analysis complete: {len(result.dishes)} dishes found in {result.processing_time:.2f}s"
-        )
+        logger.info(f"Analysis complete: {len(result.dishes)} dishes found in {result.processing_time:.2f}s")
 
         # Return HTML partial for HTMX requests
         if request.headers.get("HX-Request") == "true":
@@ -246,10 +239,10 @@ def analyze_menu() -> ResponseReturnValue:
         logger.warning(f"Unknown provider requested: {e}")
         default_msg = "This provider is not yet implemented."
         error_msg = TranslationLoader.get(
-            language, "api_key_modal.provider_not_implemented", default_msg
+            language, 'api_key_modal.provider_not_implemented', default_msg
         )
         title_msg = TranslationLoader.get(
-            language, "error.provider_not_implemented", "Provider Not Implemented"
+            language, 'error.provider_not_implemented', 'Provider Not Implemented'
         )
         return _create_error_response(
             error_message=error_msg,
@@ -259,12 +252,8 @@ def analyze_menu() -> ResponseReturnValue:
         )
     except InvalidMenuImageError as e:
         logger.warning(f"Invalid menu image: {e}")
-        error_msg = (
-            str(e)
-            if str(e)
-            else TranslationLoader.get(language, "toast.analysis_failed", "Analysis failed")
-        )
-        title_msg = TranslationLoader.get(language, "error.invalid_menu_image", "Not a Menu Image")
+        error_msg = str(e) if str(e) else TranslationLoader.get(language, 'toast.analysis_failed', 'Analysis failed')
+        title_msg = TranslationLoader.get(language, 'error.invalid_menu_image', 'Not a Menu Image')
         return _create_error_response(
             error_message=error_msg,
             error_code="INVALID_MENU_IMAGE",
@@ -273,10 +262,8 @@ def analyze_menu() -> ResponseReturnValue:
         )
     except AIProviderError as e:
         logger.exception(f"AI provider error: {e}")
-        error_msg = TranslationLoader.get(
-            language, "toast.analysis_failed", f"AI analysis failed: {str(e)}"
-        )
-        title_msg = TranslationLoader.get(language, "error.analysis_error", "AI Analysis Error")
+        error_msg = TranslationLoader.get(language, 'toast.analysis_failed', f'AI analysis failed: {str(e)}')
+        title_msg = TranslationLoader.get(language, 'error.analysis_error', 'AI Analysis Error')
         return _create_error_response(
             error_message=error_msg,
             error_code="AI_ERROR",
@@ -285,10 +272,8 @@ def analyze_menu() -> ResponseReturnValue:
         )
     except Exception as e:
         logger.error(f"Unexpected error: {e}", exc_info=True)
-        error_msg = TranslationLoader.get(
-            language, "toast.server_error", "An unexpected error occurred. Please try again later."
-        )
-        title_msg = TranslationLoader.get(language, "error.unknown_error", "Unexpected Error")
+        error_msg = TranslationLoader.get(language, 'toast.server_error', 'An unexpected error occurred. Please try again later.')
+        title_msg = TranslationLoader.get(language, 'error.unknown_error', 'Unexpected Error')
         return _create_error_response(
             error_message=error_msg,
             error_code="INTERNAL_ERROR",

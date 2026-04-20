@@ -13,7 +13,9 @@ class _ConcreteProvider(AIProvider):
     def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
         # Invoke the abstract method body to exercise line 69.
         AIProvider.analyze_menu(self, image_data, mime_type)
-        return AnalysisResult(dishes=[], raw_response="", provider=self.name, processing_time=0.0)
+        return AnalysisResult(
+            dishes=[], raw_response="", provider=self.name, processing_time=0.0
+        )
 
 
 class TestAbstractMethodBodies:

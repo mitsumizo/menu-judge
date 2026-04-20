@@ -13,7 +13,7 @@ class TranslationLoader:
     """
 
     _cache: dict[str, dict[str, Any]] = {}
-    _supported_languages = ["en", "ja"]
+    _supported_languages = ['en', 'ja']
 
     @classmethod
     def load(cls, language: str) -> dict[str, Any]:
@@ -47,7 +47,7 @@ class TranslationLoader:
             raise FileNotFoundError(f"Translation file not found: {file_path}")
 
         # JSONファイルを読み込み
-        with open(file_path, encoding="utf-8") as f:
+        with open(file_path, encoding='utf-8') as f:
             translations = json.load(f)
 
         # キャッシュに保存
@@ -56,7 +56,7 @@ class TranslationLoader:
         return translations
 
     @classmethod
-    def get(cls, language: str, key: str, fallback: str = "") -> str:
+    def get(cls, language: str, key: str, fallback: str = '') -> str:
         """ドット記法で翻訳を取得
 
         Args:
@@ -73,7 +73,7 @@ class TranslationLoader:
         """
         try:
             translations = cls.load(language)
-            keys = key.split(".")
+            keys = key.split('.')
             value = translations
 
             for k in keys:

@@ -12,25 +12,13 @@ Arguments:
 {% from 'components/dish_card.html' import dish_card %}
 {% from 'components/image_with_boxes.html' import image_with_boxes %}
 
-{# dishes に登場するカテゴリと件数を集計（表示順は登場順） #}
-{% set category_counts = {} %}
-{% for d in dishes %}
-    {% set _ = category_counts.update({d.category.value: category_counts.get(d.category.value, 0) + 1}) %}
-{% endfor %}
-
-<div id="dish-list" class="space-y-4"
-     x-data="{
-        showImageModal: false,
-        selectedCategory: 'all',
-        counts: {{ {'all': dishes | length} | combine_counts(category_counts) | tojson }},
-        get filteredCount() { return this.counts[this.selectedCategory] ?? 0; }
-     }">
+<div id="dish-list" class="space-y-4" x-data="{ showImageModal: false }">
     <!-- Results Summary -->
     <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
         <h2 class="text-xl font-bold">
             {{ t('results.title', 'Analysis Results') }}
             <span class="text-sm text-slate-400">
-                (<span data-testid="filtered-count" x-text="filteredCount">{{ dishes | length }}</span> {{ t('results.dish_count', 'dishes') }})
+                ({{ dishes | length }} {{ t('results.dish_count', 'dishes') }})
             </span>
         </h2>
         <div class="flex items-center gap-4">

@@ -111,7 +111,9 @@ class Dish:
         # numberの検証（Noneは許容、指定時は1以上の整数）
         if self.number is not None:
             if not isinstance(self.number, int) or isinstance(self.number, bool):
-                raise TypeError(f"number must be an integer, got {type(self.number).__name__}")
+                raise TypeError(
+                    f"number must be an integer, got {type(self.number).__name__}"
+                )
             if self.number < 1:
                 raise ValueError(f"number must be >= 1, got {self.number}")
 
@@ -149,13 +151,7 @@ class Dish:
             ValueError: 必須フィールドが欠けている場合
         """
         # 必須フィールドのチェック
-        required_fields = [
-            "original_name",
-            "translated_name",
-            "description",
-            "spiciness",
-            "sweetness",
-        ]
+        required_fields = ["original_name", "translated_name", "description", "spiciness", "sweetness"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")

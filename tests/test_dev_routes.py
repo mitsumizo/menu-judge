@@ -71,7 +71,9 @@ class TestMockPageRoute:
 
 class TestDevBlueprintNotRegisteredInProduction:
     def test_mock_routes_return_404_without_debug(self):
-        app = create_app({"TESTING": True, "DEBUG": False, "SECRET_KEY": "test-secret-key"})
+        app = create_app(
+            {"TESTING": True, "DEBUG": False, "SECRET_KEY": "test-secret-key"}
+        )
         client = app.test_client()
         assert client.get("/dev/mock-results").status_code == 404
         assert client.get("/dev/mock-page").status_code == 404
