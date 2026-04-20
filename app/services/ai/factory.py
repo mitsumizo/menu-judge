@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .base import AIProvider, AIProviderError, APIKeyMissingError
 from .claude_provider import ClaudeProvider
+from .openai_provider import OpenAIProvider
 
 
 class UnknownProviderError(AIProviderError):
@@ -17,6 +18,7 @@ class AIProviderFactory:
 
     _providers: dict[str, type[AIProvider]] = {
         "claude": ClaudeProvider,
+        "openai": OpenAIProvider,
     }
 
     @classmethod
