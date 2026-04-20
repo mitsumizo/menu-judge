@@ -1,4 +1,4 @@
-"""OpenAI GPT-4V provider for menu analysis."""
+"""OpenAI vision provider for menu analysis."""
 
 from __future__ import annotations
 
@@ -25,9 +25,13 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIProvider(AIProvider):
-    """OpenAI GPT-4V を使用した画像解析プロバイダー"""
+    """OpenAIのビジョン対応モデルを使用した画像解析プロバイダー。
 
-    MODEL = "gpt-4o"
+    デフォルトでは GPT-5.4 を使用（2026年3月リリースのフラッグシップ）。
+    画像理解・チャート推論・レイアウト把握が強化され、10Mピクセル超の画像も圧縮不要。
+    """
+
+    MODEL = "gpt-5.4"
     MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
     MAX_TOKENS = 4096
 
