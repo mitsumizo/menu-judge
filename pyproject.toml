@@ -61,3 +61,10 @@ exclude_dirs = ["tests", "venv", ".venv"]
 skips = [
     "B101",  # assert_used（テストでは使用するため）
 ]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # GC timing issues in Python 3.14 stdlib / werkzeug — not our bug.
+    "ignore::ResourceWarning:re._parser",
+    "ignore::ResourceWarning:werkzeug.routing.rules",
+]
