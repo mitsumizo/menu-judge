@@ -1,0 +1,53 @@
+{#
+画像とバウンディングボックスオーバーレイコンポーネント
+
+使用方法:
+    {% from 'components/image_with_boxes.html' import image_with_boxes %}
+    {{ image_with_boxes(dishes) }}
+
+引数:
+    dishes: 料理のリスト（bounding_boxを含む）
+#}
+
+{% macro image_with_boxes(dishes) %}
+<div x-data="imageOverlay()" class="relative w-full flex justify-center">
+    <!-- メニュー画像 -->
+    <template x-if="getImageUrl()">
+        <div class="relative rounded-xl overflow-hidden shadow-lg max-w-full">
+            <img
+                :src="getImageUrl()"
+                alt="解析中のメニュー画像"
+                class="max-w-full h-auto block"
+            >
+
+            <!-- CSSベースのバウンディングボックスオーバーレイ -->
+            {% for dish in dishes %}
+            {% if dish.bounding_box %}
+            <div
+                class="absolute cursor-pointer transition-all duration-200 border-2 border-primary/60 bg-primary/10 hover:border-primary hover:bg-primary/20"
+                style="left: {{ dish.bounding_box.x * 100 }}%; top: {{ dish.bounding_box.y * 100 }}%; width: {{ dish.bounding_box.width * 100 }}%; height: {{ dish.bounding_box.height * 100 }}%;"
+                data-dish-index="{{ loop.index }}"
+                @mouseenter="highlightBox({{ loop.index }})"
+                @mouseleave="unhighlightBox()"
+                @click="highlightBox({{ loop.index }})"
+                :class="isHighlighted({{ loop.index }}) ? 'border-secondary bg-secondary/30 z-10' : ''"
+            >
+                <!-- 番号ラベル（左上に配置） -->
+                <div
+                    class="absolute -top-3 -left-3 w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md transition-all duration-200"
+                    :class="isHighlighted({{ loop.index }}) ? 'bg-secondary' : 'bg-primary'"
+                >{{ loop.index }}</div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </template>
+
+    <!-- 画像がない場合のフォールバック -->
+    <template x-if="!getImageUrl()">
+        <div class="bg-surface rounded-xl p-8 text-center border border-slate-700">
+            <p class="text-slate-400">画像が読み込まれていません</p>
+        </div>
+    </template>
+</div>
+{% endmacro %}

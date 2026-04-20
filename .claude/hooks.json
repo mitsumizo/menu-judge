@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "tool == \"Bash\" && tool_input.command matches \"(flask run|python run\\.py)\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Note: Consider running dev server in background or separate terminal' >&2"
+          }
+        ],
+        "description": "Reminder about dev server management"
+      },
+      {
+        "matcher": "tool == \"Bash\" && tool_input.command matches \"git push\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Review changes before push...' >&2"
+          }
+        ],
+        "description": "Reminder before git push to review changes"
+      },
+      {
+        "matcher": "tool == \"Write\" && tool_input.file_path matches \"\\\\.(md|txt)$\" && !(tool_input.file_path matches \"README\\\\.md|CLAUDE\\\\.md|CONTRIBUTING\\\\.md\")",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Note: Creating documentation file. Consider if README.md would be more appropriate.' >&2"
+          }
+        ],
+        "description": "Note about documentation file creation"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "tool == \"Bash\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/gh pr create/.test(cmd)){const out=i.tool_output?.output||'';const m=out.match(/https:\\/\\/github.com\\/[^/]+\\/[^/]+\\/pull\\/\\d+/);if(m){console.error('[Hook] PR created: '+m[0])}}console.log(d)})\""
+          }
+        ],
+        "description": "Log PR URL after PR creation"
+      },
+      {
+        "matcher": "tool == \"Edit\" && tool_input.file_path matches \"\\\\.py$\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path;if(p&&fs.existsSync(p)){const c=fs.readFileSync(p,'utf8');const lines=c.split('\\n');const matches=[];lines.forEach((l,idx)=>{if(/^\\s*print\\(/.test(l)&&!/# noqa/.test(l))matches.push((idx+1)+': '+l.trim())});if(matches.length){console.error('[Hook] WARNING: print() found in '+p);matches.slice(0,5).forEach(m=>console.error(m));console.error('[Hook] Consider using logging instead')}}console.log(d)})\""
+          }
+        ],
+        "description": "Warn about print() statements in Python files"
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const{execSync}=require('child_process');const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{execSync('git rev-parse --git-dir',{stdio:'pipe'})}catch{console.log(d);process.exit(0)}try{const files=execSync('git diff --name-only HEAD',{encoding:'utf8',stdio:['pipe','pipe','pipe']}).split('\\n').filter(f=>/\\.py$/.test(f)&&fs.existsSync(f));let hasPrint=false;for(const f of files){if(fs.readFileSync(f,'utf8').match(/^\\s*print\\(/m)){console.error('[Hook] WARNING: print() found in '+f);hasPrint=true}}if(hasPrint)console.error('[Hook] Consider using logging instead of print()')}catch(e){}console.log(d)})\""
+          }
+        ],
+        "description": "Check for print() in modified Python files after each response"
+      }
+    ]
+  }
+}

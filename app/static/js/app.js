@@ -1,18 +1,102 @@
 /**
- * Menu Judge - カスタムJavaScript
- * Alpine.jsと連携してインタラクティブな機能を提供
+ * Menu Judge - Custom JavaScript
+ * Provides interactive features in conjunction with Alpine.js
  */
 
-// Toast通知の定数
-const TOAST_ANIMATION_DELAY = 10;  // アニメーション開始までの遅延（ミリ秒）
-const TOAST_FADE_DURATION = 300;   // フェードアウトのアニメーション時間（ミリ秒）
-const TOAST_DEFAULT_DURATION = 3000; // デフォルトの表示時間（ミリ秒）
+// Alpine.js Store (preserves image URL after HTMX swap)
+document.addEventListener('alpine:init', () => {
+    Alpine.store('menuAnalysis', {
+        imageUrl: null,
+        setImageUrl(url) {
+            this.imageUrl = url;
+        },
+        clearImageUrl() {
+            this.imageUrl = null;
+        }
+    });
+});
 
 /**
- * Toast通知を表示する
- * @param {string} message - 表示するメッセージ
- * @param {string} type - メッセージタイプ (success, error, info, warning)
- * @param {number} duration - 表示時間（ミリ秒）
+ * Focus trap utility for modals
+ * Keeps focus within a container element when Tab key is pressed
+ */
+const FocusTrap = {
+    /**
+     * Get all focusable elements within a container
+     * @param {HTMLElement} container - The container element
+     * @returns {HTMLElement[]} Array of focusable elements
+     */
+    getFocusableElements(container) {
+        const selector = [
+            'a[href]',
+            'button:not([disabled])',
+            'input:not([disabled])',
+            'select:not([disabled])',
+            'textarea:not([disabled])',
+            '[tabindex]:not([tabindex="-1"])'
+        ].join(', ');
+        return Array.from(container.querySelectorAll(selector)).filter(
+            el => !el.hasAttribute('disabled') && el.offsetParent !== null
+        );
+    },
+
+    /**
+     * Handle Tab key press to trap focus
+     * @param {KeyboardEvent} event - The keyboard event
+     * @param {HTMLElement} container - The container element
+     */
+    handleTab(event, container) {
+        if (event.key !== 'Tab') return;
+
+        const focusableElements = this.getFocusableElements(container);
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey) {
+            // Shift+Tab: Moving backwards
+            if (document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement.focus();
+            }
+        } else {
+            // Tab: Moving forwards
+            if (document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement.focus();
+            }
+        }
+    },
+
+    /**
+     * Set initial focus to the first focusable element
+     * @param {HTMLElement} container - The container element
+     */
+    setInitialFocus(container) {
+        const focusableElements = this.getFocusableElements(container);
+        if (focusableElements.length > 0) {
+            // Small delay to ensure element is visible
+            requestAnimationFrame(() => {
+                focusableElements[0].focus();
+            });
+        }
+    }
+};
+
+// Expose globally
+window.FocusTrap = FocusTrap;
+
+// Toast notification constants
+const TOAST_ANIMATION_DELAY = 10;  // Delay before animation starts (milliseconds)
+const TOAST_FADE_DURATION = 300;   // Fade out animation duration (milliseconds)
+const TOAST_DEFAULT_DURATION = 3000; // Default display duration (milliseconds)
+
+/**
+ * Display toast notification
+ * @param {string} message - Message to display
+ * @param {string} type - Message type (success, error, info, warning)
+ * @param {number} duration - Display duration (milliseconds)
  */
 function showToast(message, type = 'info', duration = TOAST_DEFAULT_DURATION) {
     const container = document.getElementById('toast-container');
@@ -103,7 +187,7 @@ function uploadZone() {
 
             // 複数ファイルのドロップをチェック
             if (files.length > 1) {
-                showToast('一度に処理できる画像は1枚です', 'warning');
+                showToast(t('toast.multiple_files'), 'warning');
                 return;
             }
 
@@ -112,7 +196,7 @@ function uploadZone() {
 
                 // 早期にファイルサイズをチェック（パフォーマンス向上）
                 if (file.size > MAX_FILE_SIZE) {
-                    showToast('ファイルサイズが大きすぎます。10MB以下の画像を選択してください。', 'error');
+                    showToast(t('toast.file_too_large'), 'error');
                     return;
                 }
 
@@ -127,29 +211,26 @@ function uploadZone() {
         processFile(file) {
             // ファイルタイプのバリデーション
             if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-                showToast(
-                    '対応していない画像形式です。JPEG、PNG、WebPのいずれかを選択してください。',
-                    'error'
-                );
+                showToast(t('toast.unsupported_format'), 'error');
                 return;
             }
 
             // ファイルサイズのバリデーション
             if (file.size > MAX_FILE_SIZE) {
-                showToast(
-                    'ファイルサイズが大きすぎます。10MB以下の画像を選択してください。',
-                    'error'
-                );
+                showToast(t('toast.file_too_large'), 'error');
                 return;
             }
 
             // ファイルを保存
             this.file = file;
 
-            // プレビュー生成
+            // Generate preview
             this.generatePreview(file);
 
-            showToast('画像を読み込みました', 'success');
+            // Save image URL to Alpine store (accessible after HTMX swap)
+            Alpine.store('menuAnalysis').setImageUrl(this.preview);
+
+            showToast(t('toast.image_loaded'), 'success');
         },
 
         /**
@@ -182,6 +263,9 @@ function uploadZone() {
             this.file = null;
             this.preview = null;
             this.isUploading = false;
+
+            // Alpine storeの画像URLもクリア
+            Alpine.store('menuAnalysis').clearImageUrl();
         },
 
         /**
@@ -189,7 +273,7 @@ function uploadZone() {
          */
         uploadFile() {
             if (!this.file) {
-                showToast('ファイルが選択されていません', 'error');
+                showToast(t('toast.no_file'), 'error');
                 return;
             }
 
@@ -211,27 +295,27 @@ function uploadZone() {
             .then(async response => {
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `サーバーエラー: ${response.status}`);
+                    throw new Error(errorData.error || t('error.server_error', 'Server Error') + `: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
                 this.isUploading = false;
                 if (data.success) {
-                    showToast('解析が完了しました', 'success');
+                    showToast(t('toast.analysis_complete'), 'success');
                     // 結果を表示（HTMXまたはAlpine.jsで処理）
                     // この部分は後で実装
                 } else {
-                    showToast(data.error || '解析に失敗しました', 'error');
+                    showToast(data.error || t('toast.analysis_failed'), 'error');
                 }
             })
             .catch(error => {
                 this.isUploading = false;
                 // ネットワークエラー（オフライン、タイムアウト、CORS等）とAPIエラーを区別
                 if (error instanceof TypeError) {
-                    showToast('ネットワークエラー: 接続を確認してください', 'error');
+                    showToast(t('toast.network_error'), 'error');
                 } else {
-                    showToast(error.message || 'エラーが発生しました', 'error');
+                    showToast(error.message || t('toast.server_error'), 'error');
                 }
             });
         }
@@ -240,6 +324,16 @@ function uploadZone() {
 
 // グローバルに公開
 window.uploadZone = uploadZone;
+
+// 利用可能なAIプロバイダー定義
+const AI_PROVIDERS = [
+    { id: 'claude', name: 'Claude (Anthropic)', implemented: true },
+    { id: 'openai', name: 'OpenAI GPT-4V', implemented: false },
+    { id: 'gemini', name: 'Google Gemini', implemented: false }
+];
+
+// デフォルトのプロバイダー
+const DEFAULT_PROVIDER = 'claude';
 
 /**
  * APIキー設定管理のAlpine.jsコンポーネント
@@ -250,7 +344,13 @@ function apiKeyManager() {
         // モーダル表示状態
         showModal: false,
 
-        // APIキー
+        // 選択中のプロバイダー
+        selectedProvider: DEFAULT_PROVIDER,
+
+        // プロバイダーごとのAPIキー
+        apiKeys: {},
+
+        // 現在のプロバイダーのAPIキー（後方互換性のため）
         apiKey: '',
 
         // APIキー入力フィールド（マスク用）
@@ -259,10 +359,13 @@ function apiKeyManager() {
         // APIキーの表示/非表示
         showApiKey: false,
 
+        // 利用可能なプロバイダー一覧
+        providers: AI_PROVIDERS,
+
         // 初期化
         init() {
-            // localStorageからAPIキーを読み込み
-            this.apiKey = this.getStoredApiKey();
+            // localStorageから設定を読み込み
+            this.loadSettings();
 
             // APIキーが未設定の場合、モーダルを表示
             if (!this.apiKey) {
@@ -277,16 +380,102 @@ function apiKeyManager() {
         },
 
         /**
-         * localStorageからAPIキーを取得
+         * localStorageから設定を読み込み
+         */
+        loadSettings() {
+            try {
+                // プロバイダーを読み込み
+                const storedProvider = localStorage.getItem('menu_judge_provider');
+                if (storedProvider && AI_PROVIDERS.some(p => p.id === storedProvider)) {
+                    this.selectedProvider = storedProvider;
+                }
+
+                // 各プロバイダーのAPIキーを読み込み
+                AI_PROVIDERS.forEach(provider => {
+                    const key = localStorage.getItem(`menu_judge_api_key_${provider.id}`) || '';
+                    this.apiKeys[provider.id] = key;
+                });
+
+                // 後方互換性: 古い形式のAPIキーがある場合はClaudeに移行
+                const legacyKey = localStorage.getItem('menu_judge_api_key');
+                if (legacyKey && !this.apiKeys.claude) {
+                    this.apiKeys.claude = legacyKey;
+                    localStorage.setItem('menu_judge_api_key_claude', legacyKey);
+                    localStorage.removeItem('menu_judge_api_key');
+                }
+
+                // 現在のプロバイダーのAPIキーを設定
+                this.apiKey = this.apiKeys[this.selectedProvider] || '';
+            } catch (e) {
+                console.error('Failed to load settings from localStorage:', e);
+                this.apiKey = '';
+            }
+        },
+
+        /**
+         * 現在選択中のプロバイダーのAPIキーを取得
          * @returns {string} APIキー（未設定の場合は空文字列）
          */
         getStoredApiKey() {
+            return this.apiKeys[this.selectedProvider] || '';
+        },
+
+        /**
+         * プロバイダーが実装済みかどうかを確認
+         * @param {string} providerId - プロバイダーID
+         * @returns {boolean} 実装済みならtrue
+         */
+        isProviderImplemented(providerId) {
+            const provider = AI_PROVIDERS.find(p => p.id === providerId);
+            return provider ? provider.implemented : false;
+        },
+
+        /**
+         * プロバイダーを変更
+         * @param {string} providerId - 新しいプロバイダーID
+         */
+        changeProvider(providerId) {
+            this.selectedProvider = providerId;
+            this.apiKey = this.apiKeys[providerId] || '';
+            this.apiKeyInput = this.apiKey;
+
+            // localStorageに保存
             try {
-                return localStorage.getItem('menu_judge_api_key') || '';
+                localStorage.setItem('menu_judge_provider', providerId);
             } catch (e) {
-                console.error('Failed to load API key from localStorage:', e);
-                return '';
+                console.error('Failed to save provider:', e);
             }
+
+            // HTMXヘッダーを更新
+            this.setupHtmxHeaders();
+        },
+
+        /**
+         * プロバイダーのコンソールURLを取得
+         * @param {string} providerId - プロバイダーID
+         * @returns {string} コンソールURL
+         */
+        getProviderConsoleUrl(providerId) {
+            const urls = {
+                claude: 'https://console.anthropic.com/settings/keys',
+                openai: 'https://platform.openai.com/api-keys',
+                gemini: 'https://aistudio.google.com/app/apikey'
+            };
+            return urls[providerId] || urls.claude;
+        },
+
+        /**
+         * プロバイダーのプレースホルダーを取得
+         * @param {string} providerId - プロバイダーID
+         * @returns {string} プレースホルダーテキスト
+         */
+        getProviderPlaceholder(providerId) {
+            const placeholders = {
+                claude: 'sk-ant-api03-...',
+                openai: 'sk-proj-...',
+                gemini: 'AIza...'
+            };
+            return placeholders[providerId] || '';
         },
 
         /**
@@ -296,34 +485,47 @@ function apiKeyManager() {
         saveApiKey(key) {
             try {
                 if (key && key.trim()) {
-                    localStorage.setItem('menu_judge_api_key', key.trim());
-                    this.apiKey = key.trim();
-                    showToast('APIキーを保存しました', 'success');
+                    const trimmedKey = key.trim();
+
+                    // 未実装プロバイダーの警告
+                    if (!this.isProviderImplemented(this.selectedProvider)) {
+                        showToast(t('api_key_modal.provider_not_implemented'), 'warning', 5000);
+                    }
+
+                    // プロバイダー固有のキーとして保存
+                    localStorage.setItem(`menu_judge_api_key_${this.selectedProvider}`, trimmedKey);
+                    localStorage.setItem('menu_judge_provider', this.selectedProvider);
+
+                    this.apiKeys[this.selectedProvider] = trimmedKey;
+                    this.apiKey = trimmedKey;
+
+                    showToast(t('toast.api_key_saved'), 'success');
                     this.closeModal();
                     this.setupHtmxHeaders();
                 } else {
-                    showToast('APIキーを入力してください', 'error');
+                    showToast(t('toast.api_key_required'), 'error');
                 }
             } catch (e) {
                 console.error('Failed to save API key:', e);
-                showToast('APIキーの保存に失敗しました', 'error');
+                showToast(t('toast.failed_to_save'), 'error');
             }
         },
 
         /**
-         * APIキーをlocalStorageから削除
+         * 現在のプロバイダーのAPIキーをlocalStorageから削除
          */
         deleteApiKey() {
-            if (confirm('APIキーを削除してもよろしいですか？')) {
+            if (confirm(t('api_key_modal.delete_confirm'))) {
                 try {
-                    localStorage.removeItem('menu_judge_api_key');
+                    localStorage.removeItem(`menu_judge_api_key_${this.selectedProvider}`);
+                    this.apiKeys[this.selectedProvider] = '';
                     this.apiKey = '';
                     this.apiKeyInput = '';
-                    showToast('APIキーを削除しました', 'success');
+                    showToast(t('toast.api_key_deleted'), 'success');
                     this.showModal = true;
                 } catch (e) {
                     console.error('Failed to delete API key:', e);
-                    showToast('APIキーの削除に失敗しました', 'error');
+                    showToast(t('toast.failed_to_delete'), 'error');
                 }
             }
         },
@@ -340,10 +542,9 @@ function apiKeyManager() {
          * モーダルを閉じる
          */
         closeModal() {
-            // APIキーが未設定の場合は閉じられない
+            // APIキーが未設定の場合は警告を表示
             if (!this.apiKey) {
-                showToast('APIキーを設定してください', 'warning');
-                return;
+                showToast(t('toast.api_key_setup'), 'warning', 5000);
             }
             this.showModal = false;
             this.apiKeyInput = '';
@@ -351,15 +552,28 @@ function apiKeyManager() {
         },
 
         /**
-         * HTMXリクエストヘッダーにAPIキーを追加
+         * HTMXリクエストヘッダーにAPIキーとプロバイダーを追加
          */
         setupHtmxHeaders() {
-            // HTMXのグローバル設定でヘッダーを追加
-            document.body.addEventListener('htmx:configRequest', (event) => {
+            // Remove existing listener if present (prevents duplicates)
+            if (this._htmxConfigHandler) {
+                document.body.removeEventListener('htmx:configRequest', this._htmxConfigHandler);
+            }
+
+            // Create and store the handler
+            this._htmxConfigHandler = (event) => {
                 if (this.apiKey) {
                     event.detail.headers['X-API-Key'] = this.apiKey;
                 }
-            });
+                // Add provider header
+                event.detail.headers['X-AI-Provider'] = this.selectedProvider;
+                // Add language header
+                const language = getCurrentLanguage();
+                event.detail.headers['X-Language'] = language;
+            };
+
+            // Add the listener
+            document.body.addEventListener('htmx:configRequest', this._htmxConfigHandler);
         },
 
         /**
@@ -373,23 +587,28 @@ function apiKeyManager() {
 
                 // 401エラー（認証エラー）またはAPIキーエラーの場合
                 if (status === 401 || errorCode === 'NO_API_KEY') {
-                    showToast('APIキーが無効または未設定です。設定画面からAPIキーを入力してください。', 'error', 5000);
+                    showToast(t('toast.api_key_invalid'), 'error', 5000);
                     this.showModal = true;
                 }
-                // その他のエラー
+                // プロバイダー未実装エラー
+                else if (errorCode === 'PROVIDER_NOT_IMPLEMENTED') {
+                    showToast(t('api_key_modal.provider_not_implemented'), 'warning', 5000);
+                    this.showModal = true;
+                }
+                // Other errors
                 else if (status >= 400) {
                     try {
                         const response = JSON.parse(event.detail.xhr.responseText);
-                        showToast(response.error || `エラーが発生しました (${status})`, 'error');
+                        showToast(response.error || t('error.unknown_error', 'Unknown Error') + ` (${status})`, 'error');
                     } catch (e) {
-                        showToast(`エラーが発生しました (${status})`, 'error');
+                        showToast(t('error.unknown_error', 'Unknown Error') + ` (${status})`, 'error');
                     }
                 }
             });
 
             // ネットワークエラー（タイムアウト、オフライン等）の処理
             document.body.addEventListener('htmx:sendError', (event) => {
-                showToast('ネットワークエラー: サーバーに接続できません。', 'error');
+                showToast(t('toast.network_error_server'), 'error');
             });
         }
     };
@@ -397,3 +616,66 @@ function apiKeyManager() {
 
 // グローバルに公開
 window.apiKeyManager = apiKeyManager;
+
+/**
+ * 画像オーバーレイ（バウンディングボックス表示）のAlpine.jsコンポーネント
+ * @returns {Object} Alpine.jsコンポーネントオブジェクト
+ */
+function imageOverlay() {
+    return {
+        // ハイライト中の料理インデックス
+        highlightedDish: null,
+
+        /**
+         * 初期化
+         */
+        init() {
+            // 料理ハイライトイベントをリッスン
+            window.addEventListener('highlight-dish', (e) => {
+                this.highlightedDish = e.detail.index;
+            });
+            window.addEventListener('unhighlight-dish', () => {
+                this.highlightedDish = null;
+            });
+        },
+
+        /**
+         * 画像URLを取得（Alpine storeから）
+         * @returns {string|null} 画像URL
+         */
+        getImageUrl() {
+            return Alpine.store('menuAnalysis')?.imageUrl;
+        },
+
+        /**
+         * バウンディングボックスをハイライト
+         * @param {number} index - 料理インデックス
+         */
+        highlightBox(index) {
+            this.highlightedDish = index;
+            window.dispatchEvent(new CustomEvent('highlight-dish', {
+                detail: { index }
+            }));
+        },
+
+        /**
+         * ハイライトを解除
+         */
+        unhighlightBox() {
+            this.highlightedDish = null;
+            window.dispatchEvent(new CustomEvent('unhighlight-dish'));
+        },
+
+        /**
+         * ボックスがハイライト中かどうか
+         * @param {number} index - 料理インデックス
+         * @returns {boolean} ハイライト中ならtrue
+         */
+        isHighlighted(index) {
+            return this.highlightedDish === index;
+        }
+    };
+}
+
+// グローバルに公開
+window.imageOverlay = imageOverlay;

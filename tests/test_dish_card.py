@@ -1,21 +1,16 @@
 """dish_card.html コンポーネントのテスト"""
 
-from typing import Generator
-
 import pytest
 from flask import Flask, render_template_string
 
-from app.models.dish import Category, Dish, PriceRange
+from app import create_app
+from app.models.dish import Category, Dish
 
 
 @pytest.fixture
-def app() -> Generator[Flask, None, None]:
-    """テスト用のFlaskアプリケーション"""
-    app = Flask(
-        __name__,
-        template_folder="../app/templates",
-    )
-    return app  # type: ignore[return-value]
+def app() -> Flask:
+    """テスト用のFlaskアプリケーション（t()などのJinja2グローバルを含む）"""
+    return create_app({"TESTING": True, "SECRET_KEY": "test-secret-key"})
 
 
 @pytest.fixture
@@ -23,20 +18,19 @@ def sample_dish() -> Dish:
     """テスト用のサンプル料理データ"""
     return Dish(
         original_name="Pad Thai",
-        japanese_name="パッタイ",
+        translated_name="パッタイ",
         description="米麺を使ったタイ風焼きそば",
         spiciness=2,
         sweetness=3,
         ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
         allergens=["甲殻類", "卵", "ナッツ"],
         category=Category.MAIN,
-        price_range=PriceRange.MODERATE,
     )
 
 
 def test_dish_card_renders_basic_info(app: Flask, sample_dish: Dish) -> None:
     """料理カードが基本情報を表示することを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}
@@ -51,37 +45,9 @@ def test_dish_card_renders_basic_info(app: Flask, sample_dish: Dish) -> None:
         assert "米麺を使ったタイ風焼きそば" in html
 
 
-def test_dish_card_renders_price_range(app: Flask, sample_dish: Dish) -> None:
-    """価格帯が表示されることを確認"""
-    with app.app_context():
-        template = """
-        {% from 'components/dish_card.html' import dish_card %}
-        {{ dish_card(dish) }}
-        """
-        html = render_template_string(template, dish=sample_dish)
-
-        # 価格帯が表示される
-        assert "$$" in html
-
-
-def test_dish_card_renders_without_price_range(app: Flask, sample_dish: Dish) -> None:
-    """価格帯がない場合でもレンダリングできることを確認"""
-    sample_dish.price_range = None
-
-    with app.app_context():
-        template = """
-        {% from 'components/dish_card.html' import dish_card %}
-        {{ dish_card(dish) }}
-        """
-        html = render_template_string(template, dish=sample_dish)
-
-        # 基本情報は表示される
-        assert "パッタイ" in html
-
-
 def test_dish_card_renders_spiciness_indicator(app: Flask, sample_dish: Dish) -> None:
     """辛さインジケーターが表示されることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}
@@ -98,7 +64,7 @@ def test_dish_card_renders_spiciness_indicator(app: Flask, sample_dish: Dish) ->
 
 def test_dish_card_renders_sweetness_indicator(app: Flask, sample_dish: Dish) -> None:
     """甘さインジケーターが表示されることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}
@@ -114,7 +80,7 @@ def test_dish_card_renders_sweetness_indicator(app: Flask, sample_dish: Dish) ->
 
 def test_dish_card_renders_ingredients(app: Flask, sample_dish: Dish) -> None:
     """材料タグが表示されることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}
@@ -127,16 +93,16 @@ def test_dish_card_renders_ingredients(app: Flask, sample_dish: Dish) -> None:
 
 
 def test_dish_card_renders_allergens(app: Flask, sample_dish: Dish) -> None:
-    """アレルギー情報が表示されることを確認"""
-    with app.app_context():
+    """アレルギー情報が表示されることを確認（日本語i18nコンテキストで）"""
+    with app.test_request_context("/?lang=ja"):
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}
         """
         html = render_template_string(template, dish=sample_dish)
 
-        # アレルギー警告が表示される
-        assert "⚠️ アレルギー:" in html
+        # アレルゲン警告が表示される（ja翻訳では"アレルゲン"が採用されている）
+        assert "⚠️ アレルゲン:" in html
         assert "甲殻類" in html
         assert "卵" in html
         assert "ナッツ" in html
@@ -146,7 +112,7 @@ def test_dish_card_renders_without_allergens(app: Flask, sample_dish: Dish) -> N
     """アレルギー情報がない場合、警告が表示されないことを確認"""
     sample_dish.allergens = []
 
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}
@@ -159,7 +125,7 @@ def test_dish_card_renders_without_allergens(app: Flask, sample_dish: Dish) -> N
 
 def test_dish_card_renders_category(app: Flask, sample_dish: Dish) -> None:
     """カテゴリバッジが表示されることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}
@@ -172,7 +138,7 @@ def test_dish_card_renders_category(app: Flask, sample_dish: Dish) -> None:
 
 def test_dish_card_has_correct_css_classes(app: Flask, sample_dish: Dish) -> None:
     """正しいCSSクラスが適用されていることを確認"""
-    with app.app_context():
+    with app.test_request_context():
         template = """
         {% from 'components/dish_card.html' import dish_card %}
         {{ dish_card(dish) }}

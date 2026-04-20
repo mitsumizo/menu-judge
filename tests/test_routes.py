@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 from PIL import Image
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import Category, Dish
 from app.services.ai.base import AIProviderError, AnalysisResult
 
 
@@ -45,7 +45,7 @@ class TestIndexRoute:
         assert response.status_code == 200
         assert response.content_type == "text/html; charset=utf-8"
         assert b"Menu Judge" in response.data
-        assert b"index.html" in response.data or b"\xe6\xb5\xb7\xe5\xa4\x96\xe3\x83\xa1\xe3\x83\x8b\xe3\x83\xa5\xe3\x83\xbc\xe3\x82\x92" in response.data  # "海外メニューを" in UTF-8
+        assert b"<!DOCTYPE html>" in response.data
 
     def test_index_rejects_post_method(self, client):
         """Test that POST method is not allowed on root endpoint."""
@@ -105,14 +105,13 @@ class TestAnalyzeRoute:
             dishes=[
                 Dish(
                     original_name="Pad Thai",
-                    japanese_name="パッタイ",
+                    translated_name="パッタイ",
                     description="米麺を使ったタイ風焼きそば",
                     spiciness=2,
                     sweetness=3,
                     ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
                     allergens=["甲殻類", "卵", "ナッツ"],
                     category=Category.MAIN,
-                    price_range=PriceRange.MODERATE,
                 )
             ],
             raw_response="mock response",
@@ -137,14 +136,13 @@ class TestAnalyzeRoute:
             dishes=[
                 Dish(
                     original_name="Pad Thai",
-                    japanese_name="パッタイ",
+                    translated_name="パッタイ",
                     description="米麺を使ったタイ風焼きそば",
                     spiciness=2,
                     sweetness=3,
                     ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
                     allergens=["甲殻類", "卵", "ナッツ"],
                     category=Category.MAIN,
-                    price_range=PriceRange.MODERATE,
                 )
             ],
             raw_response="mock response",

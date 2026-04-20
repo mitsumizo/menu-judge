@@ -17,6 +17,7 @@ from app.services.ai.base import (
     APIKeyMissingError,
     InvalidMenuImageError,
 )
+from app.services.ai.prompt_builder import PromptBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -27,17 +28,19 @@ class ClaudeProvider(AIProvider):
     MODEL = "claude-3-7-sonnet-20250219"
     MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB (matches CLAUDE.md spec)
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, language: str = 'en') -> None:
         """
         Initialize Claude provider.
 
         Args:
             api_key: Anthropic API key
+            language: Language code for responses ('en' or 'ja')
         """
-        super().__init__(api_key)
+        super().__init__(api_key, language)
         if not self.api_key:
             raise APIKeyMissingError("API key is required")
         self.client = anthropic.Anthropic(api_key=self.api_key)
+        self.prompt_builder = PromptBuilder(language)
 
     @property
     def name(self) -> str:
@@ -83,7 +86,7 @@ class ClaudeProvider(AIProvider):
             # Call Claude API
             response = self.client.messages.create(
                 model=self.MODEL,
-                max_tokens=4096,
+                max_tokens=8192,
                 messages=[
                     {
                         "role": "user",
@@ -122,52 +125,53 @@ class ClaudeProvider(AIProvider):
 
     def _build_prompt(self) -> str:
         """
-        Build menu analysis prompt.
+        Build menu analysis prompt using the multilingual prompt builder.
 
         Returns:
-            Prompt text
+            Prompt text in the selected language
         """
-        return """この画像はレストランのメニューです。画像内の各料理について、以下の情報をJSON形式で抽出してください。
+        # Get base prompt from multilingual prompt builder
+        base_prompt = self.prompt_builder.build_menu_analysis_prompt()
 
-各料理について以下の情報を含めてください:
-- number: 料理の番号（1から順番に付与。メニュー画像での上から下、左から右の順序）
-- original_name: 料理の原語名（メニューに記載されている通り）
-- japanese_name: 料理の日本語名（翻訳）
-- description: 料理の説明（日本語で50文字程度）
-- spiciness: 辛さレベル（1〜5の整数。1=辛くない、5=非常に辛い）
-- sweetness: 甘さレベル（1〜5の整数。1=甘くない、5=非常に甘い）
-- ingredients: 主な材料のリスト（日本語）
-- allergens: アレルゲンのリスト（日本語。卵、乳製品、小麦、そば、落花生、えび、かに、etc.）
-- category: 料理のカテゴリ（"appetizer", "main", "dessert", "beverage", "other"のいずれか）
-- price_range: 価格帯（"$", "$$", "$$$", "$$$$"のいずれか。判断できない場合はnull）
+        # Add number field instructions
+        number_instruction = """
+- number: Dish order number in the menu image (integer, starting from 1)
+  Assign numbers in reading order: top-to-bottom, then left-to-right for multi-column menus.
+  Every dish MUST have a unique sequential number."""
 
-以下のJSON形式で出力してください:
-```json
-{
-  "dishes": [
-    {
-      "number": 1,
-      "original_name": "Pad Thai",
-      "japanese_name": "パッタイ",
-      "description": "米麺を使ったタイ風焼きそば。エビ、卵、もやし、ピーナッツを使用",
-      "spiciness": 2,
-      "sweetness": 3,
-      "ingredients": ["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
-      "allergens": ["甲殻類", "卵", "ナッツ"],
-      "category": "main",
-      "price_range": "$$"
-    }
-  ]
-}
-```
+        # Add bounding_box field instructions with improved guidance
+        bounding_box_instruction = """
+- bounding_box: The location of the dish entry in the menu image (REQUIRED for each dish)
+  IMPORTANT: Think of the image as a 1.0 x 1.0 coordinate system where:
+  - (0, 0) is the TOP-LEFT corner of the image
+  - (1, 1) is the BOTTOM-RIGHT corner of the image
 
-重要な注意事項:
-- number は1から順番に付与してください（メニュー画像での上から下、左から右の順序）
-- spiciness と sweetness は必ず1〜5の整数にしてください
-- 情報が不明な場合、ingredients や allergens は空のリストにしてください
-- price_range が判断できない場合は null にしてください
-- JSON以外のテキストは含めないでください
-- 必ず有効なJSON形式で出力してください"""
+  - x: X coordinate of the LEFT edge of the dish entry (0.0 to 1.0)
+  - y: Y coordinate of the TOP edge of the dish entry (0.0 to 1.0)
+  - width: Width of the bounding box (0.0 to 1.0)
+  - height: Height of the bounding box (0.0 to 1.0)
+
+  CRITICAL guidelines for bounding_box:
+  1. The bounding box should tightly enclose ONLY the dish name and its price/description text
+  2. Analyze the vertical position of each dish in the menu from TOP to BOTTOM
+     - First dish on the page should have a smaller y value (closer to 0)
+     - Last dish on the page should have a larger y value (closer to 1)
+  3. For a typical single-column menu:
+     - x is usually around 0.05-0.15 (dishes start near the left edge with some margin)
+     - width is usually around 0.7-0.9 (dishes span most of the width)
+  4. For a multi-column menu:
+     - Left column: x around 0.02-0.1
+     - Right column: x around 0.5-0.55
+  5. Height should match the actual text height of that dish entry (usually 0.03-0.1)
+  6. ALWAYS provide bounding_box coordinates - do not set to null unless truly impossible"""
+
+        extra_instructions = number_instruction + bounding_box_instruction
+
+        # Insert instructions before the output format section
+        if "```json" in base_prompt:
+            parts = base_prompt.split("```json")
+            return parts[0] + extra_instructions + "\n\n```json" + parts[1]
+        return base_prompt + extra_instructions
 
     def _parse_response(self, response: str) -> list[Dish]:
         """
@@ -181,47 +185,42 @@ class ClaudeProvider(AIProvider):
 
         Raises:
             APICallError: Failed to parse response
+            InvalidMenuImageError: No dishes could be detected
         """
+        cleaned = self._strip_markdown_fences(response)
+
         try:
-            # Extract JSON from response (handle markdown code blocks)
-            response = response.strip()
-            if response.startswith("```json"):
-                response = response[7:]  # Remove ```json
-            if response.startswith("```"):
-                response = response[3:]  # Remove ```
-            if response.endswith("```"):
-                response = response[:-3]  # Remove ```
-            response = response.strip()
-
-            # Parse JSON
-            data = json.loads(response)
-
-            # Validate structure
-            if not isinstance(data, dict) or "dishes" not in data:
-                raise ValueError("Response must contain 'dishes' key")
-
-            dishes = []
-            for dish_data in data["dishes"]:
-                try:
-                    dish = Dish.from_dict(dish_data)
-                    dishes.append(dish)
-                except Exception as e:
-                    # Log error but continue with other dishes
-                    logger.warning("Failed to parse dish: %s", e, exc_info=True)
-                    continue
-
-            if not dishes:
-                raise InvalidMenuImageError(
-                    "画像からメニューを検出できませんでした。"
-                    "メニュー表の写真であることを確認してください。"
-                )
-
-            return dishes
-
-        except InvalidMenuImageError:
-            # Re-raise InvalidMenuImageError as-is
-            raise
+            data = json.loads(cleaned)
         except json.JSONDecodeError as e:
             raise APICallError(f"Failed to parse JSON response: {e}") from e
-        except Exception as e:
-            raise APICallError(f"Failed to parse response: {e}") from e
+
+        if not isinstance(data, dict) or "dishes" not in data:
+            raise APICallError("Response must contain 'dishes' key")
+
+        dishes: list[Dish] = []
+        for dish_data in data["dishes"]:
+            try:
+                dishes.append(Dish.from_dict(dish_data))
+            except (ValueError, KeyError, TypeError) as e:
+                logger.warning("Failed to parse dish: %s", e, exc_info=True)
+                continue
+
+        if not dishes:
+            raise InvalidMenuImageError(
+                "Could not detect menu from image. "
+                "Please verify that the image is a photo of a menu."
+            )
+
+        return dishes
+
+    @staticmethod
+    def _strip_markdown_fences(response: str) -> str:
+        """Strip markdown code fences from Claude response text."""
+        cleaned = response.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        if cleaned.startswith("```"):
+            cleaned = cleaned[3:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        return cleaned.strip()

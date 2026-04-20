@@ -1,5 +1,5 @@
 """データモデル"""
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import BoundingBox, Category, Dish
 
-__all__ = ["Dish", "Category", "PriceRange"]
+__all__ = ["Dish", "Category", "BoundingBox"]

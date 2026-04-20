@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import Category, Dish
 from app.services.ai.base import (
     AIProvider,
     AIProviderError,
@@ -26,26 +26,24 @@ class TestAnalysisResult:
         """Test creating an AnalysisResult with all fields."""
         dish1 = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
             ingredients=["米麺", "エビ"],
             allergens=["甲殻類"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
         )
 
         dish2 = Dish(
             original_name="Tom Yum Soup",
-            japanese_name="トムヤムスープ",
+            translated_name="トムヤムスープ",
             description="辛酸っぱいタイ風スープ",
             spiciness=4,
             sweetness=1,
             ingredients=["エビ", "レモングラス", "唐辛子"],
             allergens=["甲殻類"],
             category=Category.APPETIZER,
-            price_range=PriceRange.BUDGET,
         )
 
         result = AnalysisResult(
@@ -112,20 +110,6 @@ class TestAIProvider:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
             IncompleteProvider()  # type: ignore
 
-    def test_subclass_without_is_available_raises_error(self):
-        """Test that subclass without is_available cannot be instantiated."""
-
-        class IncompleteProvider(AIProvider):
-            @property
-            def name(self) -> str:
-                return "incomplete"
-
-            def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
-                pass
-
-        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            IncompleteProvider()  # type: ignore
-
     def test_complete_subclass_can_be_instantiated(self):
         """Test that a complete subclass can be instantiated."""
 
@@ -137,7 +121,7 @@ class TestAIProvider:
             def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
                 dish = Dish(
                     original_name="Test Dish",
-                    japanese_name="テスト料理",
+                    translated_name="テスト料理",
                     description="テスト用の料理",
                     spiciness=3,
                     sweetness=3,
@@ -149,12 +133,8 @@ class TestAIProvider:
                     processing_time=1.0,
                 )
 
-            def is_available(self) -> bool:
-                return True
-
-        provider = CompleteProvider()
+        provider = CompleteProvider(api_key="sk-ant-test")
         assert provider.name == "test-provider"
-        assert provider.is_available() is True
 
         result = provider.analyze_menu(b"fake image data", "image/jpeg")
         assert len(result.dishes) == 1
@@ -209,60 +189,53 @@ class TestClaudeProvider:
 
     def test_initialization_with_api_key(self):
         """Test ClaudeProvider initialization with API key."""
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = ClaudeProvider()
-            assert provider.api_key == "test-api-key"
-            assert provider.client is not None
-            assert provider.is_available() is True
+        provider = ClaudeProvider(api_key="sk-ant-test")
+        assert provider.api_key == "sk-ant-test"
+        assert provider.client is not None
 
     def test_initialization_without_api_key(self):
-        """Test ClaudeProvider initialization without API key."""
-        with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
-            assert provider.api_key is None
-            assert provider.client is None
-            assert provider.is_available() is False
+        """Test that ClaudeProvider raises APIKeyMissingError when api_key is empty."""
+        with pytest.raises(APIKeyMissingError, match="API key is required"):
+            ClaudeProvider(api_key="")
 
     def test_name_property(self):
         """Test that name property returns 'claude'."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
             assert provider.name == "claude"
 
     def test_build_prompt(self):
         """Test that _build_prompt returns appropriate prompt text."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
             prompt = provider._build_prompt()
 
             # Verify prompt contains key requirements
             assert "JSON" in prompt
             assert "original_name" in prompt
-            assert "japanese_name" in prompt
+            assert "translated_name" in prompt
             assert "spiciness" in prompt
             assert "sweetness" in prompt
             assert "ingredients" in prompt
             assert "allergens" in prompt
             assert "category" in prompt
-            assert "price_range" in prompt
 
     def test_parse_response_valid_json(self):
         """Test parsing valid JSON response."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             response_json = {
                 "dishes": [
                     {
                         "original_name": "Pad Thai",
-                        "japanese_name": "パッタイ",
+                        "translated_name": "パッタイ",
                         "description": "米麺を使ったタイ風焼きそば",
                         "spiciness": 2,
                         "sweetness": 3,
                         "ingredients": ["米麺", "エビ", "卵"],
                         "allergens": ["甲殻類", "卵"],
                         "category": "main",
-                        "price_range": "$$",
                     }
                 ]
             }
@@ -271,29 +244,27 @@ class TestClaudeProvider:
 
             assert len(dishes) == 1
             assert dishes[0].original_name == "Pad Thai"
-            assert dishes[0].japanese_name == "パッタイ"
+            assert dishes[0].translated_name == "パッタイ"
             assert dishes[0].spiciness == 2
             assert dishes[0].sweetness == 3
             assert dishes[0].category == Category.MAIN
-            assert dishes[0].price_range == PriceRange.MODERATE
 
     def test_parse_response_with_markdown_code_block(self):
         """Test parsing JSON wrapped in markdown code block."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             response_json = {
                 "dishes": [
                     {
                         "original_name": "Tom Yum",
-                        "japanese_name": "トムヤム",
+                        "translated_name": "トムヤム",
                         "description": "辛酸っぱいスープ",
                         "spiciness": 4,
                         "sweetness": 1,
                         "ingredients": ["エビ", "レモングラス"],
                         "allergens": ["甲殻類"],
                         "category": "appetizer",
-                        "price_range": "$",
                     }
                 ]
             }
@@ -315,7 +286,7 @@ class TestClaudeProvider:
     def test_parse_response_invalid_json(self):
         """Test that invalid JSON raises APICallError."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             with pytest.raises(APICallError, match="Failed to parse JSON response"):
                 provider._parse_response("This is not JSON")
@@ -323,7 +294,7 @@ class TestClaudeProvider:
     def test_parse_response_missing_dishes_key(self):
         """Test that response without 'dishes' key raises APICallError."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             response_json = {"menu": []}
 
@@ -336,13 +307,13 @@ class TestClaudeProvider:
 
         response_json = {"dishes": []}
 
-        with pytest.raises(InvalidMenuImageError, match="画像からメニューを検出できませんでした"):
+        with pytest.raises(InvalidMenuImageError, match="Could not detect menu from image"):
             provider._parse_response(json.dumps(response_json))
 
     def test_parse_response_skips_invalid_dishes(self):
         """Test that invalid dishes are skipped but valid ones are kept."""
         with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             response_json = {
                 "dishes": [
@@ -353,14 +324,13 @@ class TestClaudeProvider:
                     {
                         # Valid dish
                         "original_name": "Valid Dish",
-                        "japanese_name": "有効な料理",
+                        "translated_name": "有効な料理",
                         "description": "これは有効な料理です",
                         "spiciness": 3,
                         "sweetness": 3,
                         "ingredients": ["材料1"],
                         "allergens": [],
                         "category": "main",
-                        "price_range": "$$",
                     },
                 ]
             }
@@ -371,18 +341,15 @@ class TestClaudeProvider:
             assert len(dishes) == 1
             assert dishes[0].original_name == "Valid Dish"
 
-    def test_analyze_menu_without_api_key(self):
-        """Test that analyze_menu raises APIKeyMissingError without API key."""
-        with patch.dict(os.environ, {}, clear=True):
-            provider = ClaudeProvider()
-
-            with pytest.raises(APIKeyMissingError, match="ANTHROPIC_API_KEY is not configured"):
-                provider.analyze_menu(b"fake image data", "image/jpeg")
+    def test_construction_without_api_key_raises_error(self):
+        """ClaudeProvider now rejects empty api_key at construction time."""
+        with pytest.raises(APIKeyMissingError, match="API key is required"):
+            ClaudeProvider(api_key="")
 
     def test_analyze_menu_image_size_exceeds_limit(self):
         """Test that analyze_menu raises APICallError when image size exceeds limit."""
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             # Create image data larger than MAX_IMAGE_SIZE (10MB)
             large_image_data = b"x" * (provider.MAX_IMAGE_SIZE + 1)
@@ -404,14 +371,13 @@ class TestClaudeProvider:
                 "dishes": [
                     {
                         "original_name": "Green Curry",
-                        "japanese_name": "グリーンカレー",
+                        "translated_name": "グリーンカレー",
                         "description": "タイのグリーンカレー",
                         "spiciness": 4,
                         "sweetness": 2,
                         "ingredients": ["鶏肉", "ココナッツミルク", "バジル"],
                         "allergens": [],
                         "category": "main",
-                        "price_range": "$$",
                     }
                 ]
             }
@@ -420,7 +386,7 @@ class TestClaudeProvider:
             mock_response.content = [MagicMock(text=json.dumps(response_json))]
             mock_client.messages.create.return_value = mock_response
 
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
             result = provider.analyze_menu(b"fake image data", "image/jpeg")
 
             # Verify result
@@ -432,8 +398,8 @@ class TestClaudeProvider:
             # Verify API call
             mock_client.messages.create.assert_called_once()
             call_args = mock_client.messages.create.call_args
-            assert call_args[1]["model"] == "claude-3-5-sonnet-20241022"
-            assert call_args[1]["max_tokens"] == 4096
+            assert call_args[1]["model"] == ClaudeProvider.MODEL
+            assert call_args[1]["max_tokens"] == 8192
 
     @patch("anthropic.Anthropic")
     def test_analyze_menu_api_error(self, mock_anthropic_class):
@@ -452,7 +418,7 @@ class TestClaudeProvider:
             )
             mock_client.messages.create.side_effect = api_error
 
-            provider = ClaudeProvider()
+            provider = ClaudeProvider(api_key="sk-ant-test")
 
             with pytest.raises(APICallError, match="Claude API call failed"):
                 provider.analyze_menu(b"fake image data", "image/jpeg")
@@ -463,43 +429,36 @@ class TestAIProviderFactory:
 
     def test_create_with_default_provider(self):
         """Test creating provider with default (claude)."""
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = AIProviderFactory.create()
-            assert isinstance(provider, ClaudeProvider)
-            assert provider.name == "claude"
+        provider = AIProviderFactory.create(api_key="sk-ant-test")
+        assert isinstance(provider, ClaudeProvider)
+        assert provider.name == "claude"
 
     def test_create_with_env_variable(self):
-        """Test creating provider from AI_PROVIDER environment variable."""
-        with patch.dict(
-            os.environ, {"AI_PROVIDER": "claude", "ANTHROPIC_API_KEY": "test-api-key"}
-        ):
-            provider = AIProviderFactory.create()
-            assert isinstance(provider, ClaudeProvider)
-            assert provider.name == "claude"
+        """Test creating provider with explicit provider_name."""
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="claude")
+        assert isinstance(provider, ClaudeProvider)
+        assert provider.name == "claude"
 
     def test_create_with_explicit_provider_name(self):
         """Test creating provider with explicit provider_name argument."""
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-api-key"}):
-            provider = AIProviderFactory.create(provider_name="claude")
-            assert isinstance(provider, ClaudeProvider)
-            assert provider.name == "claude"
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="claude")
+        assert isinstance(provider, ClaudeProvider)
+        assert provider.name == "claude"
 
     def test_create_with_unknown_provider_raises_error(self):
         """Test that unknown provider raises UnknownProviderError."""
         with pytest.raises(UnknownProviderError, match="Unknown provider: unknown"):
-            AIProviderFactory.create(provider_name="unknown")
+            AIProviderFactory.create(api_key="sk-ant-test", provider_name="unknown")
 
     def test_create_with_unknown_provider_from_env_raises_error(self):
-        """Test that unknown provider from env raises UnknownProviderError."""
-        with patch.dict(os.environ, {"AI_PROVIDER": "nonexistent"}):
-            with pytest.raises(UnknownProviderError, match="Unknown provider: nonexistent"):
-                AIProviderFactory.create()
+        """Test that unknown provider raises UnknownProviderError."""
+        with pytest.raises(UnknownProviderError, match="Unknown provider: nonexistent"):
+            AIProviderFactory.create(api_key="sk-ant-test", provider_name="nonexistent")
 
     def test_create_without_api_key_raises_error(self):
         """Test that missing API key raises APIKeyMissingError."""
-        with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(APIKeyMissingError, match="API key not configured for claude"):
-                AIProviderFactory.create()
+        with pytest.raises(APIKeyMissingError, match="API key is required"):
+            AIProviderFactory.create(api_key="")
 
     def test_register_new_provider(self):
         """Test registering a new provider."""
@@ -512,7 +471,7 @@ class TestAIProviderFactory:
             def analyze_menu(self, image_data: bytes, mime_type: str) -> AnalysisResult:
                 dish = Dish(
                     original_name="Custom Dish",
-                    japanese_name="カスタム料理",
+                    translated_name="カスタム料理",
                     description="カスタムプロバイダーのテスト",
                     spiciness=3,
                     sweetness=3,
@@ -531,7 +490,7 @@ class TestAIProviderFactory:
         AIProviderFactory.register("custom", CustomProvider)
 
         # Verify it can be created
-        provider = AIProviderFactory.create(provider_name="custom")
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="custom")
         assert isinstance(provider, CustomProvider)
         assert provider.name == "custom"
 
@@ -545,13 +504,11 @@ class TestAIProviderFactory:
             assert isinstance(providers, list)
             assert "claude" in providers
 
-    def test_available_providers_excludes_unavailable(self):
-        """Test that available_providers excludes providers without API keys."""
-        with patch.dict(os.environ, {}, clear=True):
-            providers = AIProviderFactory.available_providers()
-            assert isinstance(providers, list)
-            # claude should not be in the list without API key
-            assert "claude" not in providers
+    def test_available_providers_returns_registered_names(self):
+        """available_providers returns all registered provider names (no env check)."""
+        providers = AIProviderFactory.available_providers()
+        assert isinstance(providers, list)
+        assert "claude" in providers
 
     def test_unknown_provider_error_is_ai_provider_error(self):
         """Test that UnknownProviderError is a subclass of AIProviderError."""

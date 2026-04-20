@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 from PIL import Image
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import Category, Dish
 from app.services.ai.base import AIProviderError, AnalysisResult, InvalidMenuImageError
 
 
@@ -38,14 +38,13 @@ def create_mock_result():
     dishes = [
         Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
             ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
             allergens=["甲殻類", "卵", "ナッツ"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
         )
     ]
     return AnalysisResult(dishes=dishes, raw_response="mock response", provider="mock", processing_time=1.0)
@@ -201,7 +200,7 @@ class TestAnalyzeMenuEndpoint:
         assert response.status_code == 500
         assert response.json["success"] is False
         assert response.json["code"] == "AI_ERROR"
-        assert "AI analysis failed" in response.json["error"]
+        assert "Analysis failed" in response.json["error"]
 
     @patch("app.routes.menu.AIProviderFactory.create")
     def test_unexpected_error(self, mock_factory, client):
@@ -223,7 +222,7 @@ class TestAnalyzeMenuEndpoint:
         assert response.status_code == 500
         assert response.json["success"] is False
         assert response.json["code"] == "INTERNAL_ERROR"
-        assert "Internal server error" in response.json["error"]
+        assert "Server error occurred" in response.json["error"]
 
     def test_invalid_mime_type_with_valid_extension(self, client):
         """有効な拡張子でも無効なMIMEタイプの場合、エラーを返す."""

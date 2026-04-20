@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.models.dish import Category, Dish, PriceRange
+from app.models.dish import BoundingBox, Category, Dish
 
 
 class TestDish:
@@ -12,33 +12,31 @@ class TestDish:
         """Test creating a Dish with all fields specified."""
         dish = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
             ingredients=["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
             allergens=["甲殻類", "卵", "ナッツ"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
         )
 
         assert dish.original_name == "Pad Thai"
-        assert dish.japanese_name == "パッタイ"
+        assert dish.translated_name == "パッタイ"
         assert dish.description == "米麺を使ったタイ風焼きそば"
         assert dish.spiciness == 2
         assert dish.sweetness == 3
         assert dish.ingredients == ["米麺", "エビ", "卵", "もやし", "ピーナッツ"]
         assert dish.allergens == ["甲殻類", "卵", "ナッツ"]
         assert dish.category == Category.MAIN
-        assert dish.price_range == PriceRange.MODERATE
         assert dish.image_url == "https://example.com/pad-thai.jpg"
 
     def test_dish_creation_with_default_values(self):
         """Test creating a Dish with default values."""
         dish = Dish(
             original_name="Simple Dish",
-            japanese_name="シンプル料理",
+            translated_name="シンプル料理",
             description="説明",
             spiciness=1,
             sweetness=1,
@@ -47,7 +45,6 @@ class TestDish:
         assert dish.ingredients == []
         assert dish.allergens == []
         assert dish.category == Category.OTHER
-        assert dish.price_range is None
         assert dish.image_url is None
 
     def test_spiciness_validation_below_range(self):
@@ -55,7 +52,7 @@ class TestDish:
         with pytest.raises(ValueError, match="spiciness must be 1-5, got 0"):
             Dish(
                 original_name="Too Mild",
-                japanese_name="辛くない",
+                translated_name="辛くない",
                 description="辛さゼロ",
                 spiciness=0,
                 sweetness=3,
@@ -66,7 +63,7 @@ class TestDish:
         with pytest.raises(ValueError, match="spiciness must be 1-5, got 6"):
             Dish(
                 original_name="Too Spicy",
-                japanese_name="辛すぎ",
+                translated_name="辛すぎ",
                 description="辛さ6",
                 spiciness=6,
                 sweetness=3,
@@ -77,7 +74,7 @@ class TestDish:
         with pytest.raises(ValueError, match="sweetness must be 1-5, got 0"):
             Dish(
                 original_name="Not Sweet",
-                japanese_name="甘くない",
+                translated_name="甘くない",
                 description="甘さゼロ",
                 spiciness=3,
                 sweetness=0,
@@ -88,7 +85,7 @@ class TestDish:
         with pytest.raises(ValueError, match="sweetness must be 1-5, got 6"):
             Dish(
                 original_name="Too Sweet",
-                japanese_name="甘すぎ",
+                translated_name="甘すぎ",
                 description="甘さ6",
                 spiciness=3,
                 sweetness=6,
@@ -98,7 +95,7 @@ class TestDish:
         """Test that spiciness at boundaries (1 and 5) are valid."""
         dish_min = Dish(
             original_name="Mild",
-            japanese_name="マイルド",
+            translated_name="マイルド",
             description="辛さ1",
             spiciness=1,
             sweetness=3,
@@ -107,7 +104,7 @@ class TestDish:
 
         dish_max = Dish(
             original_name="Very Spicy",
-            japanese_name="激辛",
+            translated_name="激辛",
             description="辛さ5",
             spiciness=5,
             sweetness=3,
@@ -118,7 +115,7 @@ class TestDish:
         """Test that sweetness at boundaries (1 and 5) are valid."""
         dish_min = Dish(
             original_name="Not Sweet",
-            japanese_name="甘さ控えめ",
+            translated_name="甘さ控えめ",
             description="甘さ1",
             spiciness=3,
             sweetness=1,
@@ -127,7 +124,7 @@ class TestDish:
 
         dish_max = Dish(
             original_name="Very Sweet",
-            japanese_name="激甘",
+            translated_name="激甘",
             description="甘さ5",
             spiciness=3,
             sweetness=5,
@@ -136,10 +133,10 @@ class TestDish:
 
     def test_spiciness_type_validation(self):
         """Test that spiciness must be an integer."""
-        with pytest.raises(ValueError, match="spiciness must be an integer"):
+        with pytest.raises(TypeError, match="spiciness must be an integer"):
             Dish(
                 original_name="Invalid Type",
-                japanese_name="無効な型",
+                translated_name="無効な型",
                 description="辛さが文字列",
                 spiciness=3.5,  # type: ignore
                 sweetness=3,
@@ -147,10 +144,10 @@ class TestDish:
 
     def test_sweetness_type_validation(self):
         """Test that sweetness must be an integer."""
-        with pytest.raises(ValueError, match="sweetness must be an integer"):
+        with pytest.raises(TypeError, match="sweetness must be an integer"):
             Dish(
                 original_name="Invalid Type",
-                japanese_name="無効な型",
+                translated_name="無効な型",
                 description="甘さが文字列",
                 spiciness=3,
                 sweetness="3",  # type: ignore
@@ -160,14 +157,13 @@ class TestDish:
         """Test converting Dish to dictionary."""
         dish = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
             ingredients=["米麺", "エビ"],
             allergens=["甲殻類"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
             number=1,
         )
@@ -176,23 +172,23 @@ class TestDish:
 
         assert result == {
             "original_name": "Pad Thai",
-            "japanese_name": "パッタイ",
+            "translated_name": "パッタイ",
             "description": "米麺を使ったタイ風焼きそば",
             "spiciness": 2,
             "sweetness": 3,
             "ingredients": ["米麺", "エビ"],
             "allergens": ["甲殻類"],
             "category": "main",
-            "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
             "number": 1,
+            "bounding_box": None,
         }
 
     def test_to_dict_with_none_values(self):
         """Test to_dict with None values."""
         dish = Dish(
             original_name="Simple",
-            japanese_name="シンプル",
+            translated_name="シンプル",
             description="説明",
             spiciness=1,
             sweetness=1,
@@ -200,22 +196,21 @@ class TestDish:
 
         result = dish.to_dict()
 
-        assert result["price_range"] is None
         assert result["image_url"] is None
         assert result["number"] is None
+        assert result["bounding_box"] is None
 
     def test_from_dict(self):
         """Test creating Dish from dictionary."""
         data = {
             "original_name": "Pad Thai",
-            "japanese_name": "パッタイ",
+            "translated_name": "パッタイ",
             "description": "米麺を使ったタイ風焼きそば",
             "spiciness": 2,
             "sweetness": 3,
             "ingredients": ["米麺", "エビ"],
             "allergens": ["甲殻類"],
             "category": "main",
-            "price_range": "$$",
             "image_url": "https://example.com/pad-thai.jpg",
             "number": 1,
         }
@@ -223,14 +218,13 @@ class TestDish:
         dish = Dish.from_dict(data)
 
         assert dish.original_name == "Pad Thai"
-        assert dish.japanese_name == "パッタイ"
+        assert dish.translated_name == "パッタイ"
         assert dish.description == "米麺を使ったタイ風焼きそば"
         assert dish.spiciness == 2
         assert dish.sweetness == 3
         assert dish.ingredients == ["米麺", "エビ"]
         assert dish.allergens == ["甲殻類"]
         assert dish.category == Category.MAIN
-        assert dish.price_range == PriceRange.MODERATE
         assert dish.image_url == "https://example.com/pad-thai.jpg"
         assert dish.number == 1
 
@@ -238,7 +232,7 @@ class TestDish:
         """Test from_dict with missing optional fields."""
         data = {
             "original_name": "Simple",
-            "japanese_name": "シンプル",
+            "translated_name": "シンプル",
             "description": "説明",
             "spiciness": 1,
             "sweetness": 1,
@@ -249,7 +243,6 @@ class TestDish:
         assert dish.ingredients == []
         assert dish.allergens == []
         assert dish.category == Category.OTHER
-        assert dish.price_range is None
         assert dish.image_url is None
         assert dish.number is None
 
@@ -257,16 +250,16 @@ class TestDish:
         """Test roundtrip conversion: Dish -> dict -> Dish."""
         original = Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="米麺を使ったタイ風焼きそば",
             spiciness=2,
             sweetness=3,
             ingredients=["米麺", "エビ", "卵"],
             allergens=["甲殻類", "卵"],
             category=Category.MAIN,
-            price_range=PriceRange.MODERATE,
             image_url="https://example.com/pad-thai.jpg",
             number=1,
+            bounding_box=BoundingBox(x=0.1, y=0.2, width=0.3, height=0.1),
         )
 
         # to_dict -> from_dict
@@ -275,39 +268,40 @@ class TestDish:
 
         # Verify all fields match
         assert restored.original_name == original.original_name
-        assert restored.japanese_name == original.japanese_name
+        assert restored.translated_name == original.translated_name
         assert restored.description == original.description
         assert restored.spiciness == original.spiciness
         assert restored.sweetness == original.sweetness
         assert restored.ingredients == original.ingredients
         assert restored.allergens == original.allergens
         assert restored.category == original.category
-        assert restored.price_range == original.price_range
         assert restored.image_url == original.image_url
         assert restored.number == original.number
+        assert restored.bounding_box.x == original.bounding_box.x
+        assert restored.bounding_box.y == original.bounding_box.y
+        assert restored.bounding_box.width == original.bounding_box.width
+        assert restored.bounding_box.height == original.bounding_box.height
 
     def test_from_dict_with_enum_objects(self):
         """Test from_dict can handle Enum objects in addition to strings."""
         data = {
             "original_name": "Test",
-            "japanese_name": "テスト",
+            "translated_name": "テスト",
             "description": "説明",
             "spiciness": 1,
             "sweetness": 1,
             "category": Category.APPETIZER,
-            "price_range": PriceRange.BUDGET,
         }
 
         dish = Dish.from_dict(data)
 
         assert dish.category == Category.APPETIZER
-        assert dish.price_range == PriceRange.BUDGET
 
     def test_from_dict_missing_required_fields(self):
         """Test from_dict raises ValueError when required fields are missing."""
         # Missing original_name
         data = {
-            "japanese_name": "テスト",
+            "translated_name": "テスト",
             "description": "説明",
             "spiciness": 1,
             "sweetness": 1,
@@ -323,7 +317,7 @@ class TestDish:
         }
         with pytest.raises(
             ValueError,
-            match="Missing required fields: japanese_name, description, spiciness, sweetness",
+            match="Missing required fields: translated_name, description, spiciness, sweetness",
         ):
             Dish.from_dict(data)
 
@@ -348,19 +342,62 @@ class TestCategory:
         assert Category("other") == Category.OTHER
 
 
-class TestPriceRange:
-    """Test cases for PriceRange enum."""
+class TestBoundingBox:
+    """Test cases for BoundingBox dataclass."""
 
-    def test_price_range_values(self):
-        """Test that all price range values are defined correctly."""
-        assert PriceRange.BUDGET.value == "$"
-        assert PriceRange.MODERATE.value == "$$"
-        assert PriceRange.EXPENSIVE.value == "$$$"
-        assert PriceRange.LUXURY.value == "$$$$"
+    def test_bounding_box_creation_with_valid_data(self):
+        """Test creating a BoundingBox with valid data."""
+        bbox = BoundingBox(x=0.1, y=0.2, width=0.3, height=0.4)
+        assert bbox.x == 0.1
+        assert bbox.y == 0.2
+        assert bbox.width == 0.3
+        assert bbox.height == 0.4
 
-    def test_price_range_from_string(self):
-        """Test creating PriceRange from string value."""
-        assert PriceRange("$") == PriceRange.BUDGET
-        assert PriceRange("$$") == PriceRange.MODERATE
-        assert PriceRange("$$$") == PriceRange.EXPENSIVE
-        assert PriceRange("$$$$") == PriceRange.LUXURY
+    def test_bounding_box_boundary_values(self):
+        """Test BoundingBox at boundary values (0 and 1)."""
+        bbox = BoundingBox(x=0.0, y=0.0, width=1.0, height=1.0)
+        assert bbox.x == 0.0
+        assert bbox.y == 0.0
+        assert bbox.width == 1.0
+        assert bbox.height == 1.0
+
+    def test_bounding_box_validation_negative(self):
+        """Test that negative values raise ValueError."""
+        with pytest.raises(ValueError, match="x must be between 0 and 1"):
+            BoundingBox(x=-0.1, y=0.2, width=0.3, height=0.4)
+
+    def test_bounding_box_validation_greater_than_one(self):
+        """Test that values greater than 1 raise ValueError."""
+        with pytest.raises(ValueError, match="width must be between 0 and 1"):
+            BoundingBox(x=0.1, y=0.2, width=1.5, height=0.4)
+
+    def test_bounding_box_to_dict(self):
+        """Test converting BoundingBox to dictionary."""
+        bbox = BoundingBox(x=0.1, y=0.2, width=0.3, height=0.4)
+        result = bbox.to_dict()
+        assert result == {"x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}
+
+    def test_bounding_box_from_dict(self):
+        """Test creating BoundingBox from dictionary."""
+        data = {"x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}
+        bbox = BoundingBox.from_dict(data)
+        assert bbox.x == 0.1
+        assert bbox.y == 0.2
+        assert bbox.width == 0.3
+        assert bbox.height == 0.4
+
+    def test_bounding_box_from_dict_missing_field(self):
+        """Test that from_dict raises ValueError when field is missing."""
+        data = {"x": 0.1, "y": 0.2, "width": 0.3}
+        with pytest.raises(ValueError, match="Missing required fields: height"):
+            BoundingBox.from_dict(data)
+
+    def test_bounding_box_roundtrip(self):
+        """Test roundtrip conversion: BoundingBox -> dict -> BoundingBox."""
+        original = BoundingBox(x=0.15, y=0.25, width=0.35, height=0.45)
+        data = original.to_dict()
+        restored = BoundingBox.from_dict(data)
+        assert restored.x == original.x
+        assert restored.y == original.y
+        assert restored.width == original.width
+        assert restored.height == original.height

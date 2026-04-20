@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja" class="dark">
+<html lang="{{ current_language }}" class="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -24,10 +24,20 @@
     <!-- Alpine.js -->
     <script defer src="{{ url_for('static', filename='js/vendor/alpinejs.min.js') }}"></script>
 
+    <!-- i18n Utility -->
+    <script>
+        // Embed translation data for JavaScript
+        window.translations = {
+            en: {{ translations_en | tojson }},
+            ja: {{ translations_ja | tojson }}
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+
     {% block head %}{% endblock %}
 </head>
 
-<body x-data="apiKeyManager()"
+<body x-data="{ ...apiKeyManager(), ...languageSwitcher() }"
     class="bg-background text-text-primary min-h-screen flex flex-col font-sans antialiased selection:bg-primary selection:text-white overflow-x-hidden">
     <!-- Background Effects -->
     <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
@@ -53,8 +63,16 @@
                     Menu Judge
                 </span>
             </a>
-            <!-- 設定ボタン -->
-            <button @click="openModal()" type="button"
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3">
+                <!-- Language Switcher -->
+                <button @click="toggleLanguage()" type="button"
+                    class="flex items-center gap-2 rounded-lg border border-white/10 bg-surface/50 px-3 py-2 text-sm font-medium text-slate-300 backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-surface hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background">
+                    <span x-text="getLanguageFlag()"></span>
+                    <span x-text="getLanguageLabel()" class="hidden sm:inline"></span>
+                </button>
+                <!-- Settings Button -->
+                <button @click="openModal()" type="button"
                 class="group relative flex items-center gap-2 rounded-lg border border-white/10 bg-surface/50 px-4 py-2 text-sm font-medium text-slate-300 backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-surface hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background">
                 <svg class="h-5 w-5 transition-transform group-hover:rotate-90 duration-500" fill="none"
                     stroke="currentColor" viewBox="0 0 24 24">
@@ -64,12 +82,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
-                <span class="hidden sm:inline">設定</span>
-                <span x-show="!apiKey" class="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                </span>
-            </button>
+                    <span class="hidden sm:inline" x-text="t('ui.settings', 'Settings')"></span>
+                    <span x-show="!apiKey" class="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                </button>
+            </div>
         </nav>
     </header>
 
@@ -88,7 +107,7 @@
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50"></div>
 
-    <!-- APIキー設定モーダル -->
+    <!-- API Key Settings Modal -->
     {% include 'components/api_key_modal.html' %}
 
     <!-- Custom JS -->

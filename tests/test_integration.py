@@ -74,20 +74,47 @@ class TestMenuAnalysisFlow:
 class TestMultipleProviders:
     """複数プロバイダーのテスト"""
 
-    @patch.dict("os.environ", {"AI_PROVIDER": "claude", "ANTHROPIC_API_KEY": "test-key"})
     def test_claude_provider_selection(self, client):
         """Claudeプロバイダーが選択される"""
         from app.services.ai.factory import AIProviderFactory
 
-        provider = AIProviderFactory.create()
+        provider = AIProviderFactory.create(api_key="sk-ant-test", provider_name="claude")
         assert provider.name == "claude"
 
-    @patch.dict("os.environ", {"AI_PROVIDER": "invalid"})
     def test_invalid_provider_error(self, client, real_menu_image):
-        """無効なプロバイダーでエラー"""
+        """無効なプロバイダーでエラー（X-AI-Providerヘッダーで指定）"""
         response = client.post(
             "/api/analyze",
             data={"image": (BytesIO(real_menu_image), "menu.jpg")},
+            headers={"X-API-Key": "test-key", "X-AI-Provider": "invalid"},
             content_type="multipart/form-data",
         )
-        assert response.status_code == 500
+        # 未知のプロバイダーは400エラー（PROVIDER_NOT_IMPLEMENTED）
+        assert response.status_code == 400
+        assert response.headers.get("X-Error-Code") == "PROVIDER_NOT_IMPLEMENTED"
+
+    def test_provider_header_is_used(self, client, real_menu_image):
+        """X-AI-Providerヘッダーがバックエンドで使用される"""
+        from app.services.ai.base import AnalysisResult
+
+        with patch("app.services.ai.factory.AIProviderFactory.create") as mock_factory:
+            mock_provider = mock_factory.return_value
+            mock_provider.analyze_menu.return_value = AnalysisResult(
+                dishes=[],
+                raw_response="{}",
+                provider="claude",
+                processing_time=0.5,
+            )
+
+            response = client.post(
+                "/api/analyze",
+                data={"image": (BytesIO(real_menu_image), "menu.jpg")},
+                headers={"X-API-Key": "test-key", "X-AI-Provider": "claude"},
+                content_type="multipart/form-data",
+            )
+
+        assert response.status_code == 200
+        # ファクトリーがclaudeプロバイダーで呼び出されたことを確認
+        mock_factory.assert_called_once()
+        call_kwargs = mock_factory.call_args.kwargs
+        assert call_kwargs["provider_name"] == "claude"

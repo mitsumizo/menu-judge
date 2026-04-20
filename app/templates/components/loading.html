@@ -1,6 +1,25 @@
-<!-- スピナー版ローディング -->
-<div class="loading-container flex flex-col items-center" role="status" aria-live="polite">
-    <!-- スピナー -->
+{#
+Loading Component with Progressive Messages
+
+Features:
+- Animated spinner with gradient
+- Progressive status messages that change over time
+- i18n support
+- Screen reader accessible
+- Visual progress indicator
+#}
+
+<!-- Spinner Loading with Progressive Messages -->
+<div class="loading-container flex flex-col items-center"
+     role="status"
+     aria-live="polite"
+     x-data="loadingProgress()"
+     x-init="startProgress()"
+     @htmx:after-swap.window="destroy()"
+     @htmx:before-request.window="startProgress()"
+     x-effect="$cleanup(() => destroy())">
+
+    <!-- Spinner -->
     <div class="relative mb-6">
         <div class="absolute inset-0 bg-primary blur-xl opacity-30 animate-pulse"></div>
         <svg class="animate-spin h-16 w-16 text-primary" viewBox="0 0 24 24" aria-hidden="true" fill="none">
@@ -16,25 +35,98 @@
         </svg>
     </div>
 
-    <!-- メッセージ -->
-    <h3 class="text-xl font-bold text-white mb-2 animate-pulse">AIがメニューを解析中...</h3>
-    <p class="text-slate-400 font-medium">
-        料理の詳細を抽出しています
+    <!-- Progressive Messages -->
+    <h3 class="text-xl font-bold text-white mb-2 transition-all duration-300"
+        x-text="currentMessage">
+    </h3>
+    <p class="text-slate-400 font-medium transition-opacity duration-300"
+       x-text="currentSubMessage">
     </p>
 
-    <!-- スクリーンリーダー用 -->
-    <span class="sr-only">メニューを解析中です。少々お待ちください。</span>
+    <!-- Elapsed Time -->
+    <p class="text-xs text-slate-500 mt-2" x-show="elapsedSeconds > 3">
+        <span x-text="t('loading.elapsed', 'Elapsed:')"></span>
+        <span x-text="elapsedSeconds + 's'"></span>
+    </p>
 
-    <!-- プログレスバー -->
-    <div class="mt-8 w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-primary via-accent to-secondary animate-progress w-full origin-left">
+    <!-- Screen reader text -->
+    <span class="sr-only" x-text="currentMessage + '. ' + t('loading.please_wait', 'Please wait a moment.')"></span>
+
+    <!-- Progress bar (indeterminate animation) -->
+    <div class="mt-8 w-64 h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div class="h-full w-1/3 bg-gradient-to-r from-primary via-accent to-secondary rounded-full animate-indeterminate">
         </div>
     </div>
+
+    <!-- Step indicator -->
+    <p class="text-xs text-slate-500 mt-2" x-text="t('loading.step', 'Step') + ' ' + (step + 1) + '/4'"></p>
 </div>
 
-<!-- スケルトンUI版 -->
-<div class="skeleton-container space-y-4 hidden">
-    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
-    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
-    <div class="skeleton-card h-32 bg-surface rounded-lg animate-pulse"></div>
-</div>
+<script>
+/**
+ * Loading progress component with progressive messages
+ * Note: Uses time-based step progression instead of fake percentage
+ */
+function loadingProgress() {
+    return {
+        step: 0,
+        elapsedSeconds: 0,
+        stepIntervalId: null,
+        timerIntervalId: null,
+
+        // Message steps with duration (seconds per step)
+        steps: [
+            { message: 'loading.step1_title', sub: 'loading.step1_sub', duration: 3 },
+            { message: 'loading.step2_title', sub: 'loading.step2_sub', duration: 5 },
+            { message: 'loading.step3_title', sub: 'loading.step3_sub', duration: 7 },
+            { message: 'loading.step4_title', sub: 'loading.step4_sub', duration: 0 },
+        ],
+
+        get currentMessage() {
+            const key = this.steps[this.step]?.message || 'loading.step1_title';
+            return t(key, 'Analyzing menu with AI...');
+        },
+
+        get currentSubMessage() {
+            const key = this.steps[this.step]?.sub || 'loading.step1_sub';
+            return t(key, 'Uploading image...');
+        },
+
+        startProgress() {
+            // Reset state
+            this.step = 0;
+            this.elapsedSeconds = 0;
+
+            // Step progression based on elapsed time
+            this.stepIntervalId = setInterval(() => {
+                const currentStepDuration = this.steps[this.step]?.duration || 0;
+                // Move to next step if duration exceeded (and not on last step)
+                if (currentStepDuration > 0 && this.elapsedSeconds >= this.getStepStartTime(this.step) + currentStepDuration) {
+                    if (this.step < this.steps.length - 1) {
+                        this.step++;
+                    }
+                }
+            }, 1000);
+
+            // Elapsed time counter
+            this.timerIntervalId = setInterval(() => {
+                this.elapsedSeconds++;
+            }, 1000);
+        },
+
+        // Calculate cumulative start time for a step
+        getStepStartTime(stepIndex) {
+            let time = 0;
+            for (let i = 0; i < stepIndex; i++) {
+                time += this.steps[i].duration;
+            }
+            return time;
+        },
+
+        destroy() {
+            if (this.stepIntervalId) clearInterval(this.stepIntervalId);
+            if (this.timerIntervalId) clearInterval(this.timerIntervalId);
+        }
+    };
+}
+</script>

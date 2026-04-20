@@ -29,15 +29,30 @@ def app():
 
 @pytest.fixture
 def client(app):
-    """Create a test client for the application.
+    """Create a test client that auto-sends the X-API-Key header.
+
+    The /api/analyze endpoint requires `X-API-Key` — tests don't care
+    about auth plumbing, so inject a valid placeholder key by default.
 
     Args:
         app: Flask application fixture.
 
     Returns:
-        Flask test client.
+        Flask test client with X-API-Key set on every request.
     """
-    return app.test_client()
+    test_client = app.test_client()
+    original_open = test_client.open
+
+    def open_with_api_key(*args, **kwargs):
+        headers = kwargs.get("headers") or {}
+        if not isinstance(headers, dict):
+            headers = dict(headers)
+        headers.setdefault("X-API-Key", "sk-ant-test")
+        kwargs["headers"] = headers
+        return original_open(*args, **kwargs)
+
+    test_client.open = open_with_api_key
+    return test_client
 
 
 @pytest.fixture
@@ -67,25 +82,23 @@ def mock_claude_response():
   "dishes": [
     {
       "original_name": "Pad Thai",
-      "japanese_name": "パッタイ",
+      "translated_name": "パッタイ",
       "description": "米麺を使ったタイ風焼きそば。エビ、卵、もやし、ピーナッツを使用",
       "spiciness": 2,
       "sweetness": 3,
       "ingredients": ["米麺", "エビ", "卵", "もやし", "ピーナッツ"],
       "allergens": ["甲殻類", "卵", "ナッツ"],
-      "category": "main",
-      "price_range": "$$"
+      "category": "main"
     },
     {
       "original_name": "Tom Yum Goong",
-      "japanese_name": "トムヤムクン",
+      "translated_name": "トムヤムクン",
       "description": "辛酸っぱいタイ風エビスープ",
       "spiciness": 4,
       "sweetness": 1,
       "ingredients": ["エビ", "レモングラス", "ライム", "唐辛子"],
       "allergens": ["甲殻類"],
-      "category": "appetizer",
-      "price_range": "$$$"
+      "category": "appetizer"
     }
   ]
 }
@@ -116,7 +129,7 @@ def mock_analysis_result():
     dishes = [
         Dish(
             original_name="Pad Thai",
-            japanese_name="パッタイ",
+            translated_name="パッタイ",
             description="タイ風焼きそば",
             spiciness=2,
             sweetness=3,
