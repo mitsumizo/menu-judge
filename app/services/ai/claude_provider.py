@@ -6,6 +6,7 @@ import base64
 import json
 import logging
 import time
+from typing import cast
 
 import anthropic
 
@@ -105,8 +106,9 @@ class ClaudeProvider(AIProvider):
                 ],
             )
 
-            # Parse response
-            raw_response = response.content[0].text
+            # Parse response — Claude returns TextBlock for our text-only prompt
+            text_block = cast(anthropic.types.TextBlock, response.content[0])
+            raw_response = text_block.text
             dishes = self._parse_response(raw_response)
 
             processing_time = time.time() - start_time
