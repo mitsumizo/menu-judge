@@ -30,7 +30,7 @@ class ClaudeProvider(AIProvider):
     MODEL = "claude-sonnet-4-6"
     MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB (matches CLAUDE.md spec)
 
-    def __init__(self, api_key: str, language: str = 'en') -> None:
+    def __init__(self, api_key: str, language: str = "en") -> None:
         """
         Initialize Claude provider.
 

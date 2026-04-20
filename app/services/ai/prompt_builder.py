@@ -12,7 +12,7 @@ class PromptBuilder:
     AIの回答も同じ言語で出力されるようにプロンプトを構成します。
     """
 
-    def __init__(self, language: str = 'en'):
+    def __init__(self, language: str = "en"):
         """初期化
 
         Args:
@@ -30,7 +30,7 @@ class PromptBuilder:
         Returns:
             str: 言語に応じたプロンプト文字列
         """
-        t = self.translations['ai_prompt']
+        t = self.translations["ai_prompt"]
 
         # 言語に応じた例を生成
         example_json = self._get_example_json()
@@ -63,20 +63,20 @@ For each dish, include the following information:
         Returns:
             str: JSON例文字列
         """
-        t = self.translations['ai_prompt']
+        t = self.translations["ai_prompt"]
 
         example = {
             "dishes": [
                 {
                     "number": 1,
                     "original_name": "Pad Thai",
-                    "translated_name": t['example_dish_name'],
-                    "description": t['example_description'],
+                    "translated_name": t["example_dish_name"],
+                    "description": t["example_description"],
                     "spiciness": 2,
                     "sweetness": 3,
-                    "ingredients": t['example_ingredients'],
-                    "allergens": t['example_allergens'],
-                    "category": "main"
+                    "ingredients": t["example_ingredients"],
+                    "allergens": t["example_allergens"],
+                    "category": "main",
                 }
             ]
         }

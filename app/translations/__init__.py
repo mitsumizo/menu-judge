@@ -2,4 +2,4 @@
 
 from .loader import TranslationLoader
 
-__all__ = ['TranslationLoader']
+__all__ = ["TranslationLoader"]

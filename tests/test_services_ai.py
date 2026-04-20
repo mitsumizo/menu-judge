@@ -453,9 +453,7 @@ class TestClaudeProvider:
             # Create image data larger than MAX_IMAGE_SIZE (10MB)
             large_image_data = b"x" * (provider.MAX_IMAGE_SIZE + 1)
 
-            with pytest.raises(
-                APICallError, match="Image size .* bytes exceeds maximum .* bytes"
-            ):
+            with pytest.raises(APICallError, match="Image size .* bytes exceeds maximum .* bytes"):
                 provider.analyze_menu(large_image_data, "image/jpeg")
 
     @patch("anthropic.Anthropic")
