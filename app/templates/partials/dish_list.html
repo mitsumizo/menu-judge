@@ -27,7 +27,7 @@ Arguments:
      x-data="{
         showImageModal: false,
         selectedCategory: 'all',
-        counts: {{ all_counts | tojson }},
+        counts: {{ all_counts | tojson | forceescape }},
         get filteredCount() { return this.counts[this.selectedCategory] ?? 0; }
      }">
     <!-- Results Summary -->
