@@ -16,8 +16,7 @@ Features:
      x-data="loadingProgress()"
      x-init="startProgress()"
      @htmx:after-swap.window="destroy()"
-     @htmx:before-request.window="startProgress()"
-     x-effect="$cleanup(() => destroy())">
+     @htmx:before-request.window="startProgress()">
 
     <!-- Spinner -->
     <div class="relative mb-6">

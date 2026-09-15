@@ -6,6 +6,9 @@ Alpine.js によるクライアント側フィルタリングの構造を検証�
 
 from __future__ import annotations
 
+import json
+from html.parser import HTMLParser
+
 import pytest
 from flask import Flask, render_template
 
@@ -192,3 +195,66 @@ def test_filter_is_hidden_when_only_one_category(app: Flask) -> None:
     ]
     html = _render(app, dishes)
     assert 'data-testid="category-filter"' not in html
+
+# ---------------------------------------------------------------------------
+# 回帰テスト: x-data 属性が HTML として完結していること
+#
+# `tojson` は `"` をエスケープしないため、ダブルクォートで囲った x-data の中に
+# 埋め込むとブラウザが属性を途中で閉じてしまい、Alpine.js が SyntaxError を出す。
+# 文字列検索ではなく HTML パーサで属性値を取り出して検証する。
+# ---------------------------------------------------------------------------
+
+
+class _AttrCollector(HTMLParser):
+    """指定 id の要素の属性を収集する最小パーサ"""
+
+    def __init__(self, target_id: str) -> None:
+        super().__init__()
+        self.target_id = target_id
+        self.attrs: dict[str, str | None] | None = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if self.attrs is None and dict(attrs).get("id") == self.target_id:
+            self.attrs = dict(attrs)
+
+
+def _dish_list_attrs(app: Flask, dishes: list[Dish]) -> dict[str, str | None]:
+    parser = _AttrCollector("dish-list")
+    parser.feed(_render(app, dishes))
+    assert parser.attrs is not None, "#dish-list が見つからない"
+    return parser.attrs
+
+
+def test_dish_list_x_data_is_a_complete_expression(
+    app: Flask, multi_category_dishes: list[Dish]
+) -> None:
+    """x-data 属性値が閉じ括弧まで丸ごとブラウザに渡る（属性が途中で切れない）"""
+    x_data = _dish_list_attrs(app, multi_category_dishes)["x-data"]
+    assert x_data is not None
+    assert "get filteredCount()" in x_data
+    assert x_data.rstrip().endswith("}")
+
+
+def test_dish_list_x_data_contains_decoded_counts_json(
+    app: Flask, multi_category_dishes: list[Dish]
+) -> None:
+    """counts はブラウザが属性をデコードした後に有効な JSON になっている"""
+    x_data = _dish_list_attrs(app, multi_category_dishes)["x-data"]
+    assert x_data is not None
+    start = x_data.index("counts: ") + len("counts: ")
+    # raw_decode は先頭の JSON 値だけを読み、後続の JS はそのまま残す
+    counts, _ = json.JSONDecoder().raw_decode(x_data[start:])
+    assert counts == {"all": 4, "appetizer": 1, "main": 2, "dessert": 1}
+
+
+def test_dish_list_has_no_stray_attributes_from_broken_quotes(
+    app: Flask, multi_category_dishes: list[Dish]
+) -> None:
+    """属性が途中で切れると `all":` のようなゴミ属性が生える。それが無いこと"""
+    attrs = _dish_list_attrs(app, multi_category_dishes)
+    # 正当な属性名は識別子か Alpine/data 系のプレフィックスを持つ。
+    # 途中で切れた x-data の残骸は `all":` `2},` のような形になる。
+    stray = [
+        k for k in attrs if not k.isidentifier() and not k.startswith(("x-", "@", ":", "data-"))
+    ]
+    assert not stray, f"クォート破損由来のゴミ属性: {stray}"

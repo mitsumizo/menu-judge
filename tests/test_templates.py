@@ -180,3 +180,18 @@ def test_loading_component_has_accessibility(app):
 
         # Check for user-friendly messages
         assert "メニューを解析中" in rendered or "Loading" in rendered
+
+
+def test_loading_component_does_not_use_undefined_alpine_magic(app):
+    """$cleanup は Alpine.js に存在しないマジックで、評価時に ReferenceError を出す。
+
+    そのため x-effect="$cleanup(() => destroy())" は一度も動いていなかった。
+    このコンポーネントは hx-indicator で表示切替されるだけで DOM から外れないので、
+    実際のクリーンアップ経路は @htmx:after-swap.window="destroy()" のみ。
+    """
+    with app.test_request_context():
+        from flask import render_template
+
+        rendered = render_template("components/loading.html")
+
+        assert "$cleanup" not in rendered
